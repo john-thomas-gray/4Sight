@@ -16,6 +16,8 @@ type PieceProps = {
   currentWellId?: string;
 };
 
+const BOARD_SIZE = 9;
+
 const Piece = ({
   team = "white",
   initialPosition = { x: 0, y: 0 },
@@ -26,7 +28,15 @@ const Piece = ({
   const pan = useRef(new Animated.ValueXY(initialPosition)).current;
   const [isDragging, setIsDragging] = useState(false);
   const pieceRef = useRef<View>(null);
-  const { wellPieceLocations, setWellPieceLocations } = useGameContext();
+  const {
+    wellPieceLocations,
+    setWellPieceLocations,
+    boardSpaces,
+    boardPieceLocations,
+    setBoardPieceLocations,
+  } = useGameContext();
+
+  const boardPieceLocationsRef = useRef(boardPieceLocations);
 
   const currentWellIdRef = useRef<string | null>(currentWellId ?? null);
   const wellPieceLocationsRef = useRef(wellPieceLocations);
@@ -34,6 +44,10 @@ const Piece = ({
   useEffect(() => {
     wellPieceLocationsRef.current = wellPieceLocations;
   }, [wellPieceLocations]);
+
+  useEffect(() => {
+    boardPieceLocationsRef.current = boardPieceLocations;
+  }, [boardPieceLocations]);
 
   useEffect(() => {
     pan.setValue(initialPosition);
@@ -46,10 +60,6 @@ const Piece = ({
     }
   }, []);
 
-  useEffect(() => {
-    // console.log("📦 wellPieceLocations updated:", wellPieceLocations);
-  }, [wellPieceLocations]);
-
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -57,11 +67,9 @@ const Piece = ({
       onPanResponderGrant: () => {
         setIsDragging(true);
 
-        console.log("currentWellId,", currentWellIdRef.current);
         if (currentWellIdRef.current) {
           setWellPieceLocations((prev) => {
             const updated = { ...prev };
-            console.log(updated[currentWellIdRef.current as string]);
             delete updated[currentWellIdRef.current as string];
             return updated;
           });
@@ -101,6 +109,8 @@ const Piece = ({
               pieceCenter.y <= ty + tHeight;
 
             if (isInside) {
+              pan.flattenOffset();
+
               const isSlot = target.id.startsWith("slot-");
 
               if (isSlot) {
@@ -111,32 +121,161 @@ const Piece = ({
                 }
 
                 const [, orientation, rowStr, colStr] = parts;
-                const row = parseInt(rowStr, 10);
-                const col = parseInt(colStr, 10);
+                let row = parseInt(rowStr, 10);
+                let col = parseInt(colStr, 10);
 
+                // Adjacent starting position on board, one step inside from the slot
+                switch (orientation) {
+                  case "N":
+                    row -= 1;
+                    break;
+                  case "S":
+                    row += 1;
+                    break;
+                  case "E":
+                    col += 1;
+                    break;
+                  case "W":
+                    col -= 1;
+                    break;
+                }
+
+                // Loop forward until you find an occupied space or go out of bounds
+                let prevRow = null;
+                let prevCol = null;
                 console.log(
-                  `✅ Dropped in slot at [${row}, ${col}] facing ${orientation}`
+                  "📦 boardPieceLocationsRef.current:",
+                  boardPieceLocationsRef.current
                 );
+
+                while (true) {
+                  if (
+                    row < 0 ||
+                    row >= BOARD_SIZE ||
+                    col < 0 ||
+                    col >= BOARD_SIZE
+                  ) {
+                    console.log("🔚 Out of bounds:", row, col);
+                    break;
+                  }
+
+                  const boardId = `${row}-${col}`;
+                  const boardLayout = boardSpaces[boardId];
+
+                  console.log("🔍 Checking board space:", boardId);
+
+                  if (!boardLayout) {
+                    console.log("❌ No layout for", boardId);
+                    break;
+                  }
+
+                  const isOccupied =
+                    boardPieceLocationsRef.current[boardId] !== undefined;
+
+                  if (isOccupied) {
+                    console.log("🟥 Space is occupied:", boardId);
+                    break;
+                  }
+
+                  console.log("✅ Space is unoccupied:", boardId);
+                  prevRow = row;
+                  prevCol = col;
+
+                  // Step in the correct direction
+                  switch (orientation) {
+                    case "N":
+                      row -= 1;
+                      break;
+                    case "S":
+                      row += 1;
+                      break;
+                    case "E":
+                      col += 1;
+                      break;
+                    case "W":
+                      col -= 1;
+                      break;
+                  }
+                }
+
+                if (prevRow === null || prevCol === null) {
+                  console.warn(
+                    "No free board space to move into near slot:",
+                    target.id
+                  );
+                  return;
+                }
+
+                const finalBoardId = `${prevRow}-${prevCol}`;
+                const finalBoardLayout = boardSpaces[finalBoardId];
+
+                if (!finalBoardLayout) {
+                  console.warn("No layout for final board space", finalBoardId);
+                  return;
+                }
+
+                // Animate piece to slot first
+                Animated.spring(pan, {
+                  toValue: {
+                    x: tx + tWidth / 2 - 16,
+                    y: ty + tHeight / 2 - 16,
+                  },
+                  useNativeDriver: false,
+                  speed: 1000,
+                  bounciness: 0,
+                }).start(() => {
+                  // Animate piece to final board space (furthest unoccupied before occupied)
+                  Animated.spring(pan, {
+                    toValue: {
+                      x:
+                        finalBoardLayout.pageX +
+                        finalBoardLayout.width / 2 -
+                        16,
+                      y:
+                        finalBoardLayout.pageY +
+                        finalBoardLayout.height / 2 -
+                        16,
+                    },
+                    useNativeDriver: false,
+                    speed: 20,
+                    bounciness: 0,
+                  }).start(() => {
+                    // Update game state
+                    currentWellIdRef.current = null;
+
+                    setWellPieceLocations((prev) => {
+                      const updated = { ...prev };
+                      delete updated[target.id];
+                      return updated;
+                    });
+
+                    setBoardPieceLocations((prev) => {
+                      const updated = {
+                        ...prev,
+                        [finalBoardId]: team,
+                      };
+                      console.log("🧩 Occupied Spaces:", Object.keys(updated));
+                      return updated;
+                    });
+                  });
+                });
               } else {
-                console.log(`✅ Dropped in well: ${target.id}`);
+                // Dropped in a well space
+                setWellPieceLocations((prev) => ({
+                  ...prev,
+                  [target.id]: team,
+                }));
+
+                currentWellIdRef.current = target.id;
+
+                Animated.spring(pan, {
+                  toValue: {
+                    x: tx + tWidth / 2 - 16,
+                    y: ty + tHeight / 2 - 16,
+                  },
+                  useNativeDriver: false,
+                }).start();
               }
-
-              pan.flattenOffset();
-
-              setWellPieceLocations((prev) => ({
-                ...prev,
-                [target.id]: team,
-              }));
-
-              currentWellIdRef.current = target.id;
-
-              Animated.spring(pan, {
-                toValue: {
-                  x: tx + tWidth / 2 - 16,
-                  y: ty + tHeight / 2 - 16,
-                },
-                useNativeDriver: false,
-              }).start();
 
               return;
             }
