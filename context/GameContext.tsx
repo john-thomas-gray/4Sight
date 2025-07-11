@@ -14,18 +14,35 @@ type Layout = {
   height: number;
 };
 
+type SlotData = {
+  layout: Layout;
+  orientation: "N" | "S" | "E" | "W";
+};
+
 type GameContextType = {
   wellSpaces: {
     white: Record<string, Layout>;
     black: Record<string, Layout>;
   };
+  boardSpaces: Record<string, Layout>;
+  slots: Record<string, SlotData>;
   wellPieceLocations: Record<string, "white" | "black">;
+  boardPieceLocations: Record<string, "white" | "black">;
   registerWellSpace: (
     team: "white" | "black",
     id: string,
     layout: Layout
   ) => void;
+  registerBoardSpace: (id: string, layout: Layout) => void;
+  registerSlot: (
+    id: string,
+    layout: Layout,
+    orientation: "N" | "S" | "E" | "W"
+  ) => void;
   setWellPieceLocations: React.Dispatch<
+    React.SetStateAction<Record<string, "white" | "black">>
+  >;
+  setBoardPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, "white" | "black">>
   >;
 };
@@ -38,7 +55,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     black: Record<string, Layout>;
   }>({ white: {}, black: {} });
 
+  const [boardSpaces, setBoardSpaces] = useState<Record<string, Layout>>({});
+  const [slots, setSlots] = useState<Record<string, SlotData>>({});
+
   const [wellPieceLocations, setWellPieceLocations] = useState<
+    Record<string, "white" | "black">
+  >({});
+
+  const [boardPieceLocations, setBoardPieceLocations] = useState<
     Record<string, "white" | "black">
   >({});
 
@@ -55,8 +79,24 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
+  const registerBoardSpace = useCallback((id: string, layout: Layout) => {
+    setBoardSpaces((prev) => ({
+      ...prev,
+      [id]: layout,
+    }));
+  }, []);
+
+  const registerSlot = useCallback(
+    (id: string, layout: Layout, orientation: "N" | "S" | "E" | "W") => {
+      setSlots((prev) => ({
+        ...prev,
+        [id]: { layout, orientation },
+      }));
+    },
+    []
+  );
+
   useEffect(() => {
-    // Only proceed if there is at least one white and black space registered
     if (
       Object.keys(wellSpaces.white).length > 0 &&
       Object.keys(wellSpaces.black).length > 0
@@ -73,15 +113,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       setWellPieceLocations(initialLocations);
     }
-  }, [wellSpaces, setWellPieceLocations]);
+  }, [wellSpaces]);
 
   return (
     <GameContext.Provider
       value={{
         wellSpaces,
-        registerWellSpace,
+        boardSpaces,
+        slots,
         wellPieceLocations,
+        boardPieceLocations,
         setWellPieceLocations,
+        setBoardPieceLocations,
+        registerWellSpace,
+        registerBoardSpace,
+        registerSlot,
       }}
     >
       {children}
@@ -91,7 +137,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 export const useGameContext = () => {
   const context = useContext(GameContext);
-  if (!context)
+  if (!context) {
     throw new Error("useGameContext must be used within GameProvider");
+  }
   return context;
 };

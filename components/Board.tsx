@@ -1,62 +1,79 @@
-// import React from 'react';
-// import { View } from 'react-native';
-// import Corner from './Corner';
-// import Slot from './Slot';
-// import Space from './Space';
+import { useGameContext } from "@/context/GameContext";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import BoardSpace from "./BoardSpace";
+import Slot from "./Slot";
 
-// const BOARD_SIZE = 9;
+type BoardProps = {
+  className?: string;
+};
 
-// const getOrientation = (row: number, col: number): 'N' | 'S' | 'E' | 'W' | 'NE' | 'NW' | 'SE' | 'SW' | 'C' => {
-//   const last = BOARD_SIZE - 1;
+const BOARD_SIZE = 9;
 
-//   if (row === 0 && col === 0) return 'NW';
-//   if (row === 0 && col === last) return 'NE';
-//   if (row === last && col === 0) return 'SW';
-//   if (row === last && col === last) return 'SE';
-//   if (row === 0) return 'N';
-//   if (row === last) return 'S';
-//   if (col === 0) return 'W';
-//   if (col === last) return 'E';
+const Board = ({ className }: BoardProps) => {
+  const { registerBoardSpace, registerSlot } = useGameContext();
 
-//   return 'C';
-// };
+  const isSlotPosition = (row: number, col: number) => {
+    return (
+      (row === 0 && col > 0 && col < BOARD_SIZE - 1) || // Top
+      (row === BOARD_SIZE - 1 && col > 0 && col < BOARD_SIZE - 1) || // Bottom
+      (col === 0 && row > 0 && row < BOARD_SIZE - 1) || // Left
+      (col === BOARD_SIZE - 1 && row > 0 && row < BOARD_SIZE - 1) // Right
+    );
+  };
 
-// const Board = ({ className }: { className?: string }) => {
-//   return (
-//     <View className={`flex-1 flex-col ${className}`}>
-//       {Array.from({ length: BOARD_SIZE }).map((_, row) => (
-//         <View key={row} style={{ flex: 1, flexDirection: 'row' }}>
-//           {Array.from({ length: BOARD_SIZE }).map((_, col) => {
-//             const orientation = getOrientation(row, col);
+  const getOrientation = (row: number, col: number): "N" | "S" | "E" | "W" => {
+    if (row === 0) return "S";
+    if (row === BOARD_SIZE - 1) return "N";
+    if (col === 0) return "E";
+    return "W"; // col === last
+  };
 
-//             if (orientation === 'C') {
-//               return <Space key={`${row}-${col}`} row={row} col={col} />;
-//             }
+  return (
+    <View className={className}>
+      <View style={styles.container}>
+        {Array.from({ length: BOARD_SIZE }).map((_, row) => (
+          <View key={row} style={styles.row}>
+            {Array.from({ length: BOARD_SIZE }).map((_, col) => {
+              const id = `${row}-${col}`;
 
-//             if (['NW', 'NE', 'SW', 'SE'].includes(orientation)) {
-//               return (
-//                 <Corner
-//                   key={`${row}-${col}`}
-//                   orientation={orientation as 'NE' | 'NW' | 'SE' | 'SW'}
-//                   row={row}
-//                   col={col}
-//                 />
-//               );
-//             }
+              if (isSlotPosition(row, col)) {
+                const orientation = getOrientation(row, col);
+                return (
+                  <Slot
+                    key={id}
+                    id={id}
+                    orientation={orientation}
+                    team="white" // Or dynamic if needed
+                    register={registerSlot}
+                  />
+                );
+              }
 
-//             return (
-//               <Slot
-//                 key={`${row}-${col}`}
-//                 orientation={orientation as 'N' | 'S' | 'E' | 'W'}
-//                 row={row}
-//                 col={col}
-//               />
-//             );
-//           })}
-//         </View>
-//       ))}
-//     </View>
-//   );
-// };
+              return (
+                <BoardSpace key={id} id={id} register={registerBoardSpace} />
+              );
+            })}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
 
-// export default Board;
+const styles = StyleSheet.create({
+  container: {
+    position: "relative",
+    width: 40 * BOARD_SIZE,
+    height: 40 * BOARD_SIZE,
+    paddingHorizontal: 4,
+    backgroundColor: "#065f46",
+    borderRadius: 8,
+  },
+  row: {
+    flexDirection: "row",
+    height: 40,
+  },
+});
+
+export default Board;

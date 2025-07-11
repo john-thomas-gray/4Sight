@@ -1,3 +1,4 @@
+import Board from "@/components/Board";
 import Piece from "@/components/Piece";
 import PieceWell from "@/components/PieceWell";
 import { useGameContext } from "@/context/GameContext";
@@ -43,7 +44,7 @@ const Test = () => {
     <View className="flex-1 flex-row items-center justify-center mt-90 bg-[#065f46]">
       <View className="flex-row justify-between p-16">
         <PieceWell team="white" />
-        <View className="flex-1"></View>
+        <Board className="mx-10" />
         <PieceWell team="black" />
       </View>
       {renderPieces(whiteWellSpaces, "white")}

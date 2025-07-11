@@ -8,8 +8,8 @@ type PieceWellProps = {
   className?: string;
 };
 
-const COLS = 4;
-const ROWS = 7;
+const COLS = 3;
+const ROWS = 8;
 
 const PieceWell = ({ team, className }: PieceWellProps) => {
   const borderColor = team === "white" ? "white" : "black";
@@ -40,8 +40,8 @@ const PieceWell = ({ team, className }: PieceWellProps) => {
 const styles = StyleSheet.create({
   container: {
     position: "relative",
-    width: 184,
-    height: 310,
+    width: COLS * 47,
+    height: 352,
     borderWidth: 4,
     paddingHorizontal: 4,
     paddingTop: 5,

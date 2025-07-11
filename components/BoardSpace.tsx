@@ -38,7 +38,6 @@ const BoardSpace = ({ id, register }: BoardSpaceProps) => {
     width: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 1,
     backgroundColor: isEven ? "#d1fae5" : "#ffffff",
     borderWidth: 1,
     borderColor: "#ccc",
