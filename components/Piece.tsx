@@ -9,6 +9,10 @@ type PieceProps = {
     id: string;
     layout: { pageX: number; pageY: number; width: number; height: number };
   }[];
+  slots: {
+    id: string;
+    layout: { pageX: number; pageY: number; width: number; height: number };
+  }[];
   currentWellId?: string;
 };
 
@@ -16,6 +20,7 @@ const Piece = ({
   team = "white",
   initialPosition = { x: 0, y: 0 },
   wellSpaces,
+  slots,
   currentWellId,
 }: PieceProps) => {
   const pan = useRef(new Animated.ValueXY(initialPosition)).current;
@@ -78,36 +83,38 @@ const Piece = ({
             y: pageY + height / 2,
           };
 
-          for (const well of wellSpaces) {
+          const allTargets = [...wellSpaces, ...slots];
+
+          for (const target of allTargets) {
             const {
-              pageX: wx,
-              pageY: wy,
-              width: wWidth,
-              height: wHeight,
-            } = well.layout;
+              pageX: tx,
+              pageY: ty,
+              width: tWidth,
+              height: tHeight,
+            } = target.layout;
 
             const isInside =
-              pieceCenter.x >= wx &&
-              pieceCenter.x <= wx + wWidth &&
-              pieceCenter.y >= wy &&
-              pieceCenter.y <= wy + wHeight;
+              pieceCenter.x >= tx &&
+              pieceCenter.x <= tx + tWidth &&
+              pieceCenter.y >= ty &&
+              pieceCenter.y <= ty + tHeight;
 
             if (isInside) {
-              console.log("✅ Dropped inside:", well.id);
+              console.log("✅ Dropped inside:", target.id);
 
               pan.flattenOffset();
 
               setWellPieceLocations((prev) => ({
                 ...prev,
-                [well.id]: team,
+                [target.id]: team,
               }));
 
-              currentWellIdRef.current = well.id;
+              currentWellIdRef.current = target.id;
 
               Animated.spring(pan, {
                 toValue: {
-                  x: wx + wWidth / 2 - 16,
-                  y: wy + wHeight / 2 - 16,
+                  x: tx + tWidth / 2 - 16,
+                  y: ty + tHeight / 2 - 16,
                 },
                 useNativeDriver: false,
               }).start();
@@ -116,7 +123,7 @@ const Piece = ({
             }
           }
 
-          console.log("❌ Dropped outside any well");
+          console.log("❌ Dropped outside any well or slot");
         });
       },
 

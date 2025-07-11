@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 
 const Test = () => {
-  const { wellSpaces } = useGameContext();
+  const { wellSpaces, slots } = useGameContext();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -19,6 +19,10 @@ const Test = () => {
   const blackWellSpaces = Object.entries(wellSpaces.black);
 
   const allEntries = [...whiteWellSpaces, ...blackWellSpaces];
+  const slotsArray = Object.entries(slots).map(([id, slot]) => ({
+    id,
+    layout: slot.layout,
+  }));
 
   const renderPieces = (
     entries: [
@@ -36,19 +40,20 @@ const Test = () => {
           x: layout.pageX + layout.width / 2 - 16,
           y: layout.pageY + layout.height / 2 - 16,
         }}
+        slots={slotsArray}
         wellSpaces={allEntries.map(([id, layout]) => ({ id, layout }))}
       />
     ));
 
   return (
     <View className="flex-1 flex-row items-center justify-center mt-90 bg-[#065f46]">
-      <View className="flex-row justify-between p-16">
+      <View className="flex-row justify-between">
         <PieceWell team="white" />
         <Board className="mx-10" />
         <PieceWell team="black" />
       </View>
-      {renderPieces(whiteWellSpaces, "white")}
-      {renderPieces(blackWellSpaces, "black")}
+      {ready && renderPieces(whiteWellSpaces, "white")}
+      {ready && renderPieces(blackWellSpaces, "black")}
     </View>
   );
 };
