@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Image, View, ViewStyle } from "react-native";
 import { icons } from "../constants";
 
-type SlotProps = {
+type SlotSpaceProps = {
   id: string;
   register: (
     id: string,
@@ -18,7 +18,12 @@ type SlotProps = {
   team?: "black" | "white";
 };
 
-const Slot = ({ id, register, orientation, team = "white" }: SlotProps) => {
+const SlotSpace = ({
+  id,
+  register,
+  orientation,
+  team = "white",
+}: SlotSpaceProps) => {
   const viewRef = useRef<View>(null);
 
   const reportLayout = () => {
@@ -77,4 +82,4 @@ const Slot = ({ id, register, orientation, team = "white" }: SlotProps) => {
   );
 };
 
-export default Slot;
+export default SlotSpace;

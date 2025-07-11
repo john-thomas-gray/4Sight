@@ -2,7 +2,7 @@ import { useGameContext } from "@/context/GameContext";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import BoardSpace from "./BoardSpace";
-import Slot from "./Slot";
+import SlotSpace from "./SlotSpace";
 
 type BoardProps = {
   className?: string;
@@ -35,12 +35,11 @@ const Board = ({ className }: BoardProps) => {
         {Array.from({ length: BOARD_SIZE }).map((_, row) => (
           <View key={row} style={styles.row}>
             {Array.from({ length: BOARD_SIZE }).map((_, col) => {
-              const id = `${row}-${col}`;
-
               if (isSlotPosition(row, col)) {
                 const orientation = getOrientation(row, col);
+                const id = `slot-${orientation}-${row}-${col}`;
                 return (
-                  <Slot
+                  <SlotSpace
                     key={id}
                     id={id}
                     orientation={orientation}
@@ -50,6 +49,7 @@ const Board = ({ className }: BoardProps) => {
                 );
               }
 
+              const id = `${row}-${col}`;
               return (
                 <BoardSpace key={id} id={id} register={registerBoardSpace} />
               );

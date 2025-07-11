@@ -1,44 +1,61 @@
-import Board from '@/components/Board';
-import PieceWell from '@/components/PieceWell';
-import React, { useState } from 'react';
-import { Dimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-const { width } = Dimensions.get('window');
-const BOARD_MAX_SIZE = width * 0.45;
-
-
+import Board from "@/components/Board";
+import Piece from "@/components/Piece";
+import PieceWell from "@/components/PieceWell";
+import { useGameContext } from "@/context/GameContext";
+import React, { useEffect, useState } from "react";
+import { View } from "react-native";
 
 const TwoPlayer = () => {
-  const [spawnedPiece, setSpawnedPiece] = useState<null | { x: number; y: number }>(null);
-  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
-  return (
-    <SafeAreaView
-      className="flex-1 bg-green-700"
-    >
-      <View
-        style={{
-          flex: 1,
-          flexDirection: 'row',
-          justifyContent: 'center',  // center all horizontally
-          alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingTop: 30,
-          gap: 20, // add some spacing between children (RN 0.71+)
+  const { wellSpaces, slots } = useGameContext();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (Object.keys(wellSpaces.white).length > 0) {
+      setReady(true);
+    }
+  }, [wellSpaces.white]);
+
+  const whiteWellSpaces = Object.entries(wellSpaces.white);
+  const blackWellSpaces = Object.entries(wellSpaces.black);
+
+  const allEntries = [...whiteWellSpaces, ...blackWellSpaces];
+  const slotsArray = Object.entries(slots).map(([id, slot]) => ({
+    id,
+    layout: slot.layout,
+  }));
+
+  const renderPieces = (
+    entries: [
+      string,
+      { pageX: number; pageY: number; width: number; height: number }
+    ][],
+    team: "white" | "black"
+  ) =>
+    entries.map(([id, layout]) => (
+      <Piece
+        key={id}
+        team={team}
+        currentWellId={id}
+        initialPosition={{
+          x: layout.pageX + layout.width / 2 - 16,
+          y: layout.pageY + layout.height / 2 - 16,
         }}
-      >
+        slots={slotsArray}
+        wellSpaces={allEntries.map(([id, layout]) => ({ id, layout }))}
+      />
+    ));
+
+  return (
+    <View className="flex-1 flex-row items-center justify-center mt-90 bg-[#065f46]">
+      <View className="flex-row justify-between">
         <PieceWell team="white" />
-        <View
-          style={{
-            width: BOARD_MAX_SIZE,
-            aspectRatio: 1,
-          }}
-        >
-          <Board className="h-full"/>
-        </View>
+        <Board className="mx-10" />
         <PieceWell team="black" />
       </View>
-    </SafeAreaView>)
-    };
+      {ready && renderPieces(whiteWellSpaces, "white")}
+      {ready && renderPieces(blackWellSpaces, "black")}
+    </View>
+  );
+};
 
-    export default TwoPlayer;
+export default TwoPlayer;

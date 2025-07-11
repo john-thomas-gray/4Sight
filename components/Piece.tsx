@@ -47,7 +47,7 @@ const Piece = ({
   }, []);
 
   useEffect(() => {
-    console.log("📦 wellPieceLocations updated:", wellPieceLocations);
+    // console.log("📦 wellPieceLocations updated:", wellPieceLocations);
   }, [wellPieceLocations]);
 
   const panResponder = useRef(
@@ -77,6 +77,7 @@ const Piece = ({
 
       onPanResponderRelease: () => {
         setIsDragging(false);
+
         pieceRef.current?.measure((x, y, width, height, pageX, pageY) => {
           const pieceCenter = {
             x: pageX + width / 2,
@@ -100,7 +101,25 @@ const Piece = ({
               pieceCenter.y <= ty + tHeight;
 
             if (isInside) {
-              console.log("✅ Dropped inside:", target.id);
+              const isSlot = target.id.startsWith("slot-");
+
+              if (isSlot) {
+                const parts = target.id.split("-");
+                if (parts.length !== 4) {
+                  console.warn("Malformed slot ID:", target.id);
+                  continue;
+                }
+
+                const [, orientation, rowStr, colStr] = parts;
+                const row = parseInt(rowStr, 10);
+                const col = parseInt(colStr, 10);
+
+                console.log(
+                  `✅ Dropped in slot at [${row}, ${col}] facing ${orientation}`
+                );
+              } else {
+                console.log(`✅ Dropped in well: ${target.id}`);
+              }
 
               pan.flattenOffset();
 
@@ -123,7 +142,7 @@ const Piece = ({
             }
           }
 
-          console.log("❌ Dropped outside any well or slot");
+          console.log("❌ Dropped outside any valid space");
         });
       },
 
