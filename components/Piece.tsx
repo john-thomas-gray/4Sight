@@ -13,7 +13,12 @@ type PieceProps = {
     id: string;
     layout: { pageX: number; pageY: number; width: number; height: number };
   }[];
+  boardSpaces: {
+    id: string;
+    layout: { pageX: number; pageY: number; width: number; height: number };
+  }[];
   currentWellId?: string;
+  currentBoardId?: string;
 };
 
 const BOARD_SIZE = 9;
@@ -24,6 +29,7 @@ const Piece = ({
   wellSpaces,
   slots,
   currentWellId,
+  currentBoardId,
 }: PieceProps) => {
   const pan = useRef(new Animated.ValueXY(initialPosition)).current;
   const [isDragging, setIsDragging] = useState(false);
@@ -36,6 +42,7 @@ const Piece = ({
     setBoardPieceLocations,
   } = useGameContext();
 
+  const currentBoardIdRef = useRef<string | null>(currentBoardId ?? null);
   const boardPieceLocationsRef = useRef(boardPieceLocations);
 
   const currentWellIdRef = useRef<string | null>(currentWellId ?? null);
@@ -111,16 +118,16 @@ const Piece = ({
             if (isInside) {
               pan.flattenOffset();
 
-              const isSlot = target.id.startsWith("slot-");
+              const isSlot = isNaN(Number(target.id[0]));
 
               if (isSlot) {
                 const parts = target.id.split("-");
-                if (parts.length !== 4) {
+                if (parts.length !== 3) {
                   console.warn("Malformed slot ID:", target.id);
                   continue;
                 }
 
-                const [, orientation, rowStr, colStr] = parts;
+                const [orientation, rowStr, colStr] = parts;
                 let row = parseInt(rowStr, 10);
                 let col = parseInt(colStr, 10);
 
@@ -140,13 +147,8 @@ const Piece = ({
                     break;
                 }
 
-                // Loop forward until you find an occupied space or go out of bounds
                 let prevRow = null;
                 let prevCol = null;
-                console.log(
-                  "📦 boardPieceLocationsRef.current:",
-                  boardPieceLocationsRef.current
-                );
 
                 while (true) {
                   if (
@@ -162,8 +164,6 @@ const Piece = ({
                   const boardId = `${row}-${col}`;
                   const boardLayout = boardSpaces[boardId];
 
-                  console.log("🔍 Checking board space:", boardId);
-
                   if (!boardLayout) {
                     console.log("❌ No layout for", boardId);
                     break;
@@ -177,11 +177,9 @@ const Piece = ({
                     break;
                   }
 
-                  console.log("✅ Space is unoccupied:", boardId);
                   prevRow = row;
                   prevCol = col;
 
-                  // Step in the correct direction
                   switch (orientation) {
                     case "N":
                       row -= 1;
@@ -214,7 +212,6 @@ const Piece = ({
                   return;
                 }
 
-                // Animate piece to slot first
                 Animated.spring(pan, {
                   toValue: {
                     x: tx + tWidth / 2 - 16,
@@ -224,7 +221,6 @@ const Piece = ({
                   speed: 1000,
                   bounciness: 0,
                 }).start(() => {
-                  // Animate piece to final board space (furthest unoccupied before occupied)
                   Animated.spring(pan, {
                     toValue: {
                       x:
@@ -240,7 +236,6 @@ const Piece = ({
                     speed: 20,
                     bounciness: 0,
                   }).start(() => {
-                    // Update game state
                     currentWellIdRef.current = null;
 
                     setWellPieceLocations((prev) => {
@@ -254,7 +249,6 @@ const Piece = ({
                         ...prev,
                         [finalBoardId]: team,
                       };
-                      console.log("🧩 Occupied Spaces:", Object.keys(updated));
                       return updated;
                     });
                   });

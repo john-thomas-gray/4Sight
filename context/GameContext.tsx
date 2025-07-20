@@ -3,7 +3,6 @@ import {
   ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useState,
 } from "react";
 
@@ -66,6 +65,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Record<string, "white" | "black">
   >({});
 
+  console.log("wellSpaces", wellSpaces);
+  console.log("boardSpaces", boardSpaces);
+  console.log("slots", slots);
+  console.log("wellPieceLocations", wellPieceLocations);
+  console.log("boardPieceLocations", boardPieceLocations);
+
   const registerWellSpace = useCallback(
     (team: "white" | "black", id: string, layout: Layout) => {
       setWellSpaces((prev) => ({
@@ -96,38 +101,19 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
-  useEffect(() => {
-    if (
-      Object.keys(wellSpaces.white).length > 0 &&
-      Object.keys(wellSpaces.black).length > 0
-    ) {
-      const initialLocations: Record<string, "white" | "black"> = {};
-
-      for (const id of Object.keys(wellSpaces.white)) {
-        initialLocations[id] = "white";
-      }
-
-      for (const id of Object.keys(wellSpaces.black)) {
-        initialLocations[id] = "black";
-      }
-
-      setWellPieceLocations(initialLocations);
-    }
-  }, [wellSpaces]);
-
   return (
     <GameContext.Provider
       value={{
         wellSpaces,
-        boardSpaces,
-        slots,
-        wellPieceLocations,
-        boardPieceLocations,
-        setWellPieceLocations,
-        setBoardPieceLocations,
         registerWellSpace,
+        boardSpaces,
         registerBoardSpace,
+        slots,
         registerSlot,
+        wellPieceLocations,
+        setWellPieceLocations,
+        boardPieceLocations,
+        setBoardPieceLocations,
       }}
     >
       {children}
