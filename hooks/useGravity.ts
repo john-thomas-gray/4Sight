@@ -1,97 +1,110 @@
-// hooks/useGravity.ts
 import { useGameContext } from "@/context/GameContext";
-import { Animated } from "react-native";
 
-// Create this file to hold gravity logic
-export const pieceAnimRefs: Record<string, Animated.ValueXY> = {};
-
-const toRowCol = (id: string) => {
-  const [r, c] = id.split("-").map(Number);
-  return { row: r, col: c };
+type GravityProps = {
+  direction: "up" | "down" | "left" | "right";
 };
 
-const toId = (row: number, col: number) => `${row}-${col}`;
-
 export const useGravity = () => {
-  const { boardPieceLocations, setBoardPieceLocations, boardSpaces } =
-    useGameContext();
+  const { boardPieceLocations, setBoardPieceLocations } = useGameContext();
 
-  const applyGravity = (direction: "up" | "down" | "left" | "right") => {
-    const BOARD_SIZE = 9;
-    const occupied = new Set(Object.keys(boardPieceLocations));
+  const applyGravity = (direction: GravityProps["direction"]) => {
+    const updatedLocations = { ...boardPieceLocations };
 
-    const pieces = Object.entries(boardPieceLocations).map(([id, team]) => {
-      const { row, col } = toRowCol(id);
-      return { id, row, col, team };
-    });
+    if (direction === "up") {
+      for (let row = 2; row <= 7; row++) {
+        for (let col = 1; col <= 7; col++) {
+          const pieceId = `${row}-${col}`;
+          if (updatedLocations[pieceId]) {
+            let targetRow = row;
+            while (
+              targetRow > 1 &&
+              !updatedLocations[`${targetRow - 1}-${col}`]
+            ) {
+              targetRow--;
+            }
 
-    pieces.sort((a, b) => {
-      if (direction === "left") return a.col - b.col;
-      if (direction === "right") return b.col - a.col;
-      if (direction === "up") return a.row - b.row;
-      return b.row - a.row;
-    });
-
-    const newPositions: Record<string, string> = {};
-
-    pieces.forEach(({ id, row, col }) => {
-      occupied.delete(id);
-      let r = row;
-      let c = col;
-
-      while (true) {
-        let nextR = r;
-        let nextC = c;
-        if (direction === "left") nextC--;
-        if (direction === "right") nextC++;
-        if (direction === "up") nextR--;
-        if (direction === "down") nextR++;
-        if (
-          nextR < 0 ||
-          nextC < 0 ||
-          nextR >= BOARD_SIZE ||
-          nextC >= BOARD_SIZE
-        )
-          break;
-
-        const nextId = toId(nextR, nextC);
-        if (occupied.has(nextId)) break;
-        r = nextR;
-        c = nextC;
+            const targetId = `${targetRow}-${col}`;
+            if (targetId !== pieceId) {
+              console.log(`Moving piece from ${pieceId} to ${targetId}`);
+              updatedLocations[targetId] = updatedLocations[pieceId];
+              delete updatedLocations[pieceId];
+            }
+          }
+        }
       }
+    } else if (direction === "down") {
+      for (let row = 6; row >= 1; row--) {
+        for (let col = 1; col <= 7; col++) {
+          const pieceId = `${row}-${col}`;
+          if (updatedLocations[pieceId]) {
+            let targetRow = row;
+            while (
+              targetRow < 7 && // 🔒 don't go into row 8
+              !updatedLocations[`${targetRow + 1}-${col}`]
+            ) {
+              targetRow++;
+            }
 
-      const finalId = toId(r, c);
-      newPositions[id] = finalId;
-      occupied.add(finalId);
-    });
+            const targetId = `${targetRow}-${col}`;
+            if (targetId !== pieceId) {
+              console.log(`Moving piece from ${pieceId} to ${targetId}`);
+              updatedLocations[targetId] = updatedLocations[pieceId];
+              delete updatedLocations[pieceId];
+            }
+          }
+        }
+      }
+    } else if (direction === "left") {
+      for (let col = 2; col <= 7; col++) {
+        for (let row = 1; row <= 7; row++) {
+          const pieceId = `${row}-${col}`;
+          if (updatedLocations[pieceId]) {
+            let targetCol = col;
+            while (
+              targetCol > 1 && // 🔒 don't go into col 0
+              !updatedLocations[`${row}-${targetCol - 1}`]
+            ) {
+              targetCol--;
+            }
 
-    const animations = pieces.map(({ id }) => {
-      const fromId = id;
-      const toId = newPositions[id];
-      if (fromId === toId) return Animated.delay(0);
-      const fromLayout = boardSpaces[fromId];
-      const toLayout = boardSpaces[toId];
-      if (!fromLayout || !toLayout) return Animated.delay(0);
+            const targetId = `${row}-${targetCol}`;
+            if (targetId !== pieceId) {
+              console.log(`Moving piece from ${pieceId} to ${targetId}`);
+              updatedLocations[targetId] = updatedLocations[pieceId];
+              delete updatedLocations[pieceId];
+            }
+          }
+        }
+      }
+    } else if (direction === "right") {
+      for (let col = 6; col >= 1; col--) {
+        for (let row = 1; row <= 7; row++) {
+          const pieceId = `${row}-${col}`;
+          if (updatedLocations[pieceId]) {
+            let targetCol = col;
+            while (
+              targetCol < 7 && // 🔒 don't go into col 8
+              !updatedLocations[`${row}-${targetCol + 1}`]
+            ) {
+              targetCol++;
+            }
 
-      const dx = toLayout.pageX - fromLayout.pageX;
-      const dy = toLayout.pageY - fromLayout.pageY;
+            const targetId = `${row}-${targetCol}`;
+            if (targetId !== pieceId) {
+              console.log(`Moving piece from ${pieceId} to ${targetId}`);
+              updatedLocations[targetId] = updatedLocations[pieceId];
+              delete updatedLocations[pieceId];
+            }
+          }
+        }
+      }
+    } else {
+      console.error("Invalid direction for gravity:", direction);
+      return;
+    }
 
-      return Animated.timing(pieceAnimRefs[id], {
-        toValue: { x: dx, y: dy },
-        duration: 300,
-        useNativeDriver: true,
-      });
-    });
-
-    Animated.stagger(50, animations).start(() => {
-      const updated: Record<string, "white" | "black"> = {};
-      pieces.forEach(({ id, team }) => {
-        const newId = newPositions[id];
-        updated[newId] = team;
-        pieceAnimRefs[id]?.setValue({ x: 0, y: 0 });
-      });
-      setBoardPieceLocations(updated);
-    });
+    setBoardPieceLocations(updatedLocations);
+    console.log("Updated boardPieceLocations:", updatedLocations);
   };
 
   return applyGravity;

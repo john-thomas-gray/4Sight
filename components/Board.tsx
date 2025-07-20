@@ -1,6 +1,7 @@
 import { useGameContext } from "@/context/GameContext";
+import { useGravity } from "@/hooks/useGravity"; // Make sure this path is correct
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import BoardSpace from "./BoardSpace";
 import SlotSpace from "./SlotSpace";
 
@@ -13,6 +14,7 @@ const BOARD_SIZE = 9;
 
 const Board = ({ className, onRotate }: BoardProps) => {
   const { registerBoardSpace, registerSlot } = useGameContext();
+  const applyGravity = useGravity(); // ✅ hook
 
   const isSlotPosition = (row: number, col: number) => {
     return (
@@ -31,36 +33,69 @@ const Board = ({ className, onRotate }: BoardProps) => {
   };
 
   return (
-    <View style={styles.container}>
-      {Array.from({ length: BOARD_SIZE }).map((_, row) => (
-        <View key={row} style={styles.row}>
-          {Array.from({ length: BOARD_SIZE }).map((_, col) => {
-            if (isSlotPosition(row, col)) {
-              const orientation = getOrientation(row, col);
-              const id = `${orientation}-${row}-${col}`;
-              return (
-                <SlotSpace
-                  key={id}
-                  id={id}
-                  orientation={orientation}
-                  team="white"
-                  register={registerSlot}
-                />
-              );
-            }
+    <View style={styles.wrapper}>
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => applyGravity("up")}
+        >
+          <Text style={styles.buttonText}>↑</Text>
+        </TouchableOpacity>
 
-            const id = `${row}-${col}`;
-            return (
-              <BoardSpace key={id} id={id} register={registerBoardSpace} />
-            );
-          })}
-        </View>
-      ))}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => applyGravity("left")}
+        >
+          <Text style={styles.buttonText}>←</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => applyGravity("right")}
+        >
+          <Text style={styles.buttonText}>→</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => applyGravity("down")}
+        >
+          <Text style={styles.buttonText}>↓</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.container}>
+        {Array.from({ length: BOARD_SIZE }).map((_, row) => (
+          <View key={row} style={styles.row}>
+            {Array.from({ length: BOARD_SIZE }).map((_, col) => {
+              if (isSlotPosition(row, col)) {
+                const orientation = getOrientation(row, col);
+                const id = `${orientation}-${row}-${col}`;
+                return (
+                  <SlotSpace
+                    key={id}
+                    id={id}
+                    orientation={orientation}
+                    team="white"
+                    register={registerSlot}
+                  />
+                );
+              }
+
+              const id = `${row}-${col}`;
+              return (
+                <BoardSpace key={id} id={id} register={registerBoardSpace} />
+              );
+            })}
+          </View>
+        ))}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    alignItems: "center",
+  },
   container: {
     position: "relative",
     width: 40 * BOARD_SIZE,
@@ -72,6 +107,28 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     height: 40,
+  },
+  controls: {
+    marginTop: 16,
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  horizontalButtons: {
+    flexDirection: "row",
+    gap: 16,
+    marginVertical: 8,
+  },
+  button: {
+    padding: 1,
+    backgroundColor: "#10b981",
+    borderRadius: 8,
+    minWidth: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    fontSize: 24,
+    color: "white",
+    fontWeight: "bold",
   },
 });
 

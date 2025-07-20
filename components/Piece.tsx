@@ -5,18 +5,6 @@ import { Animated, PanResponder, View, ViewStyle } from "react-native";
 type PieceProps = {
   team?: "black" | "white";
   initialPosition?: { x: number; y: number };
-  wellSpaces: {
-    id: string;
-    layout: { pageX: number; pageY: number; width: number; height: number };
-  }[];
-  slots: {
-    id: string;
-    layout: { pageX: number; pageY: number; width: number; height: number };
-  }[];
-  boardSpaces: {
-    id: string;
-    layout: { pageX: number; pageY: number; width: number; height: number };
-  }[];
   currentWellId?: string;
   currentBoardId?: string;
 };
@@ -26,25 +14,39 @@ const BOARD_SIZE = 9;
 const Piece = ({
   team = "white",
   initialPosition = { x: 0, y: 0 },
-  wellSpaces,
-  slots,
   currentWellId,
   currentBoardId,
 }: PieceProps) => {
   const pan = useRef(new Animated.ValueXY(initialPosition)).current;
   const [isDragging, setIsDragging] = useState(false);
   const pieceRef = useRef<View>(null);
+
   const {
-    wellPieceLocations,
-    setWellPieceLocations,
+    wellSpaces,
+    slots,
     boardSpaces,
     boardPieceLocations,
     setBoardPieceLocations,
+    wellPieceLocations,
+    setWellPieceLocations,
   } = useGameContext();
+
+  const wellSpaceArray = Object.entries(wellSpaces[team]).map(
+    ([id, layout]) => ({
+      id,
+      layout,
+    })
+  );
+
+  const slotArray = Object.entries(slots).map(([id, data]) => ({
+    id,
+    layout: data.layout,
+  }));
+
+  const allTargets = [...wellSpaceArray, ...slotArray];
 
   const currentBoardIdRef = useRef<string | null>(currentBoardId ?? null);
   const boardPieceLocationsRef = useRef(boardPieceLocations);
-
   const currentWellIdRef = useRef<string | null>(currentWellId ?? null);
   const wellPieceLocationsRef = useRef(wellPieceLocations);
 
@@ -99,8 +101,6 @@ const Piece = ({
             y: pageY + height / 2,
           };
 
-          const allTargets = [...wellSpaces, ...slots];
-
           for (const target of allTargets) {
             const {
               pageX: tx,
@@ -131,7 +131,6 @@ const Piece = ({
                 let row = parseInt(rowStr, 10);
                 let col = parseInt(colStr, 10);
 
-                // Adjacent starting position on board, one step inside from the slot
                 switch (orientation) {
                   case "N":
                     row -= 1;
@@ -156,26 +155,18 @@ const Piece = ({
                     row >= BOARD_SIZE ||
                     col < 0 ||
                     col >= BOARD_SIZE
-                  ) {
-                    console.log("🔚 Out of bounds:", row, col);
+                  )
                     break;
-                  }
 
                   const boardId = `${row}-${col}`;
                   const boardLayout = boardSpaces[boardId];
 
-                  if (!boardLayout) {
-                    console.log("❌ No layout for", boardId);
-                    break;
-                  }
+                  if (!boardLayout) break;
 
                   const isOccupied =
                     boardPieceLocationsRef.current[boardId] !== undefined;
 
-                  if (isOccupied) {
-                    console.log("🟥 Space is occupied:", boardId);
-                    break;
-                  }
+                  if (isOccupied) break;
 
                   prevRow = row;
                   prevCol = col;
@@ -197,10 +188,7 @@ const Piece = ({
                 }
 
                 if (prevRow === null || prevCol === null) {
-                  console.warn(
-                    "No free board space to move into near slot:",
-                    target.id
-                  );
+                  console.warn("No free board space near slot:", target.id);
                   return;
                 }
 
@@ -212,6 +200,7 @@ const Piece = ({
                   return;
                 }
 
+                // Animate to slot, then to final board space
                 Animated.spring(pan, {
                   toValue: {
                     x: tx + tWidth / 2 - 16,
@@ -244,13 +233,10 @@ const Piece = ({
                       return updated;
                     });
 
-                    setBoardPieceLocations((prev) => {
-                      const updated = {
-                        ...prev,
-                        [finalBoardId]: team,
-                      };
-                      return updated;
-                    });
+                    setBoardPieceLocations((prev) => ({
+                      ...prev,
+                      [finalBoardId]: team,
+                    }));
                   });
                 });
               } else {
