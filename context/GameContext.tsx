@@ -26,7 +26,7 @@ type GameContextType = {
   boardSpaces: Record<string, Layout>;
   slots: Record<string, SlotData>;
   wellPieceLocations: Record<string, "white" | "black">;
-  boardPieceLocations: Record<string, "white" | "black">;
+  boardPieceLocations: Record<string, string>;
   registerWellSpace: (
     team: "white" | "black",
     id: string,
@@ -42,7 +42,7 @@ type GameContextType = {
     React.SetStateAction<Record<string, "white" | "black">>
   >;
   setBoardPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, "white" | "black">>
+    React.SetStateAction<Record<string, string>>
   >;
   curremtBoardId?: string | null;
 };
@@ -63,7 +63,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   >({});
 
   const [boardPieceLocations, setBoardPieceLocations] = useState<
-    Record<string, "white" | "black">
+    Record<string, string>
   >({});
 
   // console.log("wellSpaces", wellSpaces);

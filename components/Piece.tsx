@@ -74,7 +74,7 @@ const Piece = ({
 
   useEffect(() => {
     const boardId = Object.entries(boardPieceLocations).find(
-      ([id, pieceTeam]) => pieceTeam === team
+      ([spaceId, pieceId]) => currentBoardId === id
     )?.[0];
 
     if (boardId && boardSpaces[boardId]) {
@@ -254,7 +254,7 @@ const Piece = ({
 
                     setBoardPieceLocations((prev) => ({
                       ...prev,
-                      [finalBoardId]: team,
+                      [finalBoardId]: id,
                     }));
                   });
                 });
