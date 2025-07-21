@@ -9,12 +9,13 @@ export const useGravity = () => {
 
   const applyGravity = (direction: GravityProps["direction"]) => {
     const updatedLocations = { ...boardPieceLocations };
+    console.log("updated locations", updatedLocations);
 
     if (direction === "up") {
       for (let row = 2; row <= 7; row++) {
         for (let col = 1; col <= 7; col++) {
-          const pieceId = `${row}-${col}`;
-          if (updatedLocations[pieceId]) {
+          const pieceLocationId = `${row}-${col}`;
+          if (updatedLocations[pieceLocationId]) {
             let targetRow = row;
             while (
               targetRow > 1 &&
@@ -24,10 +25,12 @@ export const useGravity = () => {
             }
 
             const targetId = `${targetRow}-${col}`;
-            if (targetId !== pieceId) {
-              console.log(`Moving piece from ${pieceId} to ${targetId}`);
-              updatedLocations[targetId] = updatedLocations[pieceId];
-              delete updatedLocations[pieceId];
+            if (targetId !== pieceLocationId) {
+              console.log(
+                `Moving piece from ${pieceLocationId} to ${targetId}`
+              );
+              updatedLocations[targetId] = updatedLocations[pieceLocationId];
+              delete updatedLocations[pieceLocationId];
             }
           }
         }
@@ -35,8 +38,8 @@ export const useGravity = () => {
     } else if (direction === "down") {
       for (let row = 6; row >= 1; row--) {
         for (let col = 1; col <= 7; col++) {
-          const pieceId = `${row}-${col}`;
-          if (updatedLocations[pieceId]) {
+          const pieceLocationId = `${row}-${col}`;
+          if (updatedLocations[pieceLocationId]) {
             let targetRow = row;
             while (
               targetRow < 7 && // 🔒 don't go into row 8
@@ -44,12 +47,13 @@ export const useGravity = () => {
             ) {
               targetRow++;
             }
-
             const targetId = `${targetRow}-${col}`;
-            if (targetId !== pieceId) {
-              console.log(`Moving piece from ${pieceId} to ${targetId}`);
-              updatedLocations[targetId] = updatedLocations[pieceId];
-              delete updatedLocations[pieceId];
+            if (targetId !== pieceLocationId) {
+              console.log(
+                `Moving piece from ${pieceLocationId} to ${targetId}`
+              );
+              updatedLocations[targetId] = updatedLocations[pieceLocationId];
+              delete updatedLocations[pieceLocationId];
             }
           }
         }
@@ -57,8 +61,8 @@ export const useGravity = () => {
     } else if (direction === "left") {
       for (let col = 2; col <= 7; col++) {
         for (let row = 1; row <= 7; row++) {
-          const pieceId = `${row}-${col}`;
-          if (updatedLocations[pieceId]) {
+          const pieceLocationId = `${row}-${col}`;
+          if (updatedLocations[pieceLocationId]) {
             let targetCol = col;
             while (
               targetCol > 1 && // 🔒 don't go into col 0
@@ -68,10 +72,12 @@ export const useGravity = () => {
             }
 
             const targetId = `${row}-${targetCol}`;
-            if (targetId !== pieceId) {
-              console.log(`Moving piece from ${pieceId} to ${targetId}`);
-              updatedLocations[targetId] = updatedLocations[pieceId];
-              delete updatedLocations[pieceId];
+            if (targetId !== pieceLocationId) {
+              console.log(
+                `Moving piece from ${pieceLocationId} to ${targetId}`
+              );
+              updatedLocations[targetId] = updatedLocations[pieceLocationId];
+              delete updatedLocations[pieceLocationId];
             }
           }
         }
@@ -79,8 +85,8 @@ export const useGravity = () => {
     } else if (direction === "right") {
       for (let col = 6; col >= 1; col--) {
         for (let row = 1; row <= 7; row++) {
-          const pieceId = `${row}-${col}`;
-          if (updatedLocations[pieceId]) {
+          const pieceLocationId = `${row}-${col}`;
+          if (updatedLocations[pieceLocationId]) {
             let targetCol = col;
             while (
               targetCol < 7 && // 🔒 don't go into col 8
@@ -90,10 +96,12 @@ export const useGravity = () => {
             }
 
             const targetId = `${row}-${targetCol}`;
-            if (targetId !== pieceId) {
-              console.log(`Moving piece from ${pieceId} to ${targetId}`);
-              updatedLocations[targetId] = updatedLocations[pieceId];
-              delete updatedLocations[pieceId];
+            if (targetId !== pieceLocationId) {
+              console.log(
+                `Moving piece from ${pieceLocationId} to ${targetId}`
+              );
+              updatedLocations[targetId] = updatedLocations[pieceLocationId];
+              delete updatedLocations[pieceLocationId];
             }
           }
         }

@@ -14,7 +14,7 @@ const BOARD_SIZE = 9;
 
 const Board = ({ className, onRotate }: BoardProps) => {
   const { registerBoardSpace, registerSlot } = useGameContext();
-  const applyGravity = useGravity(); // ✅ hook
+  const applyGravity = useGravity();
 
   const isSlotPosition = (row: number, col: number) => {
     return (

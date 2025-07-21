@@ -4,6 +4,7 @@ import { Animated, PanResponder, View, ViewStyle } from "react-native";
 
 type PieceProps = {
   team?: "black" | "white";
+  id?: string;
   initialPosition?: { x: number; y: number };
   currentWellId?: string;
   currentBoardId?: string;
@@ -13,6 +14,7 @@ const BOARD_SIZE = 9;
 
 const Piece = ({
   team = "white",
+  id = "X-0",
   initialPosition = { x: 0, y: 0 },
   currentWellId,
   currentBoardId,
@@ -71,7 +73,6 @@ const Piece = ({
   }, []);
 
   useEffect(() => {
-    // Find the boardId where this piece is currently located
     const boardId = Object.entries(boardPieceLocations).find(
       ([id, pieceTeam]) => pieceTeam === team
     )?.[0];
