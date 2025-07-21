@@ -44,6 +44,7 @@ type GameContextType = {
   setBoardPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, "white" | "black">>
   >;
+  curremtBoardId?: string | null;
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);

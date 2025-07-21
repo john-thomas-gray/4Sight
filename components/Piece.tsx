@@ -56,6 +56,7 @@ const Piece = ({
 
   useEffect(() => {
     boardPieceLocationsRef.current = boardPieceLocations;
+    console.log("Board piece locations updated:", boardPieceLocations);
   }, [boardPieceLocations]);
 
   useEffect(() => {
@@ -68,6 +69,23 @@ const Piece = ({
       }));
     }
   }, []);
+
+  useEffect(() => {
+    // Find the boardId where this piece is currently located
+    const boardId = Object.entries(boardPieceLocations).find(
+      ([id, pieceTeam]) => pieceTeam === team
+    )?.[0];
+
+    if (boardId && boardSpaces[boardId]) {
+      const layout = boardSpaces[boardId];
+      pan.setValue({
+        x: layout.pageX + layout.width / 2 - 16,
+        y: layout.pageY + layout.height / 2 - 16,
+      });
+
+      currentBoardIdRef.current = boardId;
+    }
+  }, [boardPieceLocations, boardSpaces]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -118,7 +136,7 @@ const Piece = ({
             if (isInside) {
               pan.flattenOffset();
 
-              const isSlot = isNaN(Number(target.id[0]));
+              const isSlot = target.id in slots;
 
               if (isSlot) {
                 const parts = target.id.split("-");
@@ -223,7 +241,7 @@ const Piece = ({
                     },
                     useNativeDriver: false,
                     speed: 20,
-                    bounciness: 0,
+                    bounciness: 10,
                   }).start(() => {
                     currentWellIdRef.current = null;
 
