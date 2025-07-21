@@ -58,7 +58,6 @@ const Piece = ({
 
   useEffect(() => {
     boardPieceLocationsRef.current = boardPieceLocations;
-    console.log("Board piece locations updated:", boardPieceLocations);
   }, [boardPieceLocations]);
 
   useEffect(() => {
