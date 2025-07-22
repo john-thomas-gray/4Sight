@@ -73,15 +73,20 @@ const Piece = ({
 
   useEffect(() => {
     const boardId = Object.entries(boardPieceLocations).find(
-      ([spaceId, pieceId]) => currentBoardId === id
+      ([spaceId, pieceId]) => pieceId === id
     )?.[0];
 
     if (boardId && boardSpaces[boardId]) {
       const layout = boardSpaces[boardId];
-      pan.setValue({
-        x: layout.pageX + layout.width / 2 - 16,
-        y: layout.pageY + layout.height / 2 - 16,
-      });
+      Animated.spring(pan, {
+        toValue: {
+          x: layout.pageX + layout.width / 2 - 16,
+          y: layout.pageY + layout.height / 2 - 16,
+        },
+        useNativeDriver: false,
+        speed: 20,
+        bounciness: 10,
+      }).start();
 
       currentBoardIdRef.current = boardId;
     }

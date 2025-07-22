@@ -46,7 +46,7 @@ export const useGravity = () => {
             const pieceId = updatedLocations[pieceLocationId];
             let targetRow = row;
             while (
-              targetRow < 7 && // 🔒 don't go into row 8
+              targetRow < 7 &&
               !updatedLocations[`${targetRow + 1}-${col}`]
             ) {
               targetRow++;
@@ -70,7 +70,7 @@ export const useGravity = () => {
             const pieceId = updatedLocations[pieceLocationId];
             let targetCol = col;
             while (
-              targetCol > 1 && // 🔒 don't go into col 0
+              targetCol > 1 &&
               !updatedLocations[`${row}-${targetCol - 1}`]
             ) {
               targetCol--;
@@ -95,7 +95,7 @@ export const useGravity = () => {
             const pieceId = updatedLocations[pieceLocationId];
             let targetCol = col;
             while (
-              targetCol < 7 && // 🔒 don't go into col 8
+              targetCol < 7 &&
               !updatedLocations[`${row}-${targetCol + 1}`]
             ) {
               targetCol++;
