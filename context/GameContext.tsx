@@ -44,7 +44,8 @@ type GameContextType = {
   setBoardPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, string>>
   >;
-  curremtBoardId?: string | null;
+  currentBoardId?: string | null;
+  layoutReady: boolean;
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -66,11 +67,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Record<string, string>
   >({});
 
-  // console.log("wellSpaces", wellSpaces);
-  // console.log("boardSpaces", boardSpaces);
-  // console.log("slots", slots);
-  // console.log("wellPieceLocations", wellPieceLocations);
-  // console.log("boardPieceLocations", boardPieceLocations);
+  const layoutReady =
+    Object.keys(slots).length > 0 &&
+    Object.keys(boardSpaces).length > 0 &&
+    Object.keys(wellSpaces.white).length > 0 &&
+    Object.keys(wellSpaces.black).length > 0;
 
   const registerWellSpace = useCallback(
     (team: "white" | "black", id: string, layout: Layout) => {
@@ -115,6 +116,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setWellPieceLocations,
         boardPieceLocations,
         setBoardPieceLocations,
+        layoutReady,
       }}
     >
       {children}
