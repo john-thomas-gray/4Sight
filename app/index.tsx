@@ -1,9 +1,14 @@
 import { Link } from "expo-router";
 import { Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
-  return <InnerIndexLayout />;
+  return (
+    <GestureHandlerRootView className="flex-1">
+      <InnerIndexLayout />
+    </GestureHandlerRootView>
+  );
 }
 
 function InnerIndexLayout() {
