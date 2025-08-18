@@ -18,6 +18,9 @@ type SlotSpaceProps = {
   team?: "black" | "white";
 };
 
+// If a piece is held and the cursor is in the area of a slot space
+// project a preview of where that piece would go if released
+
 const SlotSpace = ({
   id,
   register,

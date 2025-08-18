@@ -124,7 +124,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
                     key={id}
                     id={id}
                     orientation={orientation}
-                    team="white" // Or dynamic if needed
+                    team="white"
                     register={registerSlot}
                   />
                 );

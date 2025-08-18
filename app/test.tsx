@@ -46,8 +46,6 @@ const Test = () => {
         team="white"
         currentWellId="test-id"
         initialPosition={{ x: 0, y: 0 }}
-        slots={[]}
-        wellSpaces={[]}
       />
       <SlotSpace id="test" orientation="N" register={() => {}} />
       <Animated.View
