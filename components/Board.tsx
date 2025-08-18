@@ -21,7 +21,6 @@ const CORNER_SIZE = 40; // same as space size
 const Board = ({ className, onRotate }: BoardProps) => {
   const { registerBoardSpace, registerSlot, boardSpaces } = useGameContext();
 
-  // Identify corner positions (row,col)
   const corners = [
     { row: 0, col: 0 },
     { row: 0, col: BOARD_SIZE - 1 },
@@ -29,7 +28,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
     { row: BOARD_SIZE - 1, col: BOARD_SIZE - 1 },
   ];
 
-  // Check if touch point is inside a corner space
   const isTouchOnCorner = (x: number, y: number) => {
     for (const corner of corners) {
       const id = `${corner.row}-${corner.col}`;
@@ -47,9 +45,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     return false;
   };
 
-  // Track if gesture started on corner
   const gestureStartedOnCorner = useRef(false);
-  // Track initial touch position
   const startTouch = useRef<{ x: number; y: number } | null>(null);
 
   const panResponder = useRef(
@@ -62,9 +58,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
         startTouch.current = { x: pageX, y: pageY };
       },
 
-      onPanResponderMove: () => {
-        // We don't need to do anything here
-      },
+      onPanResponderMove: () => {},
 
       onPanResponderRelease: (
         evt: GestureResponderEvent,
