@@ -1,6 +1,7 @@
 import { useGameContext } from "@/context/GameContext";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,7 +10,7 @@ import Animated, {
 type PieceProps = {
   team?: "black" | "white";
   id?: string;
-  initialPosition?: { x: number; y: number };
+  initialOffset?: { x: number; y: number };
   currentWellId?: string;
   currentBoardId?: string;
 };
@@ -17,18 +18,14 @@ type PieceProps = {
 const Piece = ({
   team = "white",
   id = "X-0",
-  initialPosition = { x: 0, y: 0 },
+  initialOffset = { x: 0, y: 0 },
   currentWellId,
   currentBoardId,
 }: PieceProps) => {
-  // const pan = useRef(new Animated.ValueXY(initialPosition)).current;
+  // const pan = useRef(new Animated.ValueXY(initialOffset)).current;
   // const [isDragging, setIsDragging] = useState(false);
   // const held = useSharedValue<boolean>(false);
   // const size = useSharedValue<number>(0);
-  const pieceRef = useRef<View>(null);
-  const offsetX = useSharedValue(initialPosition.x);
-  const offsetY = useSharedValue(initialPosition.y);
-  const [isDragging, setIsDragging] = useState(false);
 
   const {
     wellSpaces,
@@ -68,6 +65,24 @@ const Piece = ({
     boardPieceLocationsRef.current = boardPieceLocations;
   }, [boardPieceLocations]);
 
+  const pieceRef = useRef<View>(null);
+  const offset = useSharedValue({
+    x: initialOffset.x,
+    y: initialOffset.y,
+  });
+  let pieceCenter = { x: 0, y: 0 };
+  pieceRef.current?.measure((x, y, width, height, pageX, pageY) => {
+    pieceCenter = {
+      x: pageX + width / 2,
+      y: pageY + height / 2,
+    };
+  });
+
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const isHeld = useSharedValue(false);
+  console.log(wellSpaces);
+
   //  // HANDLES PULLING ANIMATION
   //   useEffect(() => {
   //     const boardId = Object.entries(boardPieceLocations).find(
@@ -91,14 +106,7 @@ const Piece = ({
   //     }
   //   }, [boardPieceLocations, boardSpaces]);
 
-  // SET THE INITIAL LOCATION FOR THE WELL PIECES IN CONTEXT
-  const translateX = useSharedValue(initialPosition.x);
-  const translateY = useSharedValue(initialPosition.y);
-
-  useEffect(() => {
-    translateX.value = initialPosition.x;
-    translateY.value = initialPosition.y;
-  }, [initialPosition]);
+  // SET THE WELL PIECE LOCATIONS
 
   useEffect(() => {
     if (currentWellId) {
@@ -109,12 +117,37 @@ const Piece = ({
     }
   }, []);
 
+  const pan = Gesture.Pan()
+    .onBegin(() => {
+      isHeld.value = true;
+      // DELETE THE CURRENT PIECE'S ID FROM ITS WELL
+      // if (currentWellIdRef.current) {
+      //   setWellPieceLocations((prev) => {
+      //     const updated = { ...prev };
+      //     delete updated[currentWellIdRef.current as string];
+      //     return updated;
+      //   });
+      //   currentWellIdRef.current = null;
+      // }
+    })
+    .onUpdate((event) => {
+      translateX.value = offset.value.x + event.translationX;
+      translateY.value = offset.value.y + event.translationY;
+    })
+    .onEnd((event) => {
+      // 👈 equivalent to onPanResponderRelease
+      isHeld.value = false;
+      offset.value.x = translateX.value;
+      offset.value.y = translateY.value;
+    });
+
   const animatedStyles = useAnimatedStyle(() => {
     return {
       transform: [
         { translateX: translateX.value },
         { translateY: translateY.value },
       ],
+      backgroundColor: isHeld.value ? "red" : team,
     };
   });
 
@@ -133,7 +166,7 @@ const Piece = ({
     left: 0,
   };
 
-  const draggingStyle: ViewStyle = {
+  const isHeldStyle: ViewStyle = {
     height: 48,
     width: 48,
     borderRadius: 24,
@@ -145,16 +178,16 @@ const Piece = ({
   };
 
   return (
-    // <GestureDetector gesture={pan}>
-    <Animated.View
-      ref={pieceRef}
-      style={[
-        baseStyle,
-        animatedStyles,
-        // isDragging && draggingStyle
-      ]}
-    />
-    // </GestureDetector>
+    <GestureDetector gesture={pan}>
+      <Animated.View
+        ref={pieceRef}
+        style={[
+          baseStyle,
+          animatedStyles,
+          // isDragging && draggingStyle
+        ]}
+      />
+    </GestureDetector>
   );
 };
 

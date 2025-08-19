@@ -66,12 +66,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Record<string, string>
   >({});
 
-  // console.log("wellSpaces", wellSpaces);
-  // console.log("boardSpaces", boardSpaces);
-  // console.log("slots", slots);
-  // console.log("wellPieceLocations", wellPieceLocations);
-  // console.log("boardPieceLocations", boardPieceLocations);
-
   const registerWellSpace = useCallback(
     (team: "white" | "black", id: string, layout: Layout) => {
       setWellSpaces((prev) => ({
