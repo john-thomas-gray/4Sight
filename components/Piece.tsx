@@ -1,8 +1,10 @@
 import { useGameContext } from "@/context/GameContext";
-import React, { useEffect, useRef } from "react";
-import { View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { Easing, ReduceMotion, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
+import React, { useEffect, useRef, useState } from "react";
+import { View, ViewStyle } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 
 type PieceProps = {
   team?: "black" | "white";
@@ -11,8 +13,6 @@ type PieceProps = {
   currentWellId?: string;
   currentBoardId?: string;
 };
-
-const BOARD_SIZE = 9;
 
 const Piece = ({
   team = "white",
@@ -23,231 +23,12 @@ const Piece = ({
 }: PieceProps) => {
   // const pan = useRef(new Animated.ValueXY(initialPosition)).current;
   // const [isDragging, setIsDragging] = useState(false);
+  // const held = useSharedValue<boolean>(false);
+  // const size = useSharedValue<number>(0);
   const pieceRef = useRef<View>(null);
-  const held = useSharedValue<boolean>(false);
-  const size = useSharedValue<number>(0);
-  const offset = useSharedValue<number[]>([0, 0]);
-  const pan = Gesture.Pan()
-    .onBegin(() => {
-      held.value = true;
-      if (currentWellIdRef.current) {
-        setWellPieceLocations((prev) => {
-          const updated = { ...prev };
-          delete updated[currentWellIdRef.current as string];
-          return updated;
-        });
-        currentWellIdRef.current = null;
-      }
-    })
-    .onChange((event) => {
-      offset.value = [event.translationX, event.translationY];
-    })
-    .onEnd(() => {
-      held.value = false;
-       pieceRef.current?.measure((x, y, width, height, pageX, pageY) => {
-          const pieceCenter = {
-            x: pageX + width / 2,
-            y: pageY + height / 2,
-          };
-
-          for (const target of allTargets) {
-            const {
-              pageX: tx,
-              pageY: ty,
-              width: tWidth,
-              height: tHeight,
-            } = target.layout;
-
-            const isInside =
-              pieceCenter.x >= tx &&
-              pieceCenter.x <= tx + tWidth &&
-              pieceCenter.y >= ty &&
-              pieceCenter.y <= ty + tHeight;
-
-            if (isInside) {
-              // pan.flattenOffset();
-
-              const isSlot = target.id in slots;
-
-              if (isSlot) {
-                const parts = target.id.split("-");
-                if (parts.length !== 3) {
-                  console.warn("Malformed slot ID:", target.id);
-                  continue;
-                }
-
-                const [orientation, rowStr, colStr] = parts;
-                let row = parseInt(rowStr, 10);
-                let col = parseInt(colStr, 10);
-
-                switch (orientation) {
-                  case "N":
-                    row -= 1;
-                    break;
-                  case "S":
-                    row += 1;
-                    break;
-                  case "E":
-                    col += 1;
-                    break;
-                  case "W":
-                    col -= 1;
-                    break;
-                }
-
-                let prevRow = null;
-                let prevCol = null;
-
-                while (true) {
-                  if (
-                    row < 0 ||
-                    row >= BOARD_SIZE ||
-                    col < 0 ||
-                    col >= BOARD_SIZE
-                  )
-                    break;
-
-                  const boardId = `${row}-${col}`;
-                  const boardLayout = boardSpaces[boardId];
-
-                  if (!boardLayout) break;
-
-                  const isOccupied =
-                    boardPieceLocationsRef.current[boardId] !== undefined;
-
-                  if (isOccupied) break;
-
-                  prevRow = row;
-                  prevCol = col;
-
-                  switch (orientation) {
-                    case "N":
-                      row -= 1;
-                      break;
-                    case "S":
-                      row += 1;
-                      break;
-                    case "E":
-                      col += 1;
-                      break;
-                    case "W":
-                      col -= 1;
-                      break;
-                  }
-                }
-
-                if (prevRow === null || prevCol === null) {
-                  console.warn("No free board space near slot:", target.id);
-                  return;
-                }
-
-                const finalBoardId = `${prevRow}-${prevCol}`;
-                const finalBoardLayout = boardSpaces[finalBoardId];
-
-                if (!finalBoardLayout) {
-                  console.warn("No layout for final board space", finalBoardId);
-                  return;
-                }
-                offset.value = withSequence(
-                  withTiming([tx + tWidth / 2 - 16, ty + tHeight / 2 - 16 ], {
-                    duration: 300,
-                    easing: Easing.inOut(Easing.quad),
-                    reduceMotion: ReduceMotion.System,
-                  }),
-                  withTiming([
-                        finalBoardLayout.pageX +
-                        finalBoardLayout.width
-                        / 2 - 16,
-                        finalBoardLayout.pageY +
-                        finalBoardLayout.height
-                        / 2 - 16,], {
-                    duration: 600,
-                    easing: Easing.bounce,
-                    reduceMotion: ReduceMotion.System
-                  })
-                  );
-                  () => {
-                      currentWellIdRef.current = null;
-
-                      setWellPieceLocations((prev) => {
-                        const updated = { ...prev };
-                        delete updated[target.id];
-                        return updated;
-                      });
-
-                      setBoardPieceLocations((prev) => ({
-                        ...prev,
-                        [finalBoardId]: id,
-                      }));
-                    }
-                // // Animate to slot, then to final board space
-                // Animated.spring(pan, {
-                //   toValue: {
-                //     x: tx + tWidth / 2 - 16,
-                //     y: ty + tHeight / 2 - 16,
-                //   },
-                //   useNativeDriver: false,
-                //   speed: 1000,
-                //   bounciness: 0,
-                // }).start(() => {
-                //   Animated.spring(pan, {
-                //     toValue: {
-                //       x:
-                //         finalBoardLayout.pageX +
-                //         finalBoardLayout.width / 2 -
-                //         16,
-                //       y:
-                //         finalBoardLayout.pageY +
-                //         finalBoardLayout.height / 2 -
-                //         16,
-                //     },
-                //     useNativeDriver: false,
-                //     speed: 20,
-                //     bounciness: 10,
-                //   }).start(() => {
-                //     currentWellIdRef.current = null;
-
-                //     setWellPieceLocations((prev) => {
-                //       const updated = { ...prev };
-                //       delete updated[target.id];
-                //       return updated;
-                //     });
-
-                //     setBoardPieceLocations((prev) => ({
-                //       ...prev,
-                //       [finalBoardId]: id,
-                //     }));
-                //   });
-                // });
-              } else {
-                // Dropped in a well space
-                setWellPieceLocations((prev) => ({
-                  ...prev,
-                  [target.id]: team,
-                }));
-
-                currentWellIdRef.current = target.id;
-
-                withTiming([ tx + tWidth / 2 - 16,
-                    ty + tHeight / 2 - 16,], {
-                    duration: 300,
-                    easing: Easing.inOut(Easing.quad),
-                    reduceMotion: ReduceMotion.System,
-                })
-
-                // Animated.spring(pan, {
-                //   toValue: {
-                //     x: tx + tWidth / 2 - 16,
-                //     y: ty + tHeight / 2 - 16,
-                //   },
-                //   useNativeDriver: false,
-                // }).start();
-              }
-
-              return;
-            }
-          }
-    });
+  const offsetX = useSharedValue(initialPosition.x);
+  const offsetY = useSharedValue(initialPosition.y);
+  const [isDragging, setIsDragging] = useState(false);
 
   const {
     wellSpaces,
@@ -271,24 +52,55 @@ const Piece = ({
     layout: data.layout,
   }));
 
+  // CONSOLIDATE TO JUST ONE ID AND IT CHECKS WHICH IT IS
+  // WITH A PREFIX W OR B
   const allTargets = [...wellSpaceArray, ...slotArray];
-
   const currentBoardIdRef = useRef<string | null>(currentBoardId ?? null);
   const boardPieceLocationsRef = useRef(boardPieceLocations);
   const currentWellIdRef = useRef<string | null>(currentWellId ?? null);
   const wellPieceLocationsRef = useRef(wellPieceLocations);
-
+  // UPDATE THE STATE OF THE PIECES IN THE WELL
   useEffect(() => {
     wellPieceLocationsRef.current = wellPieceLocations;
   }, [wellPieceLocations]);
-
+  // UPDATE THE STATE OF THE PIECES ON THE BOARD
   useEffect(() => {
     boardPieceLocationsRef.current = boardPieceLocations;
   }, [boardPieceLocations]);
 
-  useEffect(() => {
-    // pan.setValue(initialPosition);
+  //  // HANDLES PULLING ANIMATION
+  //   useEffect(() => {
+  //     const boardId = Object.entries(boardPieceLocations).find(
+  //       ([spaceId, pieceId]) => pieceId === id
+  //     )?.[0];
 
+  //     if (boardId && boardSpaces[boardId]) {
+  //       const layout = boardSpaces[boardId];
+  //       // // UNNECESSARY?
+  //       Animated.spring(pan, {
+  //         toValue: {
+  //           x: layout.pageX + layout.width / 2 - 16,
+  //           y: layout.pageY + layout.height / 2 - 16,
+  //         },
+  //         useNativeDriver: false,
+  //         speed: 20,
+  //         bounciness: 10,
+  //       }).start();
+
+  //       currentBoardIdRef.current = boardId;
+  //     }
+  //   }, [boardPieceLocations, boardSpaces]);
+
+  // SET THE INITIAL LOCATION FOR THE WELL PIECES IN CONTEXT
+  const translateX = useSharedValue(initialPosition.x);
+  const translateY = useSharedValue(initialPosition.y);
+
+  useEffect(() => {
+    translateX.value = initialPosition.x;
+    translateY.value = initialPosition.y;
+  }, [initialPosition]);
+
+  useEffect(() => {
     if (currentWellId) {
       setWellPieceLocations((prev) => ({
         ...prev,
@@ -297,231 +109,16 @@ const Piece = ({
     }
   }, []);
 
-  useEffect(() => {
-    const boardId = Object.entries(boardPieceLocations).find(
-      ([spaceId, pieceId]) => pieceId === id
-    )?.[0];
-
-    if (boardId && boardSpaces[boardId]) {
-      const layout = boardSpaces[boardId];
-      Animated.spring(pan, {
-        toValue: {
-          x: layout.pageX + layout.width / 2 - 16,
-          y: layout.pageY + layout.height / 2 - 16,
-        },
-        useNativeDriver: false,
-        speed: 20,
-        bounciness: 10,
-      }).start();
-
-      currentBoardIdRef.current = boardId;
-    }
-  }, [boardPieceLocations, boardSpaces]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-
-      onPanResponderGrant: () => {
-        setIsDragging(true);
-
-        if (currentWellIdRef.current) {
-          setWellPieceLocations((prev) => {
-            const updated = { ...prev };
-            delete updated[currentWellIdRef.current as string];
-            return updated;
-          });
-          currentWellIdRef.current = null;
-        }
-
-        pan.extractOffset();
-      },
-
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
-        useNativeDriver: false,
-      }),
-
-      onPanResponderRelease: () => {
-        setIsDragging(false);
-
-        pieceRef.current?.measure((x, y, width, height, pageX, pageY) => {
-          const pieceCenter = {
-            x: pageX + width / 2,
-            y: pageY + height / 2,
-          };
-
-          for (const target of allTargets) {
-            const {
-              pageX: tx,
-              pageY: ty,
-              width: tWidth,
-              height: tHeight,
-            } = target.layout;
-
-            const isInside =
-              pieceCenter.x >= tx &&
-              pieceCenter.x <= tx + tWidth &&
-              pieceCenter.y >= ty &&
-              pieceCenter.y <= ty + tHeight;
-
-            if (isInside) {
-              pan.flattenOffset();
-
-              const isSlot = target.id in slots;
-
-              if (isSlot) {
-                const parts = target.id.split("-");
-                if (parts.length !== 3) {
-                  console.warn("Malformed slot ID:", target.id);
-                  continue;
-                }
-
-                const [orientation, rowStr, colStr] = parts;
-                let row = parseInt(rowStr, 10);
-                let col = parseInt(colStr, 10);
-
-                switch (orientation) {
-                  case "N":
-                    row -= 1;
-                    break;
-                  case "S":
-                    row += 1;
-                    break;
-                  case "E":
-                    col += 1;
-                    break;
-                  case "W":
-                    col -= 1;
-                    break;
-                }
-
-                let prevRow = null;
-                let prevCol = null;
-
-                while (true) {
-                  if (
-                    row < 0 ||
-                    row >= BOARD_SIZE ||
-                    col < 0 ||
-                    col >= BOARD_SIZE
-                  )
-                    break;
-
-                  const boardId = `${row}-${col}`;
-                  const boardLayout = boardSpaces[boardId];
-
-                  if (!boardLayout) break;
-
-                  const isOccupied =
-                    boardPieceLocationsRef.current[boardId] !== undefined;
-
-                  if (isOccupied) break;
-
-                  prevRow = row;
-                  prevCol = col;
-
-                  switch (orientation) {
-                    case "N":
-                      row -= 1;
-                      break;
-                    case "S":
-                      row += 1;
-                      break;
-                    case "E":
-                      col += 1;
-                      break;
-                    case "W":
-                      col -= 1;
-                      break;
-                  }
-                }
-
-                if (prevRow === null || prevCol === null) {
-                  console.warn("No free board space near slot:", target.id);
-                  return;
-                }
-
-                const finalBoardId = `${prevRow}-${prevCol}`;
-                const finalBoardLayout = boardSpaces[finalBoardId];
-
-                if (!finalBoardLayout) {
-                  console.warn("No layout for final board space", finalBoardId);
-                  return;
-                }
-
-                // Animate to slot, then to final board space
-                Animated.spring(pan, {
-                  toValue: {
-                    x: tx + tWidth / 2 - 16,
-                    y: ty + tHeight / 2 - 16,
-                  },
-                  useNativeDriver: false,
-                  speed: 1000,
-                  bounciness: 0,
-                }).start(() => {
-                  Animated.spring(pan, {
-                    toValue: {
-                      x:
-                        finalBoardLayout.pageX +
-                        finalBoardLayout.width / 2 -
-                        16,
-                      y:
-                        finalBoardLayout.pageY +
-                        finalBoardLayout.height / 2 -
-                        16,
-                    },
-                    useNativeDriver: false,
-                    speed: 20,
-                    bounciness: 10,
-                  }).start(() => {
-                    currentWellIdRef.current = null;
-
-                    setWellPieceLocations((prev) => {
-                      const updated = { ...prev };
-                      delete updated[target.id];
-                      return updated;
-                    });
-
-                    setBoardPieceLocations((prev) => ({
-                      ...prev,
-                      [finalBoardId]: id,
-                    }));
-                  });
-                });
-              } else {
-                // Dropped in a well space
-                setWellPieceLocations((prev) => ({
-                  ...prev,
-                  [target.id]: team,
-                }));
-
-                currentWellIdRef.current = target.id;
-
-                Animated.spring(pan, {
-                  toValue: {
-                    x: tx + tWidth / 2 - 16,
-                    y: ty + tHeight / 2 - 16,
-                  },
-                  useNativeDriver: false,
-                }).start();
-              }
-
-              return;
-            }
-          }
-
-          console.log("❌ Dropped outside any valid space");
-        });
-      },
-
-      onPanResponderTerminate: () => {
-        setIsDragging(false);
-      },
-    })
-  ).current;
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+      ],
+    };
+  });
 
   const baseStyle: ViewStyle = {
-    transform: pan.getTranslateTransform(),
     height: 32,
     width: 32,
     borderRadius: 16,
@@ -548,13 +145,16 @@ const Piece = ({
   };
 
   return (
-    <GestureDetector>
-      <Animated.View
-        ref={pieceRef}
-        {...panResponder.panHandlers}
-        style={[baseStyle, isDragging && draggingStyle]}
-      />
-    </GestureDetector>
+    // <GestureDetector gesture={pan}>
+    <Animated.View
+      ref={pieceRef}
+      style={[
+        baseStyle,
+        animatedStyles,
+        // isDragging && draggingStyle
+      ]}
+    />
+    // </GestureDetector>
   );
 };
 
