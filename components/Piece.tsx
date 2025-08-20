@@ -8,9 +8,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 type PieceProps = {
-  team?: "black" | "white";
-  id?: string;
-  initialOffset?: { x: number; y: number };
+  team: "black" | "white";
+  id: string;
+  initialPosition: { x: number; y: number };
   currentWellId?: string;
   currentBoardId?: string;
 };
@@ -18,11 +18,11 @@ type PieceProps = {
 const Piece = ({
   team = "white",
   id = "X-0",
-  initialOffset = { x: 0, y: 0 },
+  initialPosition,
   currentWellId,
   currentBoardId,
 }: PieceProps) => {
-  // const pan = useRef(new Animated.ValueXY(initialOffset)).current;
+  // const pan = useRef(new Animated.ValueXY(initialPosition)).current;
   // const [isDragging, setIsDragging] = useState(false);
   // const held = useSharedValue<boolean>(false);
   // const size = useSharedValue<number>(0);
@@ -67,19 +67,12 @@ const Piece = ({
 
   const pieceRef = useRef<View>(null);
   const offset = useSharedValue({
-    x: initialOffset.x,
-    y: initialOffset.y,
-  });
-  let pieceCenter = { x: 0, y: 0 };
-  pieceRef.current?.measure((x, y, width, height, pageX, pageY) => {
-    pieceCenter = {
-      x: pageX + width / 2,
-      y: pageY + height / 2,
-    };
+    x: initialPosition.x,
+    y: initialPosition.y,
   });
 
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
+  const translateX = useSharedValue(initialPosition.x);
+  const translateY = useSharedValue(initialPosition.y);
   const isHeld = useSharedValue(false);
   console.log(wellSpaces);
 

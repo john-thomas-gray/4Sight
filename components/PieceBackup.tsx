@@ -46,7 +46,6 @@ const Piece = ({
   }));
 
   const allTargets = [...wellSpaceArray, ...slotArray];
-
   const currentBoardIdRef = useRef<string | null>(currentBoardId ?? null);
   const boardPieceLocationsRef = useRef(boardPieceLocations);
   const currentWellIdRef = useRef<string | null>(currentWellId ?? null);

@@ -25,12 +25,13 @@ type GameContextType = {
   };
   boardSpaces: Record<string, Layout>;
   slots: Record<string, SlotData>;
-  wellPieceLocations: Record<string, "white" | "black">;
+  wellPieceLocations: Record<string, string>;
   boardPieceLocations: Record<string, string>;
   registerWellSpace: (
     team: "white" | "black",
     id: string,
-    layout: Layout
+    layout: Layout,
+    heldPieceId: string
   ) => void;
   registerBoardSpace: (id: string, layout: Layout) => void;
   registerSlot: (
@@ -39,7 +40,7 @@ type GameContextType = {
     orientation: "N" | "S" | "E" | "W"
   ) => void;
   setWellPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, "white" | "black">>
+    React.SetStateAction<Record<string, string>>
   >;
   setBoardPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, string>>
@@ -59,7 +60,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [slots, setSlots] = useState<Record<string, SlotData>>({});
 
   const [wellPieceLocations, setWellPieceLocations] = useState<
-    Record<string, "white" | "black">
+    Record<string, string>
   >({});
 
   const [boardPieceLocations, setBoardPieceLocations] = useState<
