@@ -68,15 +68,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Record<string, string>
   >({});
 
-<<<<<<< HEAD
   const layoutReady =
     Object.keys(slots).length > 0 &&
     Object.keys(boardSpaces).length > 0 &&
     Object.keys(wellSpaces.white).length > 0 &&
     Object.keys(wellSpaces.black).length > 0;
 
-=======
->>>>>>> gestureHandler
   const registerWellSpace = useCallback(
     (team: "white" | "black", id: string, layout: Layout) => {
       setWellSpaces((prev) => ({
