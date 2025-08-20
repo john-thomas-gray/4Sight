@@ -1,0 +1,3 @@
+export const SLOT_INSERT_DURATION = 150;
+export const PIECE_DROP_DURATION = 700;
+export const WELL_RETURN_DURATION = 300;

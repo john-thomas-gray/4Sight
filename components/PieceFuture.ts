@@ -307,7 +307,6 @@ const Piece = ({
     top: 0,
     left: 0,
   };
-
   const isHeldStyle: ViewStyle = {
     height: 48,
     width: 48,

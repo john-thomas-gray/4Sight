@@ -1,9 +1,16 @@
+import {
+  PIECE_DROP_DURATION,
+  SLOT_INSERT_DURATION,
+  WELL_RETURN_DURATION,
+} from "@/constants/animations";
+import { BOARD_SIZE, PIECE_RADIUS, PIECE_SIZE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import React, { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Easing,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -38,7 +45,9 @@ const Piece = ({
     wellPieceLocations,
     setWellPieceLocations,
   } = useGameContext();
-
+  console.log("slots", slots);
+  console.log("wellSpaces", wellSpaces);
+  console.log("boardSpaces", boardSpaces);
   const wellSpaceArray = Object.entries(wellSpaces[team]).map(
     ([id, layout]) => ({
       id,
@@ -77,38 +86,27 @@ const Piece = ({
   const translateY = useSharedValue(initialPosition.y);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(boardPieceLocations);
+  const wellPieceLocationsSV = useSharedValue(wellPieceLocations);
 
   useEffect(() => {
     boardPieceLocationsSV.value = boardPieceLocations;
   }, [boardPieceLocations]);
 
-  const BOARD_SIZE = 9;
-  const PIECE_SIZE = 32;
+  const setBoardPieceLocationsUI = (destSpaceId: string) => {
+    setBoardPieceLocations((prev) => ({
+      ...prev,
+      [destSpaceId]: id,
+    }));
+  };
 
-  //  // HANDLES PULLING ANIMATION
-  //   useEffect(() => {
-  //     const boardId = Object.entries(boardPieceLocations).find(
-  //       ([spaceId, pieceId]) => pieceId === id
-  //     )?.[0];
+  const setWellPieceLocationsUI = (wellSpaceId: string) => {
+    setWellPieceLocations((prev) => ({
+      ...prev,
+      [wellSpaceId]: team,
+    }));
+  };
 
-  //     if (boardId && boardSpaces[boardId]) {
-  //       const layout = boardSpaces[boardId];
-  //       // // UNNECESSARY?
-  //       Animated.spring(pan, {
-  //         toValue: {
-  //           x: layout.pageX + layout.width / 2 - 16,
-  //           y: layout.pageY + layout.height / 2 - 16,
-  //         },
-  //         useNativeDriver: false,
-  //         speed: 20,
-  //         bounciness: 10,
-  //       }).start();
-
-  //       currentBoardIdRef.current = boardId;
-  //     }
-  //   }, [boardPieceLocations, boardSpaces]);
-
-  // SET THE WELL PIECE LOCATIONS (not sure this does anything)
+  // SET THE WELL PIECE LOCATIONS
   useEffect(() => {
     if (currentWellId) {
       setWellPieceLocations((prev) => ({
@@ -120,6 +118,7 @@ const Piece = ({
 
   const pan = Gesture.Pan()
     .onBegin(() => {
+      // LOG WELL PIECE LOCATIONS, BOARD PIECE LOCATIONS
       isHeld.value = true;
       // DELETE THE CURRENT PIECE'S ID FROM ITS WELL
       // if (currentWellIdRef.current) {
@@ -136,8 +135,8 @@ const Piece = ({
     //   translateY.value = offset.value.y + event.translationY;
     // })
     .onUpdate((event) => {
-      translateX.value = event.absoluteX - PIECE_SIZE / 2;
-      translateY.value = event.absoluteY - PIECE_SIZE / 2;
+      translateX.value = event.absoluteX - PIECE_RADIUS;
+      translateY.value = event.absoluteY - PIECE_RADIUS;
     })
     .onEnd((event) => {
       isHeld.value = false;
@@ -145,8 +144,8 @@ const Piece = ({
       offset.value.y = translateY.value;
 
       const pieceCenter = {
-        x: translateX.value + PIECE_SIZE / 2,
-        y: translateY.value + PIECE_SIZE / 2,
+        x: translateX.value + PIECE_RADIUS,
+        y: translateY.value + PIECE_RADIUS,
       };
 
       // FIND THE SPACE IT WAS DROPPED ON
@@ -166,7 +165,11 @@ const Piece = ({
 
         if (spaceFound) {
           const isSlot = target.id in slots;
+          const isBoardSpace = target.id in boardSpaces;
+          const isWellSpace = target.id in wellSpaces;
 
+          // There is no need for the NSEW in the slot id "E-1-0"
+          // Remove it and N = 8-X, S = 0-X, E = X-0, W = X-8
           if (isSlot) {
             const data = target.id.split("-");
 
@@ -248,37 +251,80 @@ const Piece = ({
 
             // Animate to slot
             translateX.value = withSequence(
-              withTiming(tx + tWidth / 2 - 16, {
-                duration: 300,
+              withTiming(tx + tWidth / 2 - PIECE_RADIUS, {
+                duration: SLOT_INSERT_DURATION,
                 easing: Easing.inOut(Easing.quad),
               }),
               withTiming(
                 destinationSpaceLayout.pageX +
                   destinationSpaceLayout.width / 2 -
-                  16,
+                  PIECE_RADIUS,
                 {
-                  duration: 700,
+                  duration: PIECE_DROP_DURATION,
                   easing: Easing.bounce,
                 }
               )
             );
 
             translateY.value = withSequence(
-              withTiming(ty + tHeight / 2 - 16, {
-                duration: 300,
+              withTiming(ty + tHeight / 2 - PIECE_RADIUS, {
+                duration: SLOT_INSERT_DURATION,
                 easing: Easing.inOut(Easing.quad),
               }),
               withTiming(
                 destinationSpaceLayout.pageY +
                   destinationSpaceLayout.width / 2 -
-                  16,
-                { duration: 700, easing: Easing.bounce }
+                  PIECE_RADIUS,
+                { duration: PIECE_DROP_DURATION, easing: Easing.bounce }
               )
             );
-          } // end if isSlot
+
+            runOnJS(setBoardPieceLocationsUI)(destinationSpaceId);
+          } else if (isBoardSpace) {
+            console.log("is boardSpace");
+            // Check N,S,E,W if there is no piece by the time you reach a slot
+            // in one of those directions, break
+            // Animate the piece to the slot in the slot in that direction.
+            // It runs if slot
+          } else if (isWellSpace) {
+            runOnJS(setWellPieceLocationsUI)(target.id);
+            translateX.value = withTiming(tx + tWidth / 2 - PIECE_RADIUS, {
+              duration: WELL_RETURN_DURATION,
+              easing: Easing.inOut(Easing.quad),
+            });
+            translateY.value = withTiming(tx + tHeight / 2 - PIECE_RADIUS, {
+              duration: WELL_RETURN_DURATION,
+              easing: Easing.inOut(Easing.quad),
+            });
+          } else {
+            console.log("Dropped outside any valid space");
+          }
         } // end if spaceFound
       } // end for allTargets
     }); // end onEnd
+
+  //  // HANDLES PULLING ANIMATION
+  //   useEffect(() => {
+  //     const boardId = Object.entries(boardPieceLocations).find(
+  //       ([spaceId, pieceId]) => pieceId === id
+  //     )?.[0];
+
+  //     if (boardId && boardSpaces[boardId]) {
+  //       const layout = boardSpaces[boardId];
+  //       // // UNNECESSARY?
+  //       Animated.spring(pan, {
+  //         toValue: {
+  //           x: layout.pageX + layout.width / 2 - PIECE_RADIUS,
+  //           y: layout.pageY + layout.height / 2 - PIECE_RADIUS,
+  //         },
+  //         useNativeDriver: false,
+  //         speed: 20,
+  //         bounciness: 10,
+  //       }).start();
+
+  //       currentBoardIdRef.current = boardId;
+  //     }
+  //   }, [boardPieceLocations, boardSpaces]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -293,7 +339,7 @@ const Piece = ({
   const baseStyle: ViewStyle = {
     height: PIECE_SIZE,
     width: PIECE_SIZE,
-    borderRadius: PIECE_SIZE / 2,
+    borderRadius: PIECE_RADIUS,
     backgroundColor: team === "white" ? "white" : "black",
     borderWidth: 2,
     borderColor: "#9CA3AF",
@@ -312,7 +358,7 @@ const Piece = ({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.8,
-    shadowRadius: 16,
+    shadowRadius: PIECE_RADIUS,
     elevation: 8,
   };
 
