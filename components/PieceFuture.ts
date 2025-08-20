@@ -4,6 +4,7 @@ import { View, ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Easing,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -14,7 +15,7 @@ type PieceProps = {
   team: "black" | "white";
   id: string;
   initialPosition: { x: number; y: number };
-  currentWellId?: string;
+  currentWellId?: string | undefined;
   currentBoardId?: string;
 };
 
@@ -54,18 +55,6 @@ const Piece = ({
   // CONSOLIDATE TO JUST ONE ID AND IT CHECKS WHICH IT IS
   // WITH A PREFIX W OR B
   const allTargets = [...wellSpaceArray, ...slotArray];
-  const currentBoardIdRef = useRef<string | null>(currentBoardId ?? null);
-  const boardPieceLocationsRef = useRef(boardPieceLocations);
-  const currentWellIdRef = useRef<string | null>(currentWellId ?? null);
-  const wellPieceLocationsRef = useRef(wellPieceLocations);
-  // UPDATE THE STATE OF THE PIECES IN THE WELL
-  useEffect(() => {
-    wellPieceLocationsRef.current = wellPieceLocations;
-  }, [wellPieceLocations]);
-  // UPDATE THE STATE OF THE PIECES ON THE BOARD
-  useEffect(() => {
-    boardPieceLocationsRef.current = boardPieceLocations;
-  }, [boardPieceLocations]);
 
   const pieceRef = useRef<View>(null);
   const offset = useSharedValue({
@@ -77,10 +66,24 @@ const Piece = ({
   const translateY = useSharedValue(initialPosition.y);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(boardPieceLocations);
+  const currentWellIdSV = useSharedValue<string | null>(currentWellId ?? null);
 
   useEffect(() => {
     boardPieceLocationsSV.value = boardPieceLocations;
   }, [boardPieceLocations]);
+
+  useEffect(() => {
+    currentWellIdSV.value = currentWellId ?? null;
+  }, [currentWellId]);
+
+  const deletePieceFromWell = (wellId: string | null) => {
+    if (!wellId) return;
+    setWellPieceLocations((prev) => {
+      const updated = { ...prev };
+      delete updated[wellId];
+      return updated;
+    });
+  };
 
   const BOARD_SIZE = 9;
   const PIECE_SIZE = 32;
@@ -93,7 +96,6 @@ const Piece = ({
 
   //     if (boardId && boardSpaces[boardId]) {
   //       const layout = boardSpaces[boardId];
-  //       // // UNNECESSARY?
   //       Animated.spring(pan, {
   //         toValue: {
   //           x: layout.pageX + layout.width / 2 - 16,
@@ -108,38 +110,19 @@ const Piece = ({
   //     }
   //   }, [boardPieceLocations, boardSpaces]);
 
-  // SET THE WELL PIECE LOCATIONS (not sure this does anything)
-  useEffect(() => {
-    if (currentWellId) {
-      setWellPieceLocations((prev) => ({
-        ...prev,
-        [currentWellId]: team,
-      }));
-    }
-  }, []);
-
   const pan = Gesture.Pan()
     .onBegin(() => {
       isHeld.value = true;
-      // DELETE THE CURRENT PIECE'S ID FROM ITS WELL
-      // if (currentWellIdRef.current) {
-      //   setWellPieceLocations((prev) => {
-      //     const updated = { ...prev };
-      //     delete updated[currentWellIdRef.current as string];
-      //     return updated;
-      //   });
-      //   currentWellIdRef.current = null;
-      // }
+      runOnJS(deletePieceFromWell)(currentWellIdSV.value);
+
+      // Reset the shared value
+      currentWellIdSV.value = null;
     })
-    // .onUpdate((event) => {
-    //   translateX.value = offset.value.x + event.translationX;
-    //   translateY.value = offset.value.y + event.translationY;
-    // })
     .onUpdate((event) => {
-      translateX.value = event.absoluteX - PIECE_SIZE / 2;
-      translateY.value = event.absoluteY - PIECE_SIZE / 2;
+      translateX.value = offset.value.x + event.translationX;
+      translateY.value = offset.value.y + event.translationY;
     })
-    .onEnd((event) => {
+    .onEnd(() => {
       isHeld.value = false;
       offset.value.x = translateX.value;
       offset.value.y = translateY.value;
@@ -151,6 +134,7 @@ const Piece = ({
 
       // FIND THE SPACE IT WAS DROPPED ON
       for (const target of allTargets) {
+        if (!target.layout) continue;
         const {
           pageX: tx,
           pageY: ty,
@@ -166,10 +150,11 @@ const Piece = ({
 
         if (spaceFound) {
           const isSlot = target.id in slots;
+          const isWellSpace =
+            team in wellSpaces && target.id in wellSpaces[team];
 
           if (isSlot) {
             const data = target.id.split("-");
-
             if (data.length !== 3) {
               console.warn("Malformed slot ID:", target.id);
               continue;
@@ -249,7 +234,7 @@ const Piece = ({
             // Animate to slot
             translateX.value = withSequence(
               withTiming(tx + tWidth / 2 - 16, {
-                duration: 300,
+                duration: 100,
                 easing: Easing.inOut(Easing.quad),
               }),
               withTiming(
@@ -257,7 +242,7 @@ const Piece = ({
                   destinationSpaceLayout.width / 2 -
                   16,
                 {
-                  duration: 700,
+                  duration: 500,
                   easing: Easing.bounce,
                 }
               )
@@ -265,28 +250,46 @@ const Piece = ({
 
             translateY.value = withSequence(
               withTiming(ty + tHeight / 2 - 16, {
-                duration: 300,
+                duration: 100,
                 easing: Easing.inOut(Easing.quad),
               }),
               withTiming(
                 destinationSpaceLayout.pageY +
                   destinationSpaceLayout.width / 2 -
                   16,
-                { duration: 700, easing: Easing.bounce }
+                { duration: 500, easing: Easing.bounce }
               )
             );
-          } // end if isSlot
+
+            // UPDATE THE PIECE'S LOCATION ON THE BOARD
+            setBoardPieceLocations((prev) => ({
+              ...prev,
+              [destinationSpaceId]: id,
+            }));
+          }
+          // else if (isWellSpace) {
+          //   setWellPieceLocations((prev) => ({
+          //     ...prev,
+          //     [target.id]: team,
+          //   }));
+          //   currentWellIdSV.value = target.id;
+
+          //   translateX.value = withTiming(tx + tWidth / 2 - 16);
+          //   translateY.value = withTiming(ty + tHeight / 2 - 16);
+          // } else {
+          //   console.log("❌ Dropped outside any valid space");
+          // }
         } // end if spaceFound
       } // end for allTargets
     }); // end onEnd
-
+  // STYLES
   const animatedStyles = useAnimatedStyle(() => {
     return {
       transform: [
         { translateX: translateX.value },
         { translateY: translateY.value },
       ],
-      // backgroundColor: isHeld.value ? "red" : team,
+      backgroundColor: isHeld.value ? "red" : team,
     };
   });
 
