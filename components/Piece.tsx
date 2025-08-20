@@ -60,21 +60,7 @@ const Piece = ({
     layout: data.layout,
   }));
 
-  // CONSOLIDATE TO JUST ONE ID AND IT CHECKS WHICH IT IS
-  // WITH A PREFIX W OR B
   const allTargets = [...wellSpaceArray, ...slotArray];
-  const currentBoardIdRef = useRef<string | null>(currentBoardId ?? null);
-  const boardPieceLocationsRef = useRef(boardPieceLocations);
-  const currentWellIdRef = useRef<string | null>(currentWellId ?? null);
-  const wellPieceLocationsRef = useRef(wellPieceLocations);
-  // UPDATE THE STATE OF THE PIECES IN THE WELL
-  useEffect(() => {
-    wellPieceLocationsRef.current = wellPieceLocations;
-  }, [wellPieceLocations]);
-  // UPDATE THE STATE OF THE PIECES ON THE BOARD
-  useEffect(() => {
-    boardPieceLocationsRef.current = boardPieceLocations;
-  }, [boardPieceLocations]);
 
   const pieceRef = useRef<View>(null);
   const offset = useSharedValue({
@@ -84,9 +70,10 @@ const Piece = ({
 
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
+  const [placed, setPlaced] = React.useState(false);
+  const isPlaced = useSharedValue(false);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(boardPieceLocations);
-  const wellPieceLocationsSV = useSharedValue(wellPieceLocations);
 
   useEffect(() => {
     boardPieceLocationsSV.value = boardPieceLocations;
@@ -117,6 +104,7 @@ const Piece = ({
   }, []);
 
   const pan = Gesture.Pan()
+    .enabled(!placed)
     .onBegin(() => {
       // LOG WELL PIECE LOCATIONS, BOARD PIECE LOCATIONS
       isHeld.value = true;
@@ -138,8 +126,10 @@ const Piece = ({
       translateX.value = event.absoluteX - PIECE_RADIUS;
       translateY.value = event.absoluteY - PIECE_RADIUS;
     })
-    .onEnd((event) => {
+    .onEnd(() => {
       isHeld.value = false;
+      isPlaced.value = true;
+      runOnJS(setPlaced)(true);
       offset.value.x = translateX.value;
       offset.value.y = translateY.value;
 
