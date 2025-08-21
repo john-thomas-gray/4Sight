@@ -1,30 +1,20 @@
+import { useGameContext } from "@/context/GameContext";
+import { Team } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 type WellSpaceProps = {
-  backgroundColor?: string;
   id: string;
-  register: (
-    id: string,
-    layout: {
-      pageX: number;
-      pageY: number;
-      width: number;
-      height: number;
-    }
-  ) => void;
+  team: Team;
 };
 
-const WellSpace = ({
-  id,
-  register,
-  backgroundColor = "#065f46",
-}: WellSpaceProps) => {
+const WellSpace = ({ id, team }: WellSpaceProps) => {
   const viewRef = useRef<View>(null);
+  const { registerWellSpace } = useGameContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      register(id, { pageX, pageY, width, height });
+      registerWellSpace(id, team, { pageX, pageY, width, height });
     });
   };
 
@@ -39,7 +29,7 @@ const WellSpace = ({
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 1,
-    backgroundColor,
+    backgroundColor: "#065f46",
     borderWidth: 1,
     borderColor: "silver",
   };

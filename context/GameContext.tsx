@@ -1,3 +1,4 @@
+import { Team } from "@/types/board";
 import {
   createContext,
   ReactNode,
@@ -15,7 +16,6 @@ type Layout = {
 
 type SlotData = {
   layout: Layout;
-  orientation: "N" | "S" | "E" | "W";
 };
 
 type GameContextType = {
@@ -27,18 +27,9 @@ type GameContextType = {
   slots: Record<string, SlotData>;
   wellPieceLocations: Record<string, string>;
   boardPieceLocations: Record<string, string>;
-  registerWellSpace: (
-    team: "white" | "black",
-    id: string,
-    layout: Layout,
-    heldPieceId: string
-  ) => void;
+  registerWellSpace: (id: string, team: Team, layout: Layout) => void;
   registerBoardSpace: (id: string, layout: Layout) => void;
-  registerSlot: (
-    id: string,
-    layout: Layout,
-    orientation: "N" | "S" | "E" | "W"
-  ) => void;
+  registerSlot: (id: string, layout: Layout) => void;
   setWellPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, string>>
   >;
@@ -75,7 +66,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(wellSpaces.black).length > 0;
 
   const registerWellSpace = useCallback(
-    (team: "white" | "black", id: string, layout: Layout) => {
+    (id: string, team: Team, layout: Layout) => {
       setWellSpaces((prev) => ({
         ...prev,
         [team]: {
@@ -94,15 +85,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }));
   }, []);
 
-  const registerSlot = useCallback(
-    (id: string, layout: Layout, orientation: "N" | "S" | "E" | "W") => {
-      setSlots((prev) => ({
-        ...prev,
-        [id]: { layout, orientation },
-      }));
-    },
-    []
-  );
+  const registerSlot = useCallback((id: string, layout: Layout) => {
+    setSlots((prev) => ({
+      ...prev,
+      [id]: { layout },
+    }));
+  }, []);
 
   return (
     <GameContext.Provider

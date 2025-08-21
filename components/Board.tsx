@@ -1,3 +1,4 @@
+import { BOARD_COL_ROW_COUNT, BOARD_SIZE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import React, { useRef } from "react";
 import {
@@ -15,17 +16,14 @@ type BoardProps = {
   onRotate?: (direction: "clockwise" | "counterclockwise") => void; // Callback to rotate board
 };
 
-const BOARD_SIZE = 9;
-const CORNER_SIZE = 40; // same as space size
-
 const Board = ({ className, onRotate }: BoardProps) => {
   const { registerBoardSpace, registerSlot, boardSpaces } = useGameContext();
 
   const corners = [
     { row: 0, col: 0 },
-    { row: 0, col: BOARD_SIZE - 1 },
-    { row: BOARD_SIZE - 1, col: 0 },
-    { row: BOARD_SIZE - 1, col: BOARD_SIZE - 1 },
+    { row: 0, col: BOARD_COL_ROW_COUNT },
+    { row: BOARD_COL_ROW_COUNT, col: 0 },
+    { row: BOARD_COL_ROW_COUNT, col: BOARD_COL_ROW_COUNT },
   ];
 
   const isTouchOnCorner = (x: number, y: number) => {
@@ -90,18 +88,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
   const isSlotPosition = (row: number, col: number) => {
     return (
-      (row === 0 && col > 0 && col < BOARD_SIZE - 1) || // Top
-      (row === BOARD_SIZE - 1 && col > 0 && col < BOARD_SIZE - 1) || // Bottom
-      (col === 0 && row > 0 && row < BOARD_SIZE - 1) || // Left
-      (col === BOARD_SIZE - 1 && row > 0 && row < BOARD_SIZE - 1) // Right
+      (row === 0 && col > 0 && col < BOARD_COL_ROW_COUNT) || // Top
+      (row === BOARD_COL_ROW_COUNT && col > 0 && col < BOARD_COL_ROW_COUNT) || // Bottom
+      (col === 0 && row > 0 && row < BOARD_COL_ROW_COUNT) || // Left
+      (col === BOARD_COL_ROW_COUNT && row > 0 && row < BOARD_COL_ROW_COUNT) // Right
     );
-  };
-
-  const getOrientation = (row: number, col: number): "N" | "S" | "E" | "W" => {
-    if (row === 0) return "S";
-    if (row === BOARD_SIZE - 1) return "N";
-    if (col === 0) return "E";
-    return "W"; // col === last
   };
 
   return (
@@ -111,23 +102,12 @@ const Board = ({ className, onRotate }: BoardProps) => {
           <View key={row} style={styles.row}>
             {Array.from({ length: BOARD_SIZE }).map((_, col) => {
               if (isSlotPosition(row, col)) {
-                const orientation = getOrientation(row, col);
-                const id = `${orientation}-${row}-${col}`;
-                return (
-                  <SlotSpace
-                    key={id}
-                    id={id}
-                    orientation={orientation}
-                    team="white"
-                    register={registerSlot}
-                  />
-                );
+                const id = `${row}-${col}`;
+                return <SlotSpace key={id} id={id} team="white" />;
               }
 
               const id = `${row}-${col}`;
-              return (
-                <BoardSpace key={id} id={id} register={registerBoardSpace} />
-              );
+              return <BoardSpace key={id} id={id} />;
             })}
           </View>
         ))}

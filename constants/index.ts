@@ -20,19 +20,19 @@ export const icons = {
     SW: cornerArrowSW,
   },
   slot: {
-    right: {
+    E: {
       black: slotArrowEastBlack,
       white: slotArrowEastWhite,
     },
-    up: {
+    N: {
       black: slotArrowNorthBlack,
       white: slotArrowNorthWhite,
     },
-    down: {
+    S: {
       black: slotArrowSouthBlack,
       white: slotArrowSouthWhite,
     },
-    left: {
+    W: {
       black: slotArrowWestBlack,
       white: slotArrowWestWhite,
     },

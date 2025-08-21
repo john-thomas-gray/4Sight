@@ -32,10 +32,6 @@ const Piece = ({
   currentWellId,
   currentBoardId,
 }: PieceProps) => {
-  // const pan = useRef(new Animated.ValueXY(initialPosition)).current;
-  // const [isDragging, setIsDragging] = useState(false);
-  // const held = useSharedValue<boolean>(false);
-  // const size = useSharedValue<number>(0);
   const {
     wellSpaces,
     slots,
@@ -45,9 +41,9 @@ const Piece = ({
     wellPieceLocations,
     setWellPieceLocations,
   } = useGameContext();
-  console.log("slots", slots);
-  console.log("wellSpaces", wellSpaces);
-  console.log("boardSpaces", boardSpaces);
+  // console.log("slots", slots);
+  // console.log("boardSpaces", boardSpaces);
+  // console.log("wellSpaces", wellSpaces);
   const wellSpaceArray = Object.entries(wellSpaces[team]).map(
     ([id, layout]) => ({
       id,
@@ -70,8 +66,8 @@ const Piece = ({
 
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
-  const [placed, setPlaced] = React.useState(false);
-  const isPlaced = useSharedValue(false);
+  const [onBoard, setOnBoard] = React.useState(false);
+  const onBoardSV = useSharedValue(false);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(boardPieceLocations);
 
@@ -79,14 +75,14 @@ const Piece = ({
     boardPieceLocationsSV.value = boardPieceLocations;
   }, [boardPieceLocations]);
 
-  const setBoardPieceLocationsUI = (destSpaceId: string) => {
+  const setBoardPieceLocationsSV = (destSpaceId: string) => {
     setBoardPieceLocations((prev) => ({
       ...prev,
       [destSpaceId]: id,
     }));
   };
 
-  const setWellPieceLocationsUI = (wellSpaceId: string) => {
+  const setWellPieceLocationsSV = (wellSpaceId: string) => {
     setWellPieceLocations((prev) => ({
       ...prev,
       [wellSpaceId]: team,
@@ -104,7 +100,7 @@ const Piece = ({
   }, []);
 
   const pan = Gesture.Pan()
-    .enabled(!placed)
+    .enabled(!onBoard)
     .onBegin(() => {
       // LOG WELL PIECE LOCATIONS, BOARD PIECE LOCATIONS
       isHeld.value = true;
@@ -128,8 +124,6 @@ const Piece = ({
     })
     .onEnd(() => {
       isHeld.value = false;
-      isPlaced.value = true;
-      runOnJS(setPlaced)(true);
       offset.value.x = translateX.value;
       offset.value.y = translateY.value;
 
@@ -153,74 +147,62 @@ const Piece = ({
           pieceCenter.y >= ty &&
           pieceCenter.y <= ty + tHeight;
 
+        console.log("Piece center:", pieceCenter);
+        console.log("Target bounds:", {
+          id: target.id,
+          x1: tx,
+          x2: tx + tWidth,
+          y1: ty,
+          y2: ty + tHeight,
+        });
+
         if (spaceFound) {
           const isSlot = target.id in slots;
           const isBoardSpace = target.id in boardSpaces;
-          const isWellSpace = target.id in wellSpaces;
+          const isWellSpace = target.id in wellSpaces[team];
 
-          // There is no need for the NSEW in the slot id "E-1-0"
-          // Remove it and N = 8-X, S = 0-X, E = X-0, W = X-8
+          if (isBoardSpace) {
+            console.log(isBoardSpace);
+          }
+
+          let [row, col] = target.id.split("-").map(Number) as [number, number];
+          let prevRow: number | null = null;
+          let prevCol: number | null = null;
+
           if (isSlot) {
-            const data = target.id.split("-");
+            const slotDirection =
+              row === 8 ? "N" : row === 0 ? "S" : col === 0 ? "E" : "W";
 
-            if (data.length !== 3) {
-              console.warn("Malformed slot ID:", target.id);
-              continue;
-            }
+            const deltas: Record<string, { dr: number; dc: number }> = {
+              N: { dr: -1, dc: 0 },
+              S: { dr: 1, dc: 0 },
+              E: { dr: 0, dc: 1 },
+              W: { dr: 0, dc: -1 },
+            };
 
-            const [orientation, rowStr, colStr] = data;
-            let row = parseInt(rowStr, 10);
-            let col = parseInt(colStr, 10);
-
-            switch (orientation) {
-              case "N":
-                row -= 1;
-                break;
-              case "S":
-                row += 1;
-                break;
-              case "E":
-                col += 1;
-                break;
-              case "W":
-                col -= 1;
-                break;
-            }
-
-            let prevRow: number | null = null;
-            let prevCol: number | null = null;
+            row += deltas[slotDirection].dr;
+            col += deltas[slotDirection].dc;
 
             while (true) {
-              if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE)
-                break;
-
+              // extract to higher scope
               const boardId = `${row}-${col}`;
               const boardLayout = boardSpaces[boardId];
 
-              if (!boardLayout) break;
-
               const isOccupied =
                 boardPieceLocationsSV.value[boardId] !== undefined;
+
+              if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE)
+                break;
+
+              if (!boardLayout) break;
 
               if (isOccupied) break;
 
               prevRow = row;
               prevCol = col;
 
-              switch (orientation) {
-                case "N":
-                  row -= 1;
-                  break;
-                case "S":
-                  row += 1;
-                  break;
-                case "E":
-                  col += 1;
-                  break;
-                case "W":
-                  col -= 1;
-                  break;
-              }
+              row += deltas[slotDirection].dr;
+              col += deltas[slotDirection].dc;
             }
 
             if (prevRow === null || prevCol === null) {
@@ -269,7 +251,7 @@ const Piece = ({
               )
             );
 
-            runOnJS(setBoardPieceLocationsUI)(destinationSpaceId);
+            runOnJS(setBoardPieceLocationsSV)(destinationSpaceId);
           } else if (isBoardSpace) {
             console.log("is boardSpace");
             // Check N,S,E,W if there is no piece by the time you reach a slot
@@ -277,7 +259,8 @@ const Piece = ({
             // Animate the piece to the slot in the slot in that direction.
             // It runs if slot
           } else if (isWellSpace) {
-            runOnJS(setWellPieceLocationsUI)(target.id);
+            console.log("is wellSpace");
+            runOnJS(setWellPieceLocationsSV)(target.id);
             translateX.value = withTiming(tx + tWidth / 2 - PIECE_RADIUS, {
               duration: WELL_RETURN_DURATION,
               easing: Easing.inOut(Easing.quad),
@@ -288,6 +271,13 @@ const Piece = ({
             });
           } else {
             console.log("Dropped outside any valid space");
+          }
+          if (
+            isSlot
+            // || isBoardSpace
+          ) {
+            onBoardSV.value = true;
+            runOnJS(setOnBoard)(true);
           }
         } // end if spaceFound
       } // end for allTargets

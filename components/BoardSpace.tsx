@@ -1,25 +1,18 @@
+import { useGameContext } from "@/context/GameContext";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 type BoardSpaceProps = {
   id: string;
-  register: (
-    id: string,
-    layout: {
-      pageX: number;
-      pageY: number;
-      width: number;
-      height: number;
-    }
-  ) => void;
 };
 
-const BoardSpace = ({ id, register }: BoardSpaceProps) => {
+const BoardSpace = ({ id }: BoardSpaceProps) => {
+  const { registerBoardSpace } = useGameContext();
   const viewRef = useRef<View>(null);
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      register(id, { pageX, pageY, width, height });
+      registerBoardSpace(id, { pageX, pageY, width, height });
     });
   };
 

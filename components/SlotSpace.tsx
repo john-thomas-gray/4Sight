@@ -1,37 +1,23 @@
+import { useGameContext } from "@/context/GameContext";
 import React, { useEffect, useRef } from "react";
 import { Image, View, ViewStyle } from "react-native";
 import { icons } from "../constants";
 
 type SlotSpaceProps = {
   id: string;
-  register: (
-    id: string,
-    layout: {
-      pageX: number;
-      pageY: number;
-      width: number;
-      height: number;
-    },
-    orientation: "N" | "S" | "E" | "W"
-  ) => void;
-  orientation: "N" | "S" | "E" | "W";
   team?: "black" | "white";
 };
 
 // If a piece is held and the cursor is in the area of a slot space
 // project a preview of where that piece would go if released
 
-const SlotSpace = ({
-  id,
-  register,
-  orientation,
-  team = "white",
-}: SlotSpaceProps) => {
+const SlotSpace = ({ id, team = "white" }: SlotSpaceProps) => {
   const viewRef = useRef<View>(null);
+  const { registerSlot } = useGameContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      register(id, { pageX, pageY, width, height }, orientation);
+      registerSlot(id, { pageX, pageY, width, height });
     });
   };
 
@@ -39,15 +25,6 @@ const SlotSpace = ({
     const timer = setTimeout(reportLayout, 0);
     return () => clearTimeout(timer);
   }, []);
-
-  const dirMap: Record<string, "up" | "down" | "right" | "left"> = {
-    N: "down",
-    S: "up",
-    E: "left",
-    W: "right",
-  };
-
-  const dir = dirMap[orientation];
 
   const style: ViewStyle = {
     width: 40,
@@ -58,6 +35,14 @@ const SlotSpace = ({
     borderWidth: 2,
     borderColor: "#C0C0C0", // Silver border
     position: "relative", // Needed for absolutely positioned circle
+  };
+
+  const checkDirection = (id: string) => {
+    const [row, col]: [number, number] = id.split("-").map(Number) as [
+      number,
+      number
+    ];
+    return row === 8 ? "N" : row === 0 ? "S" : col === 0 ? "E" : "W";
   };
 
   return (
@@ -73,7 +58,7 @@ const SlotSpace = ({
         }}
       />
       <Image
-        source={icons.slot[dir][team]}
+        source={icons.slot[checkDirection(id)][team]}
         style={{
           width: 24,
           height: 24,
