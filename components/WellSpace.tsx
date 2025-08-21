@@ -1,14 +1,9 @@
 import { useGameContext } from "@/context/GameContext";
-import { Team } from "@/types/board";
+import { CellProps } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
-type WellSpaceProps = {
-  id: string;
-  team: Team;
-};
-
-const WellSpace = ({ id, team }: WellSpaceProps) => {
+const WellSpace = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
   const { registerWellSpace } = useGameContext();
 

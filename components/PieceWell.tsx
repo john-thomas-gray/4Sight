@@ -1,4 +1,3 @@
-import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -14,10 +13,8 @@ const ROWS = 8;
 
 const PieceWell = ({ team, className }: PieceWellProps) => {
   const borderColor = team === "white" ? "white" : "black";
-  const { registerWellSpace } = useGameContext();
   const idNumOffset =
     team === "white" ? { row: 9, col: 9 } : { row: 17, col: 12 };
-  const heldPiece = "";
 
   return (
     <View className={className}>
@@ -26,7 +23,7 @@ const PieceWell = ({ team, className }: PieceWellProps) => {
           <View key={row} style={styles.row}>
             {Array.from({ length: COLS }).map((_, col) => {
               const id = `${row + idNumOffset.row}-${col + idNumOffset.col}`;
-              return <WellSpace key={id} id={id} team={team} />;
+              return <WellSpace key={id} id={id} type="well" team={team} />;
             })}
           </View>
         ))}

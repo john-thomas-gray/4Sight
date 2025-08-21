@@ -1,12 +1,9 @@
 import { useGameContext } from "@/context/GameContext";
+import { CellProps } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
-type BoardSpaceProps = {
-  id: string;
-};
-
-const BoardSpace = ({ id }: BoardSpaceProps) => {
+const BoardSpace = ({ id }: CellProps) => {
   const { registerBoardSpace } = useGameContext();
   const viewRef = useRef<View>(null);
 

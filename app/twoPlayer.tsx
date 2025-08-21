@@ -16,7 +16,7 @@ const TwoPlayer = () => {
       string,
       { pageX: number; pageY: number; width: number; height: number }
     ][],
-    team: "white" | "black"
+    team: "white" | "black" | undefined
   ) =>
     entries.map(([id, layout]) => (
       <Piece

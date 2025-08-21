@@ -67,13 +67,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const registerWellSpace = useCallback(
     (id: string, team: Team, layout: Layout) => {
-      setWellSpaces((prev) => ({
-        ...prev,
-        [team]: {
-          ...prev[team],
-          [id]: layout,
-        },
-      }));
+      if (team) {
+        team.toString();
+        setWellSpaces((prev) => ({
+          ...prev,
+          [team]: {
+            ...prev[team],
+            [id]: layout,
+          },
+        }));
+      } else {
+        throw Error(
+          "registerWellSpace: team undefined or improperly formatted"
+        );
+      }
     },
     []
   );

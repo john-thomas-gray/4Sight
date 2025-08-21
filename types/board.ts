@@ -1,7 +1,7 @@
-export type SpaceProps = {
+export type CellProps = {
   id: string;
   type: "board" | "slot" | "well";
-  team?: "white" | "black";
+  team?: Team;
 };
 
-export type Team = "white" | "black";
+export type Team = "white" | "black" | undefined;

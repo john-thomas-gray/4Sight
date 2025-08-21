@@ -1,17 +1,13 @@
 import { useGameContext } from "@/context/GameContext";
+import { CellProps } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { Image, View, ViewStyle } from "react-native";
 import { icons } from "../constants";
 
-type SlotSpaceProps = {
-  id: string;
-  team?: "black" | "white";
-};
-
 // If a piece is held and the cursor is in the area of a slot space
 // project a preview of where that piece would go if released
 
-const SlotSpace = ({ id, team = "white" }: SlotSpaceProps) => {
+const SlotSpace = ({ id, team = "white" }: CellProps) => {
   const viewRef = useRef<View>(null);
   const { registerSlot } = useGameContext();
 
