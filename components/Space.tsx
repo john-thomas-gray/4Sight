@@ -1,15 +1,15 @@
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
-const WellSpace = ({ id, team }: CellProps) => {
+const Space = ({ id }: CellProps) => {
+  const { registerSpace } = useGameContext();
   const viewRef = useRef<View>(null);
-  const { registerWellSpace } = useGameContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      registerWellSpace(id, team, { pageX, pageY, width, height });
+      registerSpace(id, { pageX, pageY, width, height });
     });
   };
 
@@ -18,18 +18,22 @@ const WellSpace = ({ id, team }: CellProps) => {
     return () => clearTimeout(timer);
   }, []);
 
+  const [rowStr, colStr] = id.split("-");
+  const row = parseInt(rowStr, 10);
+  const col = parseInt(colStr, 10);
+  const isEven = (row + col) % 2 === 0;
+
   const style: ViewStyle = {
     height: 40,
     width: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 1,
-    backgroundColor: "#065f46",
+    backgroundColor: isEven ? "#d1fae5" : "#ffffff",
     borderWidth: 1,
-    borderColor: "silver",
+    borderColor: "#ccc",
   };
 
   return <View ref={viewRef} onLayout={reportLayout} style={style} />;
 };
 
-export default WellSpace;
+export default Space;

@@ -1,22 +1,22 @@
 import Board from "@/components/Board";
 import Piece from "@/components/Piece";
-import PieceWell from "@/components/PieceWell";
+import WellGrid from "@/components/WellGrid";
 import { useGameContext } from "@/context/GameContext";
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 const TwoPlayer = () => {
-  const { wellSpaces, layoutReady } = useGameContext();
+  const { wells, layoutReady } = useGameContext();
 
-  const whiteWellSpaces = Object.entries(wellSpaces.white);
-  const blackWellSpaces = Object.entries(wellSpaces.black);
+  const whiteWells = Object.entries(wells.white);
+  const blackWells = Object.entries(wells.black);
 
   const renderPieces = (
     entries: [
       string,
       { pageX: number; pageY: number; width: number; height: number }
     ][],
-    team: "white" | "black" | undefined
+    team: "white" | "black"
   ) =>
     entries.map(([id, layout]) => (
       <Piece
@@ -33,12 +33,12 @@ const TwoPlayer = () => {
   return (
     <View className="flex-1 flex-row items-center justify-center mt-90 bg-[#065f46]">
       <View className="flex-row justify-between">
-        <PieceWell team="white" />
+        <WellGrid team="white" />
         <Board className="mx-10" />
-        <PieceWell team="black" />
+        <WellGrid team="black" />
       </View>
-      {layoutReady && renderPieces(whiteWellSpaces, "white")}
-      {layoutReady && renderPieces(blackWellSpaces, "black")}
+      {layoutReady && renderPieces(whiteWells, "white")}
+      {layoutReady && renderPieces(blackWells, "black")}
 
       {!layoutReady && (
         <View style={styles.loadingOverlay}>

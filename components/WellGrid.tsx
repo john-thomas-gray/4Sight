@@ -1,17 +1,17 @@
-import { Team } from "@/types/board";
+import { CellTeam } from "@/types/board";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import WellSpace from "./WellSpace";
+import Well from "./Well";
 
-type PieceWellProps = {
-  team: Team;
+type WellGridProps = {
+  team: CellTeam;
   className?: string;
 };
 
 const COLS = 3;
 const ROWS = 8;
 
-const PieceWell = ({ team, className }: PieceWellProps) => {
+const WellGrid = ({ team, className }: WellGridProps) => {
   const borderColor = team === "white" ? "white" : "black";
   const idNumOffset =
     team === "white" ? { row: 9, col: 9 } : { row: 17, col: 12 };
@@ -23,7 +23,7 @@ const PieceWell = ({ team, className }: PieceWellProps) => {
           <View key={row} style={styles.row}>
             {Array.from({ length: COLS }).map((_, col) => {
               const id = `${row + idNumOffset.row}-${col + idNumOffset.col}`;
-              return <WellSpace key={id} id={id} type="well" team={team} />;
+              return <Well key={id} id={id} type="well" team={team} />;
             })}
           </View>
         ))}
@@ -51,4 +51,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PieceWell;
+export default WellGrid;

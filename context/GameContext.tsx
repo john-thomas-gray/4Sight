@@ -1,4 +1,4 @@
-import { Team } from "@/types/board";
+import { CellTeam } from "@/types/board";
 import {
   createContext,
   ReactNode,
@@ -19,16 +19,16 @@ type SlotData = {
 };
 
 type GameContextType = {
-  wellSpaces: {
+  wells: {
     white: Record<string, Layout>;
     black: Record<string, Layout>;
   };
-  boardSpaces: Record<string, Layout>;
+  spaces: Record<string, Layout>;
   slots: Record<string, SlotData>;
   wellPieceLocations: Record<string, string>;
   boardPieceLocations: Record<string, string>;
-  registerWellSpace: (id: string, team: Team, layout: Layout) => void;
-  registerBoardSpace: (id: string, layout: Layout) => void;
+  registerWell: (id: string, team: CellTeam, layout: Layout) => void;
+  registerSpace: (id: string, layout: Layout) => void;
   registerSlot: (id: string, layout: Layout) => void;
   setWellPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, string>>
@@ -43,12 +43,12 @@ type GameContextType = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  const [wellSpaces, setWellSpaces] = useState<{
+  const [wells, setWells] = useState<{
     white: Record<string, Layout>;
     black: Record<string, Layout>;
   }>({ white: {}, black: {} });
 
-  const [boardSpaces, setBoardSpaces] = useState<Record<string, Layout>>({});
+  const [spaces, setSpaces] = useState<Record<string, Layout>>({});
   const [slots, setSlots] = useState<Record<string, SlotData>>({});
 
   const [wellPieceLocations, setWellPieceLocations] = useState<
@@ -61,15 +61,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const layoutReady =
     Object.keys(slots).length > 0 &&
-    Object.keys(boardSpaces).length > 0 &&
-    Object.keys(wellSpaces.white).length > 0 &&
-    Object.keys(wellSpaces.black).length > 0;
+    Object.keys(spaces).length > 0 &&
+    Object.keys(wells.white).length > 0 &&
+    Object.keys(wells.black).length > 0;
 
-  const registerWellSpace = useCallback(
-    (id: string, team: Team, layout: Layout) => {
+  const registerWell = useCallback(
+    (id: string, team: CellTeam, layout: Layout) => {
       if (team) {
         team.toString();
-        setWellSpaces((prev) => ({
+        setWells((prev) => ({
           ...prev,
           [team]: {
             ...prev[team],
@@ -77,16 +77,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           },
         }));
       } else {
-        throw Error(
-          "registerWellSpace: team undefined or improperly formatted"
-        );
+        throw Error("registerWell: team undefined or improperly formatted");
       }
     },
     []
   );
 
-  const registerBoardSpace = useCallback((id: string, layout: Layout) => {
-    setBoardSpaces((prev) => ({
+  const registerSpace = useCallback((id: string, layout: Layout) => {
+    setSpaces((prev) => ({
       ...prev,
       [id]: layout,
     }));
@@ -102,10 +100,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GameContext.Provider
       value={{
-        wellSpaces,
-        registerWellSpace,
-        boardSpaces,
-        registerBoardSpace,
+        wells,
+        registerWell,
+        spaces,
+        registerSpace,
         slots,
         registerSlot,
         wellPieceLocations,

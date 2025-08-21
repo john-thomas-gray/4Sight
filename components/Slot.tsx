@@ -7,7 +7,7 @@ import { icons } from "../constants";
 // If a piece is held and the cursor is in the area of a slot space
 // project a preview of where that piece would go if released
 
-const SlotSpace = ({ id, team = "white" }: CellProps) => {
+const Slot = ({ id, team = "white" }: CellProps) => {
   const viewRef = useRef<View>(null);
   const { registerSlot } = useGameContext();
 
@@ -66,4 +66,4 @@ const SlotSpace = ({ id, team = "white" }: CellProps) => {
   );
 };
 
-export default SlotSpace;
+export default Slot;

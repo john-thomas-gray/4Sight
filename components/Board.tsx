@@ -8,8 +8,8 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import BoardSpace from "./BoardSpace";
-import SlotSpace from "./SlotSpace";
+import Slot from "./Slot";
+import Space from "./Space";
 
 type BoardProps = {
   className?: string;
@@ -17,7 +17,7 @@ type BoardProps = {
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { registerBoardSpace, registerSlot, boardSpaces } = useGameContext();
+  const { registerSpace, registerSlot, spaces } = useGameContext();
 
   const corners = [
     { row: 0, col: 0 },
@@ -29,7 +29,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const isTouchOnCorner = (x: number, y: number) => {
     for (const corner of corners) {
       const id = `${corner.row}-${corner.col}`;
-      const layout = boardSpaces[id];
+      const layout = spaces[id];
       if (!layout) continue;
       if (
         x >= layout.pageX &&
@@ -103,11 +103,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
             {Array.from({ length: BOARD_SIZE }).map((_, col) => {
               if (isSlotPosition(row, col)) {
                 const id = `${row}-${col}`;
-                return <SlotSpace key={id} id={id} team="white" />;
+                return <Slot key={id} id={id} team="white" />;
               }
 
               const id = `${row}-${col}`;
-              return <BoardSpace key={id} id={id} />;
+              return <Space key={id} id={id} />;
             })}
           </View>
         ))}

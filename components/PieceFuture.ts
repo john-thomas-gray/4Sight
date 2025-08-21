@@ -31,21 +31,19 @@ const Piece = ({
   // const held = useSharedValue<boolean>(false);
   // const size = useSharedValue<number>(0);
   const {
-    wellSpaces,
+    wells,
     slots,
-    boardSpaces,
+    spaces,
     boardPieceLocations,
     setBoardPieceLocations,
     wellPieceLocations,
     setWellPieceLocations,
   } = useGameContext();
 
-  const wellSpaceArray = Object.entries(wellSpaces[team]).map(
-    ([id, layout]) => ({
-      id,
-      layout,
-    })
-  );
+  const wellArray = Object.entries(wells[team]).map(([id, layout]) => ({
+    id,
+    layout,
+  }));
 
   const slotArray = Object.entries(slots).map(([id, data]) => ({
     id,
@@ -54,7 +52,7 @@ const Piece = ({
 
   // CONSOLIDATE TO JUST ONE ID AND IT CHECKS WHICH IT IS
   // WITH A PREFIX W OR B
-  const allTargets = [...wellSpaceArray, ...slotArray];
+  const allTargets = [...wellArray, ...slotArray];
 
   const pieceRef = useRef<View>(null);
   const offset = useSharedValue({
@@ -94,8 +92,8 @@ const Piece = ({
   //       ([spaceId, pieceId]) => pieceId === id
   //     )?.[0];
 
-  //     if (boardId && boardSpaces[boardId]) {
-  //       const layout = boardSpaces[boardId];
+  //     if (boardId && spaces[boardId]) {
+  //       const layout = spaces[boardId];
   //       Animated.spring(pan, {
   //         toValue: {
   //           x: layout.pageX + layout.width / 2 - 16,
@@ -108,7 +106,7 @@ const Piece = ({
 
   //       currentBoardIdRef.current = boardId;
   //     }
-  //   }, [boardPieceLocations, boardSpaces]);
+  //   }, [boardPieceLocations, spaces]);
 
   const pan = Gesture.Pan()
     .onBegin(() => {
@@ -150,8 +148,7 @@ const Piece = ({
 
         if (spaceFound) {
           const isSlot = target.id in slots;
-          const isWellSpace =
-            team in wellSpaces && target.id in wellSpaces[team];
+          const isWell = team in wells && target.id in wells[team];
 
           if (isSlot) {
             const data = target.id.split("-");
@@ -187,7 +184,7 @@ const Piece = ({
                 break;
 
               const boardId = `${row}-${col}`;
-              const boardLayout = boardSpaces[boardId];
+              const boardLayout = spaces[boardId];
 
               if (!boardLayout) break;
 
@@ -221,7 +218,7 @@ const Piece = ({
             }
 
             const destinationSpaceId = `${prevRow}-${prevCol}`;
-            const destinationSpaceLayout = boardSpaces[destinationSpaceId];
+            const destinationSpaceLayout = spaces[destinationSpaceId];
 
             if (!destinationSpaceLayout) {
               console.warn(
@@ -267,7 +264,7 @@ const Piece = ({
               [destinationSpaceId]: id,
             }));
           }
-          // else if (isWellSpace) {
+          // else if (isWell) {
           //   setWellPieceLocations((prev) => ({
           //     ...prev,
           //     [target.id]: team,

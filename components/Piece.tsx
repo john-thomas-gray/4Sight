@@ -33,30 +33,28 @@ const Piece = ({
   currentBoardId,
 }: PieceProps) => {
   const {
-    wellSpaces,
+    wells,
     slots,
-    boardSpaces,
+    spaces,
     boardPieceLocations,
     setBoardPieceLocations,
     wellPieceLocations,
     setWellPieceLocations,
   } = useGameContext();
   // console.log("slots", slots);
-  // console.log("boardSpaces", boardSpaces);
-  // console.log("wellSpaces", wellSpaces);
-  const wellSpaceArray = Object.entries(wellSpaces[team]).map(
-    ([id, layout]) => ({
-      id,
-      layout,
-    })
-  );
+  // console.log("spaces", spaces);
+  // console.log("wells", wells);
+  const wellArray = Object.entries(wells[team]).map(([id, layout]) => ({
+    id,
+    layout,
+  }));
 
   const slotArray = Object.entries(slots).map(([id, data]) => ({
     id,
     layout: data.layout,
   }));
 
-  const allTargets = [...wellSpaceArray, ...slotArray];
+  const allTargets = [...wellArray, ...slotArray];
 
   const pieceRef = useRef<View>(null);
   const offset = useSharedValue({
@@ -82,10 +80,10 @@ const Piece = ({
     }));
   };
 
-  const setWellPieceLocationsSV = (wellSpaceId: string) => {
+  const setWellPieceLocationsSV = (wellId: string) => {
     setWellPieceLocations((prev) => ({
       ...prev,
-      [wellSpaceId]: team,
+      [wellId]: team,
     }));
   };
 
@@ -158,11 +156,11 @@ const Piece = ({
 
         if (spaceFound) {
           const isSlot = target.id in slots;
-          const isBoardSpace = target.id in boardSpaces;
-          const isWellSpace = target.id in wellSpaces[team];
+          const isSpace = target.id in spaces;
+          const isWell = target.id in wells[team];
 
-          if (isBoardSpace) {
-            console.log(isBoardSpace);
+          if (isSpace) {
+            console.log(isSpace);
           }
 
           let [row, col] = target.id.split("-").map(Number) as [number, number];
@@ -186,7 +184,7 @@ const Piece = ({
             while (true) {
               // extract to higher scope
               const boardId = `${row}-${col}`;
-              const boardLayout = boardSpaces[boardId];
+              const boardLayout = spaces[boardId];
 
               const isOccupied =
                 boardPieceLocationsSV.value[boardId] !== undefined;
@@ -211,7 +209,7 @@ const Piece = ({
             }
 
             const destinationSpaceId = `${prevRow}-${prevCol}`;
-            const destinationSpaceLayout = boardSpaces[destinationSpaceId];
+            const destinationSpaceLayout = spaces[destinationSpaceId];
 
             if (!destinationSpaceLayout) {
               console.warn(
@@ -252,14 +250,14 @@ const Piece = ({
             );
 
             runOnJS(setBoardPieceLocationsSV)(destinationSpaceId);
-          } else if (isBoardSpace) {
-            console.log("is boardSpace");
+          } else if (isSpace) {
+            console.log("is space");
             // Check N,S,E,W if there is no piece by the time you reach a slot
             // in one of those directions, break
             // Animate the piece to the slot in the slot in that direction.
             // It runs if slot
-          } else if (isWellSpace) {
-            console.log("is wellSpace");
+          } else if (isWell) {
+            console.log("is well");
             runOnJS(setWellPieceLocationsSV)(target.id);
             translateX.value = withTiming(tx + tWidth / 2 - PIECE_RADIUS, {
               duration: WELL_RETURN_DURATION,
@@ -274,7 +272,7 @@ const Piece = ({
           }
           if (
             isSlot
-            // || isBoardSpace
+            // || isSpace
           ) {
             onBoardSV.value = true;
             runOnJS(setOnBoard)(true);
@@ -289,8 +287,8 @@ const Piece = ({
   //       ([spaceId, pieceId]) => pieceId === id
   //     )?.[0];
 
-  //     if (boardId && boardSpaces[boardId]) {
-  //       const layout = boardSpaces[boardId];
+  //     if (boardId && spaces[boardId]) {
+  //       const layout = spaces[boardId];
   //       // // UNNECESSARY?
   //       Animated.spring(pan, {
   //         toValue: {
@@ -304,7 +302,7 @@ const Piece = ({
 
   //       currentBoardIdRef.current = boardId;
   //     }
-  //   }, [boardPieceLocations, boardSpaces]);
+  //   }, [boardPieceLocations, spaces]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

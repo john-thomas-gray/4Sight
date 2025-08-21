@@ -1,7 +1,7 @@
 export type CellProps = {
   id: string;
   type: "board" | "slot" | "well";
-  team?: Team;
+  team?: CellTeam;
 };
 
-export type Team = "white" | "black" | undefined;
+export type CellTeam = "white" | "black" | undefined;
