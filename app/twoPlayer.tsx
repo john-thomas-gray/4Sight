@@ -1,6 +1,6 @@
 import Board from "@/components/Board";
 import Piece from "@/components/Piece";
-import WellGrid from "@/components/WellGrid";
+import TeamWellGrid from "@/components/TeamWellGrid";
 import { useGameContext } from "@/context/GameContext";
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
@@ -33,9 +33,9 @@ const TwoPlayer = () => {
   return (
     <View className="flex-1 flex-row items-center justify-center mt-90 bg-[#065f46]">
       <View className="flex-row justify-between">
-        <WellGrid team="white" />
+        <TeamWellGrid team="white" />
         <Board className="mx-10" />
-        <WellGrid team="black" />
+        <TeamWellGrid team="black" />
       </View>
       {layoutReady && renderPieces(whiteWells, "white")}
       {layoutReady && renderPieces(blackWells, "black")}

@@ -11,7 +11,6 @@ const BackButton = () => {
       className="flex-row items-center justify-between border-2 border-black rounded p-2 w-24 absolute m-6 z-50"
       onPress={() => {
         router.replace("/");
-        console.log("pressed");
       }}
     >
       <Image source={images.backArrow} className="h-6 w-6" />

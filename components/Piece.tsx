@@ -54,6 +54,11 @@ const Piece = ({
     layout: data.layout,
   }));
 
+  const spaceArray = Object.entries(spaces).map(([id, layout]) => ({
+    id,
+    layout: layout,
+  }));
+
   const allTargets = [...wellArray, ...slotArray];
 
   const pieceRef = useRef<View>(null);
@@ -145,16 +150,17 @@ const Piece = ({
           pieceCenter.y >= ty &&
           pieceCenter.y <= ty + tHeight;
 
-        console.log("Piece center:", pieceCenter);
-        console.log("Target bounds:", {
-          id: target.id,
-          x1: tx,
-          x2: tx + tWidth,
-          y1: ty,
-          y2: ty + tHeight,
-        });
+        // console.log("Piece center:", pieceCenter);
+        // console.log("Target bounds:", {
+        //   id: target.id,
+        //   x1: tx,
+        //   x2: tx + tWidth,
+        //   y1: ty,
+        //   y2: ty + tHeight,
+        // });
 
         if (spaceFound) {
+          // maybe create runOnJS to use getCellData
           const isSlot = target.id in slots;
           const isSpace = target.id in spaces;
           const isWell = target.id in wells[team];

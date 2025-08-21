@@ -3,7 +3,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import Well from "./Well";
 
-type WellGridProps = {
+type TeamWellGridProps = {
   team: CellTeam;
   className?: string;
 };
@@ -11,7 +11,7 @@ type WellGridProps = {
 const COLS = 3;
 const ROWS = 8;
 
-const WellGrid = ({ team, className }: WellGridProps) => {
+const TeamWellGrid = ({ team, className }: TeamWellGridProps) => {
   const borderColor = team === "white" ? "white" : "black";
   const idNumOffset =
     team === "white" ? { row: 9, col: 9 } : { row: 17, col: 12 };
@@ -51,4 +51,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WellGrid;
+export default TeamWellGrid;

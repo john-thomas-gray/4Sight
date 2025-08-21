@@ -1,4 +1,5 @@
 import { CellTeam } from "@/types/board";
+import { getCellData } from "@/utils/getCellData";
 import {
   createContext,
   ReactNode,
@@ -18,6 +19,12 @@ type SlotData = {
   layout: Layout;
 };
 
+type CellRegisterProps = {
+  id: string;
+  team?: CellTeam;
+  layout: Layout;
+};
+
 type GameContextType = {
   wells: {
     white: Record<string, Layout>;
@@ -27,9 +34,7 @@ type GameContextType = {
   slots: Record<string, SlotData>;
   wellPieceLocations: Record<string, string>;
   boardPieceLocations: Record<string, string>;
-  registerWell: (id: string, team: CellTeam, layout: Layout) => void;
-  registerSpace: (id: string, layout: Layout) => void;
-  registerSlot: (id: string, layout: Layout) => void;
+  registerCell: ({ id, team, layout }: CellRegisterProps) => void;
   setWellPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, string>>
   >;
@@ -65,47 +70,47 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(wells.white).length > 0 &&
     Object.keys(wells.black).length > 0;
 
-  const registerWell = useCallback(
-    (id: string, team: CellTeam, layout: Layout) => {
-      if (team) {
-        team.toString();
-        setWells((prev) => ({
+  const registerCell = useCallback(
+    ({ id, team, layout }: CellRegisterProps) => {
+      console.log("registerCell called for", id);
+      const cellData = getCellData(id);
+
+      if (cellData.type === "slot") {
+        setSlots((prev) => ({
           ...prev,
-          [team]: {
-            ...prev[team],
-            [id]: layout,
-          },
+          [id]: { layout },
         }));
+      } else if (cellData.type === "space") {
+        setSpaces((prev) => ({
+          ...prev,
+          [id]: layout,
+        }));
+      } else if (cellData.type === "well") {
+        if (team) {
+          setWells((prev) => ({
+            ...prev,
+            [team]: {
+              ...prev[team],
+              [id]: layout,
+            },
+          }));
+        }
+      } else if (cellData.type === "corner") {
+        console.log("corner registered");
       } else {
-        throw Error("registerWell: team undefined or improperly formatted");
+        throw new Error("registerCell: unknown cell type");
       }
     },
     []
   );
 
-  const registerSpace = useCallback((id: string, layout: Layout) => {
-    setSpaces((prev) => ({
-      ...prev,
-      [id]: layout,
-    }));
-  }, []);
-
-  const registerSlot = useCallback((id: string, layout: Layout) => {
-    setSlots((prev) => ({
-      ...prev,
-      [id]: { layout },
-    }));
-  }, []);
-
   return (
     <GameContext.Provider
       value={{
         wells,
-        registerWell,
         spaces,
-        registerSpace,
         slots,
-        registerSlot,
+        registerCell,
         wellPieceLocations,
         setWellPieceLocations,
         boardPieceLocations,

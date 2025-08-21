@@ -5,11 +5,15 @@ import { View, ViewStyle } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { registerWell } = useGameContext();
+  const { registerCell } = useGameContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      registerWell(id, team, { pageX, pageY, width, height });
+      registerCell({
+        id,
+        team,
+        layout: { pageX, pageY, width, height },
+      });
     });
   };
 

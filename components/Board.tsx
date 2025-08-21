@@ -17,7 +17,7 @@ type BoardProps = {
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { registerSpace, registerSlot, spaces } = useGameContext();
+  const { spaces } = useGameContext();
 
   const corners = [
     { row: 0, col: 0 },
@@ -103,11 +103,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
             {Array.from({ length: BOARD_SIZE }).map((_, col) => {
               if (isSlotPosition(row, col)) {
                 const id = `${row}-${col}`;
-                return <Slot key={id} id={id} team="white" />;
+                return <Slot key={id} id={id} type="slot" />;
               }
 
               const id = `${row}-${col}`;
-              return <Space key={id} id={id} />;
+              return <Space key={id} type="space" id={id} />;
             })}
           </View>
         ))}

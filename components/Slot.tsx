@@ -9,11 +9,14 @@ import { icons } from "../constants";
 
 const Slot = ({ id, team = "white" }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { registerSlot } = useGameContext();
+  const { registerCell } = useGameContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      registerSlot(id, { pageX, pageY, width, height });
+      registerCell({
+        id,
+        layout: { pageX, pageY, width, height },
+      });
     });
   };
 
