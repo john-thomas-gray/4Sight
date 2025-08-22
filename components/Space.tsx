@@ -11,6 +11,7 @@ const Space = ({ id }: CellProps) => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       registerCell({
         id,
+        type: "space",
         layout: { pageX, pageY, width, height },
       });
     });

@@ -11,6 +11,7 @@ const Well = ({ id, team }: CellProps) => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       registerCell({
         id,
+        type: "well",
         team,
         layout: { pageX, pageY, width, height },
       });

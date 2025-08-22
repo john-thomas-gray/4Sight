@@ -5,8 +5,9 @@ import {
 } from "@/constants/animations";
 import { BOARD_SIZE, PIECE_RADIUS, PIECE_SIZE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
-import React, { useEffect, useRef } from "react";
-import { View, ViewStyle } from "react-native";
+import { CellProps } from "@/types/board";
+import React, { useEffect } from "react";
+import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Easing,
@@ -41,27 +42,28 @@ const Piece = ({
     wellPieceLocations,
     setWellPieceLocations,
   } = useGameContext();
-  // console.log("slots", slots);
-  // console.log("spaces", spaces);
-  // console.log("wells", wells);
+
   const wellArray = Object.entries(wells[team]).map(([id, layout]) => ({
     id,
     layout,
+    type: "well" as const,
+    team,
   }));
 
   const slotArray = Object.entries(slots).map(([id, data]) => ({
     id,
     layout: data.layout,
+    type: "slot" as const,
   }));
 
   const spaceArray = Object.entries(spaces).map(([id, layout]) => ({
     id,
-    layout: layout,
+    layout,
+    type: "space" as const,
   }));
 
-  const allTargets = [...wellArray, ...slotArray];
+  const allCells: CellProps[] = [...wellArray, ...slotArray, ...spaceArray];
 
-  const pieceRef = useRef<View>(null);
   const offset = useSharedValue({
     x: initialPosition.x,
     y: initialPosition.y,
@@ -69,6 +71,7 @@ const Piece = ({
 
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
+  const currentWellIdSV = useSharedValue(currentWellId);
   const [onBoard, setOnBoard] = React.useState(false);
   const onBoardSV = useSharedValue(false);
   const isHeld = useSharedValue(false);
@@ -78,26 +81,39 @@ const Piece = ({
     boardPieceLocationsSV.value = boardPieceLocations;
   }, [boardPieceLocations]);
 
-  const setBoardPieceLocationsSV = (destSpaceId: string) => {
+  useEffect(() => {
+    currentWellIdSV.value = currentWellId;
+  }, [currentWellId]);
+
+  const setBoardPieceLocationsSV = (finalSpaceId: string) => {
     setBoardPieceLocations((prev) => ({
       ...prev,
-      [destSpaceId]: id,
+      [finalSpaceId]: id,
     }));
   };
 
   const setWellPieceLocationsSV = (wellId: string) => {
     setWellPieceLocations((prev) => ({
       ...prev,
-      [wellId]: team,
+      [wellId]: id,
     }));
   };
 
-  // SET THE WELL PIECE LOCATIONS
+  const deleteWellPieceLocationSV = () => {
+    if (currentWellId) {
+      setWellPieceLocations((prev) => {
+        const updated = { ...prev };
+        delete updated[currentWellId as string];
+        return updated;
+      });
+    }
+  };
+
   useEffect(() => {
     if (currentWellId) {
       setWellPieceLocations((prev) => ({
         ...prev,
-        [currentWellId]: team,
+        [currentWellId]: id,
       }));
     }
   }, []);
@@ -105,22 +121,9 @@ const Piece = ({
   const pan = Gesture.Pan()
     .enabled(!onBoard)
     .onBegin(() => {
-      // LOG WELL PIECE LOCATIONS, BOARD PIECE LOCATIONS
       isHeld.value = true;
-      // DELETE THE CURRENT PIECE'S ID FROM ITS WELL
-      // if (currentWellIdRef.current) {
-      //   setWellPieceLocations((prev) => {
-      //     const updated = { ...prev };
-      //     delete updated[currentWellIdRef.current as string];
-      //     return updated;
-      //   });
-      //   currentWellIdRef.current = null;
-      // }
+      runOnJS(deleteWellPieceLocationSV)();
     })
-    // .onUpdate((event) => {
-    //   translateX.value = offset.value.x + event.translationX;
-    //   translateY.value = offset.value.y + event.translationY;
-    // })
     .onUpdate((event) => {
       translateX.value = event.absoluteX - PIECE_RADIUS;
       translateY.value = event.absoluteY - PIECE_RADIUS;
@@ -135,166 +138,176 @@ const Piece = ({
         y: translateY.value + PIECE_RADIUS,
       };
 
-      // FIND THE SPACE IT WAS DROPPED ON
-      for (const target of allTargets) {
+      for (const selectedCell of allCells) {
+        if (!selectedCell.layout) continue;
+
         const {
-          pageX: tx,
-          pageY: ty,
-          width: tWidth,
-          height: tHeight,
-        } = target.layout;
+          pageX: scX,
+          pageY: scY,
+          width: scWidth,
+          height: scHeight,
+        } = selectedCell.layout;
 
-        const spaceFound =
-          pieceCenter.x >= tx &&
-          pieceCenter.x <= tx + tWidth &&
-          pieceCenter.y >= ty &&
-          pieceCenter.y <= ty + tHeight;
+        const cellFound =
+          pieceCenter.x >= scX &&
+          pieceCenter.x <= scX + scWidth &&
+          pieceCenter.y >= scY &&
+          pieceCenter.y <= scY + scHeight;
 
-        // console.log("Piece center:", pieceCenter);
-        // console.log("Target bounds:", {
-        //   id: target.id,
-        //   x1: tx,
-        //   x2: tx + tWidth,
-        //   y1: ty,
-        //   y2: ty + tHeight,
-        // });
+        if (!cellFound) continue;
 
-        if (spaceFound) {
-          // maybe create runOnJS to use getCellData
-          const isSlot = target.id in slots;
-          const isSpace = target.id in spaces;
-          const isWell = target.id in wells[team];
+        const isCorner = false;
+        const isSlot = selectedCell.id in slots;
+        const isSpace = selectedCell.id in spaces;
+        const isWell = selectedCell.id in wells[team];
 
-          if (isSpace) {
-            console.log(isSpace);
+        let [nextRow, nextCol] = selectedCell.id.split("-").map(Number) as [
+          number,
+          number
+        ];
+        let prevRow: number | null = null;
+        let prevCol: number | null = null;
+        if (isCorner) {
+          // Send the space back to the well.
+        } else if (isSlot) {
+          const slotDirection =
+            nextRow === 8
+              ? "N"
+              : nextRow === 0
+              ? "S"
+              : nextCol === 0
+              ? "E"
+              : "W";
+
+          const deltas: Record<string, { dr: number; dc: number }> = {
+            N: { dr: -1, dc: 0 },
+            S: { dr: 1, dc: 0 },
+            E: { dr: 0, dc: 1 },
+            W: { dr: 0, dc: -1 },
+          };
+
+          nextRow += deltas[slotDirection].dr;
+          nextCol += deltas[slotDirection].dc;
+
+          while (true) {
+            // extract to higher scope?
+            const nextSpaceId = `${nextRow}-${nextCol}`;
+            const nextSpace = spaces[nextSpaceId];
+
+            const isOccupied =
+              boardPieceLocationsSV.value[nextSpaceId] !== undefined;
+
+            if (
+              nextRow < 0 ||
+              nextRow >= BOARD_SIZE ||
+              nextCol < 0 ||
+              nextCol >= BOARD_SIZE
+            )
+              break;
+
+            if (!nextSpace) break;
+
+            if (isOccupied) break;
+
+            prevRow = nextRow;
+            prevCol = nextCol;
+
+            nextRow += deltas[slotDirection].dr;
+            nextCol += deltas[slotDirection].dc;
           }
 
-          let [row, col] = target.id.split("-").map(Number) as [number, number];
-          let prevRow: number | null = null;
-          let prevCol: number | null = null;
+          if (prevRow === null || prevCol === null) {
+            console.warn("No free board space near slot:", selectedCell.id);
+            return;
+          }
 
-          if (isSlot) {
-            const slotDirection =
-              row === 8 ? "N" : row === 0 ? "S" : col === 0 ? "E" : "W";
+          const finalSpaceId = `${prevRow}-${prevCol}`;
+          const finalSpaceLayout = spaces[finalSpaceId];
 
-            const deltas: Record<string, { dr: number; dc: number }> = {
-              N: { dr: -1, dc: 0 },
-              S: { dr: 1, dc: 0 },
-              E: { dr: 0, dc: 1 },
-              W: { dr: 0, dc: -1 },
-            };
+          if (!finalSpaceLayout) {
+            console.warn("No layout for final board space", finalSpaceId);
+            return;
+          }
 
-            row += deltas[slotDirection].dr;
-            col += deltas[slotDirection].dc;
-
-            while (true) {
-              // extract to higher scope
-              const boardId = `${row}-${col}`;
-              const boardLayout = spaces[boardId];
-
-              const isOccupied =
-                boardPieceLocationsSV.value[boardId] !== undefined;
-
-              if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE)
-                break;
-
-              if (!boardLayout) break;
-
-              if (isOccupied) break;
-
-              prevRow = row;
-              prevCol = col;
-
-              row += deltas[slotDirection].dr;
-              col += deltas[slotDirection].dc;
-            }
-
-            if (prevRow === null || prevCol === null) {
-              console.warn("No free board space near slot:", target.id);
-              return;
-            }
-
-            const destinationSpaceId = `${prevRow}-${prevCol}`;
-            const destinationSpaceLayout = spaces[destinationSpaceId];
-
-            if (!destinationSpaceLayout) {
-              console.warn(
-                "No layout for final board space",
-                destinationSpaceId
-              );
-              return;
-            }
-
-            // Animate to slot
-            translateX.value = withSequence(
-              withTiming(tx + tWidth / 2 - PIECE_RADIUS, {
-                duration: SLOT_INSERT_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }),
-              withTiming(
-                destinationSpaceLayout.pageX +
-                  destinationSpaceLayout.width / 2 -
-                  PIECE_RADIUS,
-                {
-                  duration: PIECE_DROP_DURATION,
-                  easing: Easing.bounce,
-                }
-              )
-            );
-
-            translateY.value = withSequence(
-              withTiming(ty + tHeight / 2 - PIECE_RADIUS, {
-                duration: SLOT_INSERT_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }),
-              withTiming(
-                destinationSpaceLayout.pageY +
-                  destinationSpaceLayout.width / 2 -
-                  PIECE_RADIUS,
-                { duration: PIECE_DROP_DURATION, easing: Easing.bounce }
-              )
-            );
-
-            runOnJS(setBoardPieceLocationsSV)(destinationSpaceId);
-          } else if (isSpace) {
-            console.log("is space");
-            // Check N,S,E,W if there is no piece by the time you reach a slot
-            // in one of those directions, break
-            // Animate the piece to the slot in the slot in that direction.
-            // It runs if slot
-          } else if (isWell) {
-            console.log("is well");
-            runOnJS(setWellPieceLocationsSV)(target.id);
-            translateX.value = withTiming(tx + tWidth / 2 - PIECE_RADIUS, {
-              duration: WELL_RETURN_DURATION,
+          // Animate to slot
+          translateX.value = withSequence(
+            withTiming(scX + scWidth / 2 - PIECE_RADIUS, {
+              duration: SLOT_INSERT_DURATION,
               easing: Easing.inOut(Easing.quad),
-            });
-            translateY.value = withTiming(tx + tHeight / 2 - PIECE_RADIUS, {
-              duration: WELL_RETURN_DURATION,
+            }),
+            withTiming(
+              finalSpaceLayout.pageX +
+                finalSpaceLayout.width / 2 -
+                PIECE_RADIUS,
+              {
+                duration: PIECE_DROP_DURATION,
+                easing: Easing.bounce,
+              }
+            )
+          );
+
+          translateY.value = withSequence(
+            withTiming(scY + scHeight / 2 - PIECE_RADIUS, {
+              duration: SLOT_INSERT_DURATION,
               easing: Easing.inOut(Easing.quad),
-            });
-          } else {
-            console.log("Dropped outside any valid space");
-          }
-          if (
-            isSlot
-            // || isSpace
-          ) {
-            onBoardSV.value = true;
-            runOnJS(setOnBoard)(true);
-          }
-        } // end if spaceFound
-      } // end for allTargets
+            }),
+            withTiming(
+              finalSpaceLayout.pageY +
+                finalSpaceLayout.width / 2 -
+                PIECE_RADIUS,
+              { duration: PIECE_DROP_DURATION, easing: Easing.bounce }
+            )
+          );
+
+          runOnJS(setBoardPieceLocationsSV)(finalSpaceId);
+        } else if (isSpace) {
+          console.log("is space");
+          runOnJS(setBoardPieceLocationsSV)(selectedCell.id);
+          translateX.value = withTiming(scX + scWidth / 2 - PIECE_RADIUS, {
+            duration: WELL_RETURN_DURATION,
+            easing: Easing.inOut(Easing.quad),
+          });
+          translateY.value = withTiming(scY + scHeight / 2 - PIECE_RADIUS, {
+            duration: WELL_RETURN_DURATION,
+            easing: Easing.inOut(Easing.quad),
+          });
+
+          // Check N,S,E,W if there is no piece by the time you reach a slot
+          // in one of those directions, break
+          // Animate the piece to the slot in the slot in that direction.
+          // It runs if slot
+        } else if (isWell) {
+          console.log("is well");
+          runOnJS(setWellPieceLocationsSV)(selectedCell.id);
+          translateX.value = withTiming(scX + scWidth / 2 - PIECE_RADIUS, {
+            duration: WELL_RETURN_DURATION,
+            easing: Easing.inOut(Easing.quad),
+          });
+          translateY.value = withTiming(scY + scHeight / 2 - PIECE_RADIUS, {
+            duration: WELL_RETURN_DURATION,
+            easing: Easing.inOut(Easing.quad),
+          });
+        } else {
+          console.log("Dropped outside any valid space");
+        }
+        if (
+          isSlot
+          // || isSpace
+        ) {
+          onBoardSV.value = true;
+          runOnJS(setOnBoard)(true);
+        }
+      } // for loop
     }); // end onEnd
 
   //  // HANDLES PULLING ANIMATION
   //   useEffect(() => {
-  //     const boardId = Object.entries(boardPieceLocations).find(
+  //     const nextSpaceId = Object.entries(boardPieceLocations).find(
   //       ([spaceId, pieceId]) => pieceId === id
   //     )?.[0];
 
-  //     if (boardId && spaces[boardId]) {
-  //       const layout = spaces[boardId];
+  //     if (nextSpaceId && spaces[nextSpaceId]) {
+  //       const layout = spaces[nextSpaceId];
   //       // // UNNECESSARY?
   //       Animated.spring(pan, {
   //         toValue: {
@@ -306,7 +319,7 @@ const Piece = ({
   //         bounciness: 10,
   //       }).start();
 
-  //       currentBoardIdRef.current = boardId;
+  //       currentBoardIdRef.current = nextSpaceId;
   //     }
   //   }, [boardPieceLocations, spaces]);
 
@@ -348,7 +361,7 @@ const Piece = ({
 
   return (
     <GestureDetector gesture={pan}>
-      <Animated.View ref={pieceRef} style={[baseStyle, animatedStyles]} />
+      <Animated.View style={[baseStyle, animatedStyles]} />
     </GestureDetector>
   );
 };

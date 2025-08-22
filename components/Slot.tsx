@@ -15,6 +15,7 @@ const Slot = ({ id, team = "white" }: CellProps) => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       registerCell({
         id,
+        type: "slot",
         layout: { pageX, pageY, width, height },
       });
     });

@@ -1,91 +1,15 @@
 import { BOARD_COL_ROW_COUNT, BOARD_SIZE } from "@/constants/gameElements";
-import { useGameContext } from "@/context/GameContext";
-import React, { useRef } from "react";
-import {
-  GestureResponderEvent,
-  PanResponder,
-  PanResponderGestureState,
-  StyleSheet,
-  View,
-} from "react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 import Slot from "./Slot";
 import Space from "./Space";
 
 type BoardProps = {
   className?: string;
-  onRotate?: (direction: "clockwise" | "counterclockwise") => void; // Callback to rotate board
+  onRotate?: (direction: "clockwise" | "counterclockwise") => void;
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { spaces } = useGameContext();
-
-  const corners = [
-    { row: 0, col: 0 },
-    { row: 0, col: BOARD_COL_ROW_COUNT },
-    { row: BOARD_COL_ROW_COUNT, col: 0 },
-    { row: BOARD_COL_ROW_COUNT, col: BOARD_COL_ROW_COUNT },
-  ];
-
-  const isTouchOnCorner = (x: number, y: number) => {
-    for (const corner of corners) {
-      const id = `${corner.row}-${corner.col}`;
-      const layout = spaces[id];
-      if (!layout) continue;
-      if (
-        x >= layout.pageX &&
-        x <= layout.pageX + layout.width &&
-        y >= layout.pageY &&
-        y <= layout.pageY + layout.height
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const gestureStartedOnCorner = useRef(false);
-  const startTouch = useRef<{ x: number; y: number } | null>(null);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-
-      onPanResponderGrant: (evt: GestureResponderEvent) => {
-        const { pageX, pageY } = evt.nativeEvent;
-        gestureStartedOnCorner.current = isTouchOnCorner(pageX, pageY);
-        startTouch.current = { x: pageX, y: pageY };
-      },
-
-      onPanResponderMove: () => {},
-
-      onPanResponderRelease: (
-        evt: GestureResponderEvent,
-        gestureState: PanResponderGestureState
-      ) => {
-        if (!gestureStartedOnCorner.current) return;
-
-        const { dx, dy } = gestureState;
-
-        // Determine swipe direction only if significant movement
-        const threshold = 30; // minimum swipe distance in px
-        if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
-
-        // For rotation, let's only consider horizontal swipes:
-        if (Math.abs(dx) > Math.abs(dy)) {
-          if (dx > 0) {
-            // Swipe right → rotate clockwise
-            onRotate && onRotate("clockwise");
-          } else {
-            // Swipe left → rotate counterclockwise
-            onRotate && onRotate("counterclockwise");
-          }
-        } else {
-          // Optional: vertical swipes could do something else or ignore
-        }
-      },
-    })
-  ).current;
-
   const isSlotPosition = (row: number, col: number) => {
     return (
       (row === 0 && col > 0 && col < BOARD_COL_ROW_COUNT) || // Top
@@ -96,7 +20,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
   };
 
   return (
-    <View {...panResponder.panHandlers} className={className}>
+    <View className={className}>
       <View style={styles.container}>
         {Array.from({ length: BOARD_SIZE }).map((_, row) => (
           <View key={row} style={styles.row}>
