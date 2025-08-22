@@ -39,7 +39,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      // run pullLeft();
       console.log("pullLeft");
       runOnJS(pullWorklet)("left");
     });
@@ -48,21 +47,21 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .direction(Directions.RIGHT)
     .onStart(() => {
       console.log("pullRight");
-      // run pullRight();
+      runOnJS(pullWorklet)("right");
     });
 
   const pullUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      // pullUp();
       console.log("pullUp");
+      runOnJS(pullWorklet)("up");
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      // pullDown();
       console.log("pullDown");
+      runOnJS(pullWorklet)("down");
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);

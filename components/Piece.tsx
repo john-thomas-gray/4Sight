@@ -129,7 +129,7 @@ const Piece = ({
     }
   }, []);
 
-  const pan = Gesture.Pan()
+  const movePiece = Gesture.Pan()
     .enabled(!onBoard)
     .onStart(() => {
       isHeld.value = true;
@@ -377,28 +377,30 @@ const Piece = ({
       }
     }); // end onEnd
 
-  //  // HANDLES PULLING ANIMATION
-  //   useEffect(() => {
-  //     const nextSpaceId = Object.entries(boardPieceLocations).find(
-  //       ([spaceId, pieceId]) => pieceId === id
-  //     )?.[0];
+  // HANDLES PULLING ANIMATION
+  useEffect(() => {
+    const nextSpaceId = Object.entries(boardPieceLocations).find(
+      ([spaceId, pieceId]) => pieceId === id
+    )?.[0];
 
-  //     if (nextSpaceId && spaces[nextSpaceId]) {
-  //       const layout = spaces[nextSpaceId];
-  //       // // UNNECESSARY?
-  //       Animated.spring(pan, {
-  //         toValue: {
-  //           x: layout.pageX + layout.width / 2 - PIECE_RADIUS,
-  //           y: layout.pageY + layout.height / 2 - PIECE_RADIUS,
-  //         },
-  //         useNativeDriver: false,
-  //         speed: 20,
-  //         bounciness: 10,
-  //       }).start();
-
-  //       currentBoardIdRef.current = nextSpaceId;
-  //     }
-  //   }, [boardPieceLocations, spaces]);
+    if (nextSpaceId && spaces[nextSpaceId]) {
+      const layout = spaces[nextSpaceId];
+      translateX.value = withTiming(
+        layout.pageX + layout.width / 2 - PIECE_RADIUS,
+        {
+          duration: PIECE_DROP_DURATION,
+          easing: Easing.bounce,
+        }
+      );
+      translateY.value = withTiming(
+        layout.pageY + layout.height / 2 - PIECE_RADIUS,
+        {
+          duration: PIECE_DROP_DURATION,
+          easing: Easing.bounce,
+        }
+      );
+    }
+  }, [boardPieceLocations, spaces]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -437,7 +439,7 @@ const Piece = ({
   };
 
   return (
-    <GestureDetector gesture={pan}>
+    <GestureDetector gesture={movePiece}>
       <Animated.View style={[baseStyle, animatedStyles]} />
     </GestureDetector>
   );
