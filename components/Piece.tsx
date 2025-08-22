@@ -107,6 +107,7 @@ const Piece = ({
       ...prev,
       [wellId]: id,
     }));
+    console.log(wellPieceLocations);
   };
 
   const deleteWellPieceLocationSV = () => {
@@ -130,7 +131,7 @@ const Piece = ({
 
   const pan = Gesture.Pan()
     .enabled(!onBoard)
-    .onBegin(() => {
+    .onStart(() => {
       isHeld.value = true;
       runOnJS(deleteWellPieceLocationSV)();
     })
@@ -148,6 +149,8 @@ const Piece = ({
         y: translateY.value + PIECE_RADIUS,
       };
 
+      let noCellFound = true;
+
       for (const selectedCell of allCells) {
         if (!selectedCell.layout) continue;
 
@@ -164,33 +167,10 @@ const Piece = ({
           pieceCenter.y >= scY &&
           pieceCenter.y <= scY + scHeight;
 
-        if (!cellFound) {
-          console.log("Dropped outside any valid space");
-          if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
-            runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
+        if (!cellFound) continue;
 
-            translateX.value = withTiming(
-              currentWellDataSV.value.layout.pageX +
-                currentWellDataSV.value.layout.width / 2 -
-                PIECE_RADIUS,
-              {
-                duration: WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            );
-            translateY.value = withTiming(
-              currentWellDataSV.value.layout.pageY +
-                currentWellDataSV.value.layout.height / 2 -
-                PIECE_RADIUS,
-              {
-                duration: WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            );
-          }
+        noCellFound = false;
 
-          continue;
-        }
         const isCorner = false;
         const isSlot = selectedCell.id in slots;
         const isSpace = selectedCell.id in spaces;
@@ -253,6 +233,31 @@ const Piece = ({
 
           if (prevRow === null || prevCol === null) {
             console.warn("No free board space near slot:", selectedCell.id);
+            if (
+              currentWellDataSV.value?.layout &&
+              currentWellDataSV.value?.id
+            ) {
+              runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
+
+              translateX.value = withTiming(
+                currentWellDataSV.value.layout.pageX +
+                  currentWellDataSV.value.layout.width / 2 -
+                  PIECE_RADIUS,
+                {
+                  duration: WELL_RETURN_DURATION,
+                  easing: Easing.inOut(Easing.quad),
+                }
+              );
+              translateY.value = withTiming(
+                currentWellDataSV.value.layout.pageY +
+                  currentWellDataSV.value.layout.height / 2 -
+                  PIECE_RADIUS,
+                {
+                  duration: WELL_RETURN_DURATION,
+                  easing: Easing.inOut(Easing.quad),
+                }
+              );
+            }
             return;
           }
 
@@ -297,33 +302,7 @@ const Piece = ({
           runOnJS(setBoardPieceLocationsSV)(finalSpaceId);
         } else if (isSpace) {
           console.log("is space");
-          runOnJS(setBoardPieceLocationsSV)(selectedCell.id);
-          translateX.value = withTiming(scX + scWidth / 2 - PIECE_RADIUS, {
-            duration: WELL_RETURN_DURATION,
-            easing: Easing.inOut(Easing.quad),
-          });
-          translateY.value = withTiming(scY + scHeight / 2 - PIECE_RADIUS, {
-            duration: WELL_RETURN_DURATION,
-            easing: Easing.inOut(Easing.quad),
-          });
-
-          // Check N,S,E,W if there is no piece by the time you reach a slot
-          // in one of those directions, break
-          // Animate the piece to the slot in the slot in that direction.
-          // It runs if slot
-        } else if (isWell) {
-          console.log("is well");
-          runOnJS(setWellPieceLocationsSV)(selectedCell.id);
-          translateX.value = withTiming(scX + scWidth / 2 - PIECE_RADIUS, {
-            duration: WELL_RETURN_DURATION,
-            easing: Easing.inOut(Easing.quad),
-          });
-          translateY.value = withTiming(scY + scHeight / 2 - PIECE_RADIUS, {
-            duration: WELL_RETURN_DURATION,
-            easing: Easing.inOut(Easing.quad),
-          });
-        } else {
-          console.log("Dropped outside any valid space");
+          console.log("That space is blocked!");
           if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
             runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
 
@@ -346,15 +325,56 @@ const Piece = ({
               }
             );
           }
+
+          // Check N,S,E,W if there is no piece by the time you reach a slot
+          // in one of those directions, break
+          // Animate the piece to the slot in the slot in that direction.
+          // It runs if slot
+        } else if (isWell) {
+          console.log("is well");
+          runOnJS(setWellPieceLocationsSV)(selectedCell.id);
+          translateX.value = withTiming(scX + scWidth / 2 - PIECE_RADIUS, {
+            duration: WELL_RETURN_DURATION,
+            easing: Easing.inOut(Easing.quad),
+          });
+          translateY.value = withTiming(scY + scHeight / 2 - PIECE_RADIUS, {
+            duration: WELL_RETURN_DURATION,
+            easing: Easing.inOut(Easing.quad),
+          });
         }
         if (
           isSlot
-          // || isSpace
+          // || isSpace (also need to check if it is aviable space)
         ) {
           onBoardSV.value = true;
           runOnJS(setOnBoard)(true);
         }
-      } // for loop
+      }
+      if (noCellFound) {
+        console.log("Dropped outside any valid space");
+        if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
+          runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
+
+          translateX.value = withTiming(
+            currentWellDataSV.value.layout.pageX +
+              currentWellDataSV.value.layout.width / 2 -
+              PIECE_RADIUS,
+            {
+              duration: WELL_RETURN_DURATION,
+              easing: Easing.inOut(Easing.quad),
+            }
+          );
+          translateY.value = withTiming(
+            currentWellDataSV.value.layout.pageY +
+              currentWellDataSV.value.layout.height / 2 -
+              PIECE_RADIUS,
+            {
+              duration: WELL_RETURN_DURATION,
+              easing: Easing.inOut(Easing.quad),
+            }
+          );
+        }
+      }
     }); // end onEnd
 
   //  // HANDLES PULLING ANIMATION

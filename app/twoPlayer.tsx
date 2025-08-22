@@ -10,6 +10,7 @@ const TwoPlayer = () => {
 
   const whiteWells = Object.entries(wells.white);
   const blackWells = Object.entries(wells.black);
+  let pieceNumber = 0;
 
   const renderPieces = (
     entries: [
@@ -21,7 +22,7 @@ const TwoPlayer = () => {
     entries.map(([id, layout]) => (
       <Piece
         key={id}
-        id={`${id.toString()}-${team[0]}`}
+        id={`${pieceNumber++}${team[0]}`}
         team={team}
         currentWellId={id}
         initialPosition={{
@@ -39,7 +40,7 @@ const TwoPlayer = () => {
       </View>
       {layoutReady && renderPieces(whiteWells, "white")}
       {layoutReady && renderPieces(blackWells, "black")}
-
+      {/* Should be own component. Piece dropping anim. */}
       {!layoutReady && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#fff" />

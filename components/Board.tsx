@@ -1,6 +1,11 @@
 import { BOARD_COL_ROW_COUNT, BOARD_SIZE } from "@/constants/gameElements";
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import {
+  Directions,
+  Gesture,
+  GestureDetector,
+} from "react-native-gesture-handler";
 import Slot from "./Slot";
 import Space from "./Space";
 
@@ -19,24 +24,53 @@ const Board = ({ className, onRotate }: BoardProps) => {
     );
   };
 
-  return (
-    <View className={className}>
-      <View style={styles.container}>
-        {Array.from({ length: BOARD_SIZE }).map((_, row) => (
-          <View key={row} style={styles.row}>
-            {Array.from({ length: BOARD_SIZE }).map((_, col) => {
-              if (isSlotPosition(row, col)) {
-                const id = `${row}-${col}`;
-                return <Slot key={id} id={id} type="slot" />;
-              }
+  const pullLeft = Gesture.Fling()
+    .direction(Directions.LEFT)
+    .onStart(() => {
+      // run pullLeft();
+    });
 
-              const id = `${row}-${col}`;
-              return <Space key={id} type="space" id={id} />;
-            })}
-          </View>
-        ))}
+  const pullRight = Gesture.Fling()
+    .direction(Directions.RIGHT)
+    .onStart(() => {
+      // run pullRight();
+    });
+
+  const pullUp = Gesture.Fling()
+    .direction(Directions.UP)
+    .onStart(() => {
+      // pullUp();
+    });
+
+  const pullDown = Gesture.Fling()
+    .direction(Directions.DOWN)
+    .onStart(() => {
+      // pullDown();
+    });
+
+  const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);
+
+  const boardGestures = Gesture.Exclusive();
+  return (
+    <GestureDetector gesture={fling}>
+      <View className={className}>
+        <View style={styles.container}>
+          {Array.from({ length: BOARD_SIZE }).map((_, row) => (
+            <View key={row} style={styles.row}>
+              {Array.from({ length: BOARD_SIZE }).map((_, col) => {
+                if (isSlotPosition(row, col)) {
+                  const id = `${row}-${col}`;
+                  return <Slot key={id} id={id} type="slot" />;
+                }
+
+                const id = `${row}-${col}`;
+                return <Space key={id} type="space" id={id} />;
+              })}
+            </View>
+          ))}
+        </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 };
 

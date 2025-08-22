@@ -29,7 +29,7 @@ const Well = ({ id, team }: CellProps) => {
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 1,
-    backgroundColor: "#065f46",
+    backgroundColor: "#377a67ff",
     borderWidth: 1,
     borderColor: "silver",
   };

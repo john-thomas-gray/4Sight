@@ -53,7 +53,7 @@ const Slot = ({ id, team = "white" }: CellProps) => {
           width: 28,
           height: 28,
           borderRadius: 14,
-          backgroundColor: "#C0C0C0", // Silver circle
+          backgroundColor: "#C0C0C0",
           zIndex: 0,
         }}
       />
