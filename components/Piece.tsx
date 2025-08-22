@@ -69,9 +69,15 @@ const Piece = ({
     y: initialPosition.y,
   });
 
+  const getCurrentWellData = (id: string) => {
+    return wellArray.find((well) => well.id === id) || null;
+  };
+
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
-  const currentWellIdSV = useSharedValue(currentWellId);
+  const currentWellDataSV = useSharedValue<CellProps | null>(
+    currentWellId ? getCurrentWellData(currentWellId) : null
+  );
   const [onBoard, setOnBoard] = React.useState(false);
   const onBoardSV = useSharedValue(false);
   const isHeld = useSharedValue(false);
@@ -82,7 +88,11 @@ const Piece = ({
   }, [boardPieceLocations]);
 
   useEffect(() => {
-    currentWellIdSV.value = currentWellId;
+    if (currentWellId) {
+      currentWellDataSV.value = getCurrentWellData(currentWellId);
+    } else {
+      currentWellDataSV.value = null;
+    }
   }, [currentWellId]);
 
   const setBoardPieceLocationsSV = (finalSpaceId: string) => {
@@ -154,8 +164,33 @@ const Piece = ({
           pieceCenter.y >= scY &&
           pieceCenter.y <= scY + scHeight;
 
-        if (!cellFound) continue;
+        if (!cellFound) {
+          console.log("Dropped outside any valid space");
+          if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
+            runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
 
+            translateX.value = withTiming(
+              currentWellDataSV.value.layout.pageX +
+                currentWellDataSV.value.layout.width / 2 -
+                PIECE_RADIUS,
+              {
+                duration: WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
+            translateY.value = withTiming(
+              currentWellDataSV.value.layout.pageY +
+                currentWellDataSV.value.layout.height / 2 -
+                PIECE_RADIUS,
+              {
+                duration: WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
+          }
+
+          continue;
+        }
         const isCorner = false;
         const isSlot = selectedCell.id in slots;
         const isSpace = selectedCell.id in spaces;
@@ -289,6 +324,28 @@ const Piece = ({
           });
         } else {
           console.log("Dropped outside any valid space");
+          if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
+            runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
+
+            translateX.value = withTiming(
+              currentWellDataSV.value.layout.pageX +
+                currentWellDataSV.value.layout.width / 2 -
+                PIECE_RADIUS,
+              {
+                duration: WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
+            translateY.value = withTiming(
+              currentWellDataSV.value.layout.pageY +
+                currentWellDataSV.value.layout.height / 2 -
+                PIECE_RADIUS,
+              {
+                duration: WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
+          }
         }
         if (
           isSlot
