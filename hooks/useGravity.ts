@@ -9,31 +9,32 @@ export const useGravity = () => {
   console.log("board piece locations", boardPieceLocations);
 
   const applyGravity = (direction: GravityProps["direction"]) => {
-    const updatedLocations = { ...boardPieceLocations };
-    console.log("starting locations", updatedLocations);
+    const updatedPieceLocations = { ...boardPieceLocations };
+    console.log("starting locations", updatedPieceLocations);
 
     if (direction === "up") {
       for (let row = 2; row <= 7; row++) {
         for (let col = 1; col <= 7; col++) {
-          const pieceLocationId = `${row}-${col}`;
+          const currentSpaceId = `${row}-${col}`;
 
-          if (updatedLocations[pieceLocationId]) {
-            const pieceId = updatedLocations[pieceLocationId];
+          if (updatedPieceLocations[currentSpaceId]) {
+            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetRow = row;
             while (
               targetRow > 1 &&
-              !updatedLocations[`${targetRow - 1}-${col}`]
+              !updatedPieceLocations[`${targetRow - 1}-${col}`]
             ) {
               targetRow--;
             }
 
-            const targetId = `${targetRow}-${col}`;
-            if (targetId !== pieceLocationId) {
+            const targetSpaceId = `${targetRow}-${col}`;
+            if (targetSpaceId !== currentSpaceId) {
               console.log(
-                `Moving piece ${pieceId} from ${pieceLocationId} to ${targetId}`
+                `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
               );
-              updatedLocations[targetId] = updatedLocations[pieceLocationId];
-              delete updatedLocations[pieceLocationId];
+              updatedPieceLocations[targetSpaceId] =
+                updatedPieceLocations[currentSpaceId];
+              delete updatedPieceLocations[currentSpaceId];
             }
           }
         }
@@ -41,23 +42,24 @@ export const useGravity = () => {
     } else if (direction === "down") {
       for (let row = 6; row >= 1; row--) {
         for (let col = 1; col <= 7; col++) {
-          const pieceLocationId = `${row}-${col}`;
-          if (updatedLocations[pieceLocationId]) {
-            const pieceId = updatedLocations[pieceLocationId];
+          const currentSpaceId = `${row}-${col}`;
+          if (updatedPieceLocations[currentSpaceId]) {
+            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetRow = row;
             while (
               targetRow < 7 &&
-              !updatedLocations[`${targetRow + 1}-${col}`]
+              !updatedPieceLocations[`${targetRow + 1}-${col}`]
             ) {
               targetRow++;
             }
-            const targetId = `${targetRow}-${col}`;
-            if (targetId !== pieceLocationId) {
+            const targetSpaceId = `${targetRow}-${col}`;
+            if (targetSpaceId !== currentSpaceId) {
               console.log(
-                `Moving piece ${pieceId} from ${pieceLocationId} to ${targetId}`
+                `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
               );
-              updatedLocations[targetId] = updatedLocations[pieceLocationId];
-              delete updatedLocations[pieceLocationId];
+              updatedPieceLocations[targetSpaceId] =
+                updatedPieceLocations[currentSpaceId];
+              delete updatedPieceLocations[currentSpaceId];
             }
           }
         }
@@ -65,24 +67,25 @@ export const useGravity = () => {
     } else if (direction === "left") {
       for (let col = 2; col <= 7; col++) {
         for (let row = 1; row <= 7; row++) {
-          const pieceLocationId = `${row}-${col}`;
-          if (updatedLocations[pieceLocationId]) {
-            const pieceId = updatedLocations[pieceLocationId];
+          const currentSpaceId = `${row}-${col}`;
+          if (updatedPieceLocations[currentSpaceId]) {
+            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetCol = col;
             while (
               targetCol > 1 &&
-              !updatedLocations[`${row}-${targetCol - 1}`]
+              !updatedPieceLocations[`${row}-${targetCol - 1}`]
             ) {
               targetCol--;
             }
 
-            const targetId = `${row}-${targetCol}`;
-            if (targetId !== pieceLocationId) {
+            const targetSpaceId = `${row}-${targetCol}`;
+            if (targetSpaceId !== currentSpaceId) {
               console.log(
-                `Moving piece ${pieceId} from ${pieceLocationId} to ${targetId}`
+                `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
               );
-              updatedLocations[targetId] = updatedLocations[pieceLocationId];
-              delete updatedLocations[pieceLocationId];
+              updatedPieceLocations[targetSpaceId] =
+                updatedPieceLocations[currentSpaceId];
+              delete updatedPieceLocations[currentSpaceId];
             }
           }
         }
@@ -90,24 +93,25 @@ export const useGravity = () => {
     } else if (direction === "right") {
       for (let col = 6; col >= 1; col--) {
         for (let row = 1; row <= 7; row++) {
-          const pieceLocationId = `${row}-${col}`;
-          if (updatedLocations[pieceLocationId]) {
-            const pieceId = updatedLocations[pieceLocationId];
+          const currentSpaceId = `${row}-${col}`;
+          if (updatedPieceLocations[currentSpaceId]) {
+            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetCol = col;
             while (
               targetCol < 7 &&
-              !updatedLocations[`${row}-${targetCol + 1}`]
+              !updatedPieceLocations[`${row}-${targetCol + 1}`]
             ) {
               targetCol++;
             }
 
-            const targetId = `${row}-${targetCol}`;
-            if (targetId !== pieceLocationId) {
+            const targetSpaceId = `${row}-${targetCol}`;
+            if (targetSpaceId !== currentSpaceId) {
               console.log(
-                `Moving piece from ${pieceLocationId} to ${targetId}`
+                `Moving ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
               );
-              updatedLocations[targetId] = updatedLocations[pieceLocationId];
-              delete updatedLocations[pieceLocationId];
+              updatedPieceLocations[targetSpaceId] =
+                updatedPieceLocations[currentSpaceId];
+              delete updatedPieceLocations[currentSpaceId];
             }
           }
         }
@@ -117,8 +121,8 @@ export const useGravity = () => {
       return;
     }
 
-    setBoardPieceLocations(updatedLocations);
-    console.log("Updated boardPieceLocations:", updatedLocations);
+    setBoardPieceLocations(updatedPieceLocations);
+    console.log("Updated boardPieceLocations:", updatedPieceLocations);
   };
 
   return applyGravity;

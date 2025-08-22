@@ -1,4 +1,5 @@
 import { BOARD_COL_ROW_COUNT, BOARD_SIZE } from "@/constants/gameElements";
+import { useGravity } from "@/hooks/useGravity";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -6,12 +7,17 @@ import {
   Gesture,
   GestureDetector,
 } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 import Slot from "./Slot";
 import Space from "./Space";
 
 type BoardProps = {
   className?: string;
   onRotate?: (direction: "clockwise" | "counterclockwise") => void;
+};
+
+type GravityProps = {
+  direction: "up" | "down" | "left" | "right";
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
@@ -24,15 +30,24 @@ const Board = ({ className, onRotate }: BoardProps) => {
     );
   };
 
+  const pullPieces = useGravity();
+
+  function pullWorklet(direction: GravityProps["direction"]) {
+    pullPieces(direction);
+  }
+
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
       // run pullLeft();
+      console.log("pullLeft");
+      runOnJS(pullWorklet)("left");
     });
 
   const pullRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
+      console.log("pullRight");
       // run pullRight();
     });
 
@@ -40,19 +55,21 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .direction(Directions.UP)
     .onStart(() => {
       // pullUp();
+      console.log("pullUp");
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
       // pullDown();
+      console.log("pullDown");
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);
 
-  const boardGestures = Gesture.Exclusive();
+  const boardGestures = Gesture.Exclusive(pullGestures);
   return (
-    <GestureDetector gesture={fling}>
+    <GestureDetector gesture={boardGestures}>
       <View className={className}>
         <View style={styles.container}>
           {Array.from({ length: BOARD_SIZE }).map((_, row) => (
