@@ -7,17 +7,6 @@ import {
   useState,
 } from "react";
 
-type Layout = {
-  pageX: number;
-  pageY: number;
-  width: number;
-  height: number;
-};
-
-type SlotData = {
-  layout: Layout;
-};
-
 type CellRegisterProps = {
   id: string;
   type: "space" | "slot" | "well" | "corner" | "error";
@@ -31,7 +20,8 @@ type GameContextType = {
     black: Record<string, Layout>;
   };
   spaces: Record<string, Layout>;
-  slots: Record<string, SlotData>;
+  corners: Record<string, Layout>;
+  slots: Record<string, Layout>;
   wellPieceLocations: Record<string, string>;
   boardPieceLocations: Record<string, string>;
   registerCell: ({ id, type, team, layout }: CellRegisterProps) => void;
@@ -43,6 +33,33 @@ type GameContextType = {
   >;
   currentBoardId?: string | null;
   layoutReady: boolean;
+  gameMode: GameMode;
+  nextTurn: () => void;
+};
+
+type GameMode = "twoPlayer" | "fourPlayer";
+
+type TurnStrategy = {
+  getNextTurn: (currentTurn: number) => number;
+  team: (currentTurn: number) => "white" | "black";
+};
+
+const turnStrategies: Record<string, TurnStrategy> = {
+  twoPlayer: {
+    getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
+    team: (currentTurn) => (currentTurn === 1 ? "white" : "black"),
+  },
+  fourPlayer: {
+    getNextTurn: (currentTurn) => (currentTurn % 4) + 1,
+    team: (currentTurn) => (currentTurn % 2 === 0 ? "black" : "white"),
+  },
+};
+
+type Layout = {
+  pageX: number;
+  pageY: number;
+  width: number;
+  height: number;
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -52,14 +69,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     white: Record<string, Layout>;
     black: Record<string, Layout>;
   }>({ white: {}, black: {} });
-
   const [spaces, setSpaces] = useState<Record<string, Layout>>({});
-  const [slots, setSlots] = useState<Record<string, SlotData>>({});
+  const [slots, setSlots] = useState<Record<string, Layout>>({});
+  const [corners, setCorners] = useState<Record<string, Layout>>({});
 
+  // Merge these to pieceLocations well and in play
   const [wellPieceLocations, setWellPieceLocations] = useState<
     Record<string, string>
   >({});
-
   const [boardPieceLocations, setBoardPieceLocations] = useState<
     Record<string, string>
   >({});
@@ -67,6 +84,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const layoutReady =
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&
+    Object.keys(corners).length > 0 &&
     Object.keys(wells.white).length > 0 &&
     Object.keys(wells.black).length > 0;
 
@@ -75,7 +93,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       if (type === "slot") {
         setSlots((prev) => ({
           ...prev,
-          [id]: { layout },
+          [id]: layout,
         }));
       } else if (type === "space") {
         setSpaces((prev) => ({
@@ -93,6 +111,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           }));
         }
       } else if (type === "corner") {
+        setCorners((prev) => ({
+          ...prev,
+          [id]: layout,
+        }));
       } else {
         throw new Error("registerCell: unknown cell type");
       }
@@ -100,18 +122,33 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
+  // TURN RULES
+
+  const [playersTurn, setPlayersTurn] = useState(1);
+  const [turnCount, setTurnCount] = useState(0);
+  const [gameMode, setGameMode] = useState<GameMode>("twoPlayer");
+
+  const nextTurn = () => {
+    const strategy = turnStrategies[gameMode];
+    setPlayersTurn(strategy.getNextTurn(playersTurn));
+    setTurnCount((prev) => prev + 1);
+  };
+
   return (
     <GameContext.Provider
       value={{
         wells,
         spaces,
         slots,
+        corners,
         registerCell,
         wellPieceLocations,
         setWellPieceLocations,
         boardPieceLocations,
         setBoardPieceLocations,
         layoutReady,
+        gameMode,
+        nextTurn,
       }}
     >
       {children}

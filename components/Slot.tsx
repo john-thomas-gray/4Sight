@@ -1,7 +1,8 @@
+import { SLOT_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
 import React, { useEffect, useRef } from "react";
-import { Image, View, ViewStyle } from "react-native";
+import { Image, View } from "react-native";
 import { icons } from "../constants";
 
 // If a piece is held and the cursor is in the area of a slot space
@@ -26,17 +27,6 @@ const Slot = ({ id, team = "white" }: CellProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const style: ViewStyle = {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#6E2C00", // Deep reddish brown
-    borderWidth: 2,
-    borderColor: "#C0C0C0", // Silver border
-    position: "relative", // Needed for absolutely positioned circle
-  };
-
   const checkDirection = (id: string) => {
     const [row, col]: [number, number] = id.split("-").map(Number) as [
       number,
@@ -46,7 +36,7 @@ const Slot = ({ id, team = "white" }: CellProps) => {
   };
 
   return (
-    <View ref={viewRef} style={style}>
+    <View ref={viewRef} style={SLOT_STYLE}>
       <View
         style={{
           position: "absolute",

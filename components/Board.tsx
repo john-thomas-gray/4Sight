@@ -1,4 +1,8 @@
-import { BOARD_COL_ROW_COUNT, BOARD_SIZE } from "@/constants/gameElements";
+import {
+  BASE_CELL_SIZE,
+  BOARD_SIZE,
+  BOARD_SIZE_ZERO_IDX,
+} from "@/constants/gameElements";
 import { useGravity } from "@/hooks/useGravity";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -7,7 +11,13 @@ import {
   Gesture,
   GestureDetector,
 } from "react-native-gesture-handler";
-import { runOnJS } from "react-native-reanimated";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import Corner from "./Corner";
 import Slot from "./Slot";
 import Space from "./Space";
 
@@ -23,10 +33,19 @@ type GravityProps = {
 const Board = ({ className, onRotate }: BoardProps) => {
   const isSlotPosition = (row: number, col: number) => {
     return (
-      (row === 0 && col > 0 && col < BOARD_COL_ROW_COUNT) || // Top
-      (row === BOARD_COL_ROW_COUNT && col > 0 && col < BOARD_COL_ROW_COUNT) || // Bottom
-      (col === 0 && row > 0 && row < BOARD_COL_ROW_COUNT) || // Left
-      (col === BOARD_COL_ROW_COUNT && row > 0 && row < BOARD_COL_ROW_COUNT) // Right
+      (row === 0 && col > 0 && col < BOARD_SIZE_ZERO_IDX) || // Top
+      (row === BOARD_SIZE_ZERO_IDX && col > 0 && col < BOARD_SIZE_ZERO_IDX) || // Bottom
+      (col === 0 && row > 0 && row < BOARD_SIZE_ZERO_IDX) || // Left
+      (col === BOARD_SIZE_ZERO_IDX && row > 0 && row < BOARD_SIZE_ZERO_IDX) // Right
+    );
+  };
+
+  const isCornerPosition = (row: number, col: number) => {
+    return (
+      (row === 0 && col === 0) ||
+      (row === 0 && col === BOARD_SIZE_ZERO_IDX) ||
+      (row === BOARD_SIZE_ZERO_IDX && col === BOARD_SIZE_ZERO_IDX) ||
+      (row === BOARD_SIZE_ZERO_IDX && col === 0)
     );
   };
 
@@ -39,69 +58,78 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      console.log("pullLeft");
       runOnJS(pullWorklet)("left");
     });
 
   const pullRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      console.log("pullRight");
       runOnJS(pullWorklet)("right");
     });
 
   const pullUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      console.log("pullUp");
       runOnJS(pullWorklet)("up");
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      console.log("pullDown");
       runOnJS(pullWorklet)("down");
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);
 
+  const rotation = useSharedValue(0);
+
+  function handleRotate(direction: "clockwise" | "counterclockwise") {
+    const delta = direction === "clockwise" ? 90 : -90;
+
+    rotation.value = withTiming(
+      rotation.value + delta,
+      { duration: 500 },
+      () => {
+        // Normalize rotation between 0–360
+        rotation.value = (rotation.value + 360) % 360;
+        // Update board logic to match rotation
+        // runOnJS(updateBoardLogic)(direction);
+      }
+    );
+
+    onRotate?.(direction);
+  }
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }, { scale: 1 }],
+  }));
+
   const boardGestures = Gesture.Exclusive(pullGestures);
   return (
     <GestureDetector gesture={boardGestures}>
-      <View className={className}>
-        <View style={styles.container}>
-          {Array.from({ length: BOARD_SIZE }).map((_, row) => (
-            <View key={row} style={styles.row}>
-              {Array.from({ length: BOARD_SIZE }).map((_, col) => {
-                if (isSlotPosition(row, col)) {
-                  const id = `${row}-${col}`;
-                  return <Slot key={id} id={id} type="slot" />;
-                }
-
-                const id = `${row}-${col}`;
-                return <Space key={id} type="space" id={id} />;
-              })}
-            </View>
-          ))}
-        </View>
-      </View>
+      <Animated.View className={className} style={animatedStyle}>
+        {Array.from({ length: BOARD_SIZE }).map((_, row) => (
+          <View key={row} style={styles.row}>
+            {Array.from({ length: BOARD_SIZE }).map((_, col) => {
+              const id = `${row}-${col}`;
+              if (isCornerPosition(row, col)) {
+                return <Corner key={id} id={id} type="corner" />;
+              } else if (isSlotPosition(row, col)) {
+                return <Slot key={id} id={id} type="slot" />;
+              }
+              return <Space key={id} id={id} type="space" />;
+            })}
+          </View>
+        ))}
+      </Animated.View>
     </GestureDetector>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    position: "relative",
-    width: 40 * BOARD_SIZE,
-    height: 40 * BOARD_SIZE,
-    paddingHorizontal: 4,
-    backgroundColor: "#065f46",
-    borderRadius: 8,
-  },
   row: {
     flexDirection: "row",
-    height: 40,
+    height: BASE_CELL_SIZE,
   },
 });
 

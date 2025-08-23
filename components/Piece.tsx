@@ -50,9 +50,9 @@ const Piece = ({
     team,
   }));
 
-  const slotArray = Object.entries(slots).map(([id, data]) => ({
+  const slotArray = Object.entries(slots).map(([id, layout]) => ({
     id,
-    layout: data.layout,
+    layout,
     type: "slot" as const,
   }));
 
@@ -107,7 +107,6 @@ const Piece = ({
       ...prev,
       [wellId]: id,
     }));
-    console.log(wellPieceLocations);
   };
 
   const deleteWellPieceLocationSV = () => {
@@ -171,7 +170,6 @@ const Piece = ({
 
         noCellFound = false;
 
-        const isCorner = false;
         const isSlot = selectedCell.id in slots;
         const isSpace = selectedCell.id in spaces;
         const isWell = selectedCell.id in wells[team];
@@ -182,9 +180,7 @@ const Piece = ({
         ];
         let prevRow: number | null = null;
         let prevCol: number | null = null;
-        if (isCorner) {
-          // Send the space back to the well.
-        } else if (isSlot) {
+        if (isSlot) {
           const slotDirection =
             nextRow === 8
               ? "N"
@@ -301,7 +297,6 @@ const Piece = ({
 
           runOnJS(setBoardPieceLocationsSV)(finalSpaceId);
         } else if (isSpace) {
-          console.log("is space");
           console.log("That space is blocked!");
           if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
             runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
@@ -331,7 +326,6 @@ const Piece = ({
           // Animate the piece to the slot in the slot in that direction.
           // It runs if slot
         } else if (isWell) {
-          console.log("is well");
           runOnJS(setWellPieceLocationsSV)(selectedCell.id);
           translateX.value = withTiming(scX + scWidth / 2 - PIECE_RADIUS, {
             duration: WELL_RETURN_DURATION,
@@ -375,7 +369,7 @@ const Piece = ({
           );
         }
       }
-    }); // end onEnd
+    });
 
   // HANDLES PULLING ANIMATION
   useEffect(() => {

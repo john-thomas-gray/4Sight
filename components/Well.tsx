@@ -1,7 +1,8 @@
+import { WELL_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
 import React, { useEffect, useRef } from "react";
-import { View, ViewStyle } from "react-native";
+import { View } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
@@ -23,18 +24,7 @@ const Well = ({ id, team }: CellProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const style: ViewStyle = {
-    height: 40,
-    width: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 1,
-    backgroundColor: "#377a67ff",
-    borderWidth: 1,
-    borderColor: "silver",
-  };
-
-  return <View ref={viewRef} onLayout={reportLayout} style={style} />;
+  return <View ref={viewRef} onLayout={reportLayout} style={WELL_STYLE} />;
 };
 
 export default Well;

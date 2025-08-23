@@ -1,10 +1,14 @@
-import { SPACE_STYLE } from "@/constants/gameElements";
+import {
+  BOARD_SIZE_ZERO_IDX,
+  CORNER_BORDER_RADIUS,
+  CORNER_STYLE,
+} from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
-const Space = ({ id }: CellProps) => {
+const Corner = ({ id }: CellProps) => {
   const { registerCell } = useGameContext();
   const viewRef = useRef<View>(null);
 
@@ -12,7 +16,7 @@ const Space = ({ id }: CellProps) => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       registerCell({
         id,
-        type: "space",
+        type: "corner",
         layout: { pageX, pageY, width, height },
       });
     });
@@ -26,14 +30,21 @@ const Space = ({ id }: CellProps) => {
   const [rowStr, colStr] = id.split("-");
   const row = parseInt(rowStr, 10);
   const col = parseInt(colStr, 10);
-  const isEven = (row + col) % 2 === 0;
 
   const style: ViewStyle = {
-    ...SPACE_STYLE,
-    backgroundColor: isEven ? "#d1fae5" : "#ffffff",
+    ...CORNER_STYLE,
+    borderTopLeftRadius: row === 0 && col === 0 ? CORNER_BORDER_RADIUS : 0,
+    borderTopRightRadius:
+      row === 0 && col === BOARD_SIZE_ZERO_IDX ? CORNER_BORDER_RADIUS : 0,
+    borderBottomLeftRadius:
+      row === BOARD_SIZE_ZERO_IDX && col === 0 ? CORNER_BORDER_RADIUS : 0,
+    borderBottomRightRadius:
+      row === BOARD_SIZE_ZERO_IDX && col === BOARD_SIZE_ZERO_IDX
+        ? CORNER_BORDER_RADIUS
+        : 0,
   };
 
   return <View ref={viewRef} onLayout={reportLayout} style={style} />;
 };
 
-export default Space;
+export default Corner;

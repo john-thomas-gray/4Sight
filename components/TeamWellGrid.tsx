@@ -1,3 +1,4 @@
+import { BASE_CELL_SIZE } from "@/constants/gameElements";
 import { CellTeam } from "@/types/board";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    height: 40,
+    height: BASE_CELL_SIZE,
   },
 });
 
