@@ -1,4 +1,4 @@
-import { CellTeam } from "@/types/board";
+import { CellLayout, CellProps } from "@/types/board";
 import {
   createContext,
   ReactNode,
@@ -6,72 +6,53 @@ import {
   useContext,
   useState,
 } from "react";
-
-type CellRegisterProps = {
-  id: string;
-  type: "space" | "slot" | "well" | "corner" | "error";
-  team?: CellTeam;
-  layout: Layout;
-};
+import { GameMode, Team, Turn } from "../types/logic";
 
 type GameContextType = {
-  wells: {
-    white: Record<string, Layout>;
-    black: Record<string, Layout>;
+  layout: {
+    wells: {
+      white: Record<string, CellLayout>;
+      black: Record<string, CellLayout>;
+    };
+    spaces: Record<string, CellLayout>;
+    corners: Record<string, CellLayout>;
+    slots: Record<string, CellLayout>;
+    wellPieceLocations: Record<string, string>;
+    boardPieceLocations: Record<string, string>;
+    registerCell: ({ id, type, team, layout }: CellProps) => void;
+    setWellPieceLocations: React.Dispatch<
+      React.SetStateAction<Record<string, string>>
+    >;
+    setBoardPieceLocations: React.Dispatch<
+      React.SetStateAction<Record<string, string>>
+    >;
+    currentBoardId?: string | null;
+    layoutReady: boolean;
   };
-  spaces: Record<string, Layout>;
-  corners: Record<string, Layout>;
-  slots: Record<string, Layout>;
-  wellPieceLocations: Record<string, string>;
-  boardPieceLocations: Record<string, string>;
-  registerCell: ({ id, type, team, layout }: CellRegisterProps) => void;
-  setWellPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
-  setBoardPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
-  currentBoardId?: string | null;
-  layoutReady: boolean;
-  gameMode: GameMode;
-  nextTurn: () => void;
+  logic: {
+    gameMode: GameMode;
+    nextTurn: () => void;
+    turnCount: number;
+    currentTeam: Team;
+    setGameMode: React.Dispatch<React.SetStateAction<GameMode>>;
+  };
 };
-
-type GameMode = "twoPlayer" | "fourPlayer";
 
 type TurnStrategy = {
-  getNextTurn: (currentTurn: number) => number;
-  team: (currentTurn: number) => "white" | "black";
-};
-
-const turnStrategies: Record<string, TurnStrategy> = {
-  twoPlayer: {
-    getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
-    team: (currentTurn) => (currentTurn === 1 ? "white" : "black"),
-  },
-  fourPlayer: {
-    getNextTurn: (currentTurn) => (currentTurn % 4) + 1,
-    team: (currentTurn) => (currentTurn % 2 === 0 ? "black" : "white"),
-  },
-};
-
-type Layout = {
-  pageX: number;
-  pageY: number;
-  width: number;
-  height: number;
+  getNextTurn: (currentTurn: Turn) => Turn;
+  team: (currentTurn: Turn) => Team;
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [wells, setWells] = useState<{
-    white: Record<string, Layout>;
-    black: Record<string, Layout>;
+    white: Record<string, CellLayout>;
+    black: Record<string, CellLayout>;
   }>({ white: {}, black: {} });
-  const [spaces, setSpaces] = useState<Record<string, Layout>>({});
-  const [slots, setSlots] = useState<Record<string, Layout>>({});
-  const [corners, setCorners] = useState<Record<string, Layout>>({});
+  const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
+  const [slots, setSlots] = useState<Record<string, CellLayout>>({});
+  const [corners, setCorners] = useState<Record<string, CellLayout>>({});
 
   // Merge these to pieceLocations well and in play
   const [wellPieceLocations, setWellPieceLocations] = useState<
@@ -88,67 +69,84 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(wells.white).length > 0 &&
     Object.keys(wells.black).length > 0;
 
-  const registerCell = useCallback(
-    ({ id, team, type, layout }: CellRegisterProps) => {
-      if (type === "slot") {
-        setSlots((prev) => ({
+  const registerCell = useCallback(({ id, team, type, layout }: CellProps) => {
+    if (type === "slot") {
+      setSlots((prev) => ({
+        ...prev,
+        [id]: layout!,
+      }));
+    } else if (type === "space") {
+      setSpaces((prev) => ({
+        ...prev,
+        [id]: layout!,
+      }));
+    } else if (type === "well") {
+      if (team) {
+        setWells((prev) => ({
           ...prev,
-          [id]: layout,
+          [team]: {
+            ...prev[team],
+            [id]: layout!,
+          },
         }));
-      } else if (type === "space") {
-        setSpaces((prev) => ({
-          ...prev,
-          [id]: layout,
-        }));
-      } else if (type === "well") {
-        if (team) {
-          setWells((prev) => ({
-            ...prev,
-            [team]: {
-              ...prev[team],
-              [id]: layout,
-            },
-          }));
-        }
-      } else if (type === "corner") {
-        setCorners((prev) => ({
-          ...prev,
-          [id]: layout,
-        }));
-      } else {
-        throw new Error("registerCell: unknown cell type");
       }
-    },
-    []
-  );
+    } else if (type === "corner") {
+      setCorners((prev) => ({
+        ...prev,
+        [id]: layout!,
+      }));
+    } else {
+      throw new Error("registerCell: unknown cell type");
+    }
+  }, []);
 
   // TURN RULES
-
-  const [playersTurn, setPlayersTurn] = useState(1);
-  const [turnCount, setTurnCount] = useState(0);
+  const [playersTurn, setPlayersTurn] = useState<1 | 2 | 3 | 4>(1);
+  const [turnCount, setTurnCount] = useState<number>(1);
   const [gameMode, setGameMode] = useState<GameMode>("twoPlayer");
+
+  const turnStrategies: Record<string, TurnStrategy> = {
+    twoPlayer: {
+      getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
+      team: (currentTurn) => (currentTurn === 1 ? "white" : "black"),
+    },
+    fourPlayer: {
+      getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
+      team: (currentTurn) => (currentTurn % 2 === 0 ? "black" : "white"),
+    },
+  };
 
   const nextTurn = () => {
     const strategy = turnStrategies[gameMode];
     setPlayersTurn(strategy.getNextTurn(playersTurn));
     setTurnCount((prev) => prev + 1);
+    console.log("next turn. it is now turn:", turnCount);
   };
+
+  const currentTeam = turnStrategies[gameMode].team(playersTurn);
 
   return (
     <GameContext.Provider
       value={{
-        wells,
-        spaces,
-        slots,
-        corners,
-        registerCell,
-        wellPieceLocations,
-        setWellPieceLocations,
-        boardPieceLocations,
-        setBoardPieceLocations,
-        layoutReady,
-        gameMode,
-        nextTurn,
+        layout: {
+          wells,
+          spaces,
+          slots,
+          corners,
+          registerCell,
+          wellPieceLocations,
+          setWellPieceLocations,
+          boardPieceLocations,
+          setBoardPieceLocations,
+          layoutReady,
+        },
+        logic: {
+          gameMode,
+          nextTurn,
+          turnCount,
+          currentTeam,
+          setGameMode,
+        },
       }}
     >
       {children}

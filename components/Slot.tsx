@@ -1,6 +1,7 @@
 import { SLOT_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
+import { Team } from "@/types/logic";
 import React, { useEffect, useRef } from "react";
 import { Image, View } from "react-native";
 import { icons } from "../constants";
@@ -8,13 +9,14 @@ import { icons } from "../constants";
 // If a piece is held and the cursor is in the area of a slot space
 // project a preview of where that piece would go if released
 
-const Slot = ({ id, team = "white" }: CellProps) => {
+const Slot = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { registerCell } = useGameContext();
+  const { layout, logic } = useGameContext();
+  team = logic.currentTeam;
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      registerCell({
+      layout.registerCell({
         id,
         type: "slot",
         layout: { pageX, pageY, width, height },
@@ -48,7 +50,7 @@ const Slot = ({ id, team = "white" }: CellProps) => {
         }}
       />
       <Image
-        source={icons.slot[checkDirection(id)][team]}
+        source={icons.slot[checkDirection(id)][team as Team]}
         style={{
           width: 24,
           height: 24,

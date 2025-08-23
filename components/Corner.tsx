@@ -9,12 +9,13 @@ import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Corner = ({ id }: CellProps) => {
-  const { registerCell } = useGameContext();
+  const { layout, logic } = useGameContext();
   const viewRef = useRef<View>(null);
+  const cornerColor = logic.currentTeam;
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      registerCell({
+      layout.registerCell({
         id,
         type: "corner",
         layout: { pageX, pageY, width, height },
@@ -42,6 +43,7 @@ const Corner = ({ id }: CellProps) => {
       row === BOARD_SIZE_ZERO_IDX && col === BOARD_SIZE_ZERO_IDX
         ? CORNER_BORDER_RADIUS
         : 0,
+    backgroundColor: cornerColor,
   };
 
   return <View ref={viewRef} onLayout={reportLayout} style={style} />;

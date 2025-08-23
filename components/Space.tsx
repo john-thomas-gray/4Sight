@@ -5,12 +5,12 @@ import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Space = ({ id }: CellProps) => {
-  const { registerCell } = useGameContext();
+  const { layout } = useGameContext();
   const viewRef = useRef<View>(null);
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      registerCell({
+      layout.registerCell({
         id,
         type: "space",
         layout: { pageX, pageY, width, height },

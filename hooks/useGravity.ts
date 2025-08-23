@@ -5,11 +5,11 @@ type GravityProps = {
 };
 
 export const useGravity = () => {
-  const { boardPieceLocations, setBoardPieceLocations } = useGameContext();
+  const { layout } = useGameContext();
   // console.log("board piece locations", boardPieceLocations);
 
   const applyGravity = (direction: GravityProps["direction"]) => {
-    const updatedPieceLocations = { ...boardPieceLocations };
+    const updatedPieceLocations = { ...layout.boardPieceLocations };
 
     if (direction === "up") {
       for (let row = 2; row <= 7; row++) {
@@ -120,7 +120,7 @@ export const useGravity = () => {
       return;
     }
 
-    setBoardPieceLocations(updatedPieceLocations);
+    layout.setBoardPieceLocations(updatedPieceLocations);
   };
 
   return applyGravity;

@@ -26,10 +26,6 @@ type BoardProps = {
   onRotate?: (direction: "clockwise" | "counterclockwise") => void;
 };
 
-type GravityProps = {
-  direction: "up" | "down" | "left" | "right";
-};
-
 const Board = ({ className, onRotate }: BoardProps) => {
   const isSlotPosition = (row: number, col: number) => {
     return (
@@ -51,32 +47,28 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
   const pullPieces = useGravity();
 
-  function pullWorklet(direction: GravityProps["direction"]) {
-    pullPieces(direction);
-  }
-
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      runOnJS(pullWorklet)("left");
+      runOnJS(pullPieces)("left");
     });
 
   const pullRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      runOnJS(pullWorklet)("right");
+      runOnJS(pullPieces)("right");
     });
 
   const pullUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      runOnJS(pullWorklet)("up");
+      runOnJS(pullPieces)("up");
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      runOnJS(pullWorklet)("down");
+      runOnJS(pullPieces)("down");
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);

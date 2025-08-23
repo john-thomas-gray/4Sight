@@ -6,7 +6,7 @@ import {
 import { BOARD_SIZE, PIECE_RADIUS, PIECE_SIZE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -33,30 +33,22 @@ const Piece = ({
   currentWellId,
   currentBoardId,
 }: PieceProps) => {
-  const {
-    wells,
-    slots,
-    spaces,
-    boardPieceLocations,
-    setBoardPieceLocations,
-    wellPieceLocations,
-    setWellPieceLocations,
-  } = useGameContext();
+  const { layout } = useGameContext();
 
-  const wellArray = Object.entries(wells[team]).map(([id, layout]) => ({
+  const wellArray = Object.entries(layout.wells[team]).map(([id, layout]) => ({
     id,
     layout,
     type: "well" as const,
     team,
   }));
 
-  const slotArray = Object.entries(slots).map(([id, layout]) => ({
+  const slotArray = Object.entries(layout.slots).map(([id, layout]) => ({
     id,
     layout,
     type: "slot" as const,
   }));
 
-  const spaceArray = Object.entries(spaces).map(([id, layout]) => ({
+  const spaceArray = Object.entries(layout.spaces).map(([id, layout]) => ({
     id,
     layout,
     type: "space" as const,
@@ -73,6 +65,8 @@ const Piece = ({
     return wellArray.find((well) => well.id === id) || null;
   };
 
+  const { logic } = useGameContext();
+
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
   const currentWellDataSV = useSharedValue<CellProps | null>(
@@ -81,11 +75,16 @@ const Piece = ({
   const [onBoard, setOnBoard] = React.useState(false);
   const onBoardSV = useSharedValue(false);
   const isHeld = useSharedValue(false);
-  const boardPieceLocationsSV = useSharedValue(boardPieceLocations);
+  const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
+  const [myTurn, setMyTurn] = useState(false);
 
   useEffect(() => {
-    boardPieceLocationsSV.value = boardPieceLocations;
-  }, [boardPieceLocations]);
+    setMyTurn(team === logic.currentTeam);
+  }, [logic.nextTurn]);
+
+  useEffect(() => {
+    boardPieceLocationsSV.value = layout.boardPieceLocations;
+  }, [layout.boardPieceLocations]);
 
   useEffect(() => {
     if (currentWellId) {
@@ -94,34 +93,37 @@ const Piece = ({
       currentWellDataSV.value = null;
     }
   }, [currentWellId]);
-
+  //
   const setBoardPieceLocationsSV = (finalSpaceId: string) => {
-    setBoardPieceLocations((prev) => ({
+    layout.setBoardPieceLocations((prev) => ({
       ...prev,
       [finalSpaceId]: id,
     }));
   };
-
+  //
   const setWellPieceLocationsSV = (wellId: string) => {
-    setWellPieceLocations((prev) => ({
+    layout.setWellPieceLocations((prev) => ({
       ...prev,
       [wellId]: id,
     }));
   };
-
+  //
   const deleteWellPieceLocationSV = () => {
     if (currentWellId) {
-      setWellPieceLocations((prev) => {
+      layout.setWellPieceLocations((prev) => {
         const updated = { ...prev };
         delete updated[currentWellId as string];
         return updated;
       });
     }
   };
+  const goToNextTurn = () => {
+    setTimeout(() => logic.nextTurn(), PIECE_DROP_DURATION + 250);
+  };
 
   useEffect(() => {
     if (currentWellId) {
-      setWellPieceLocations((prev) => ({
+      layout.setWellPieceLocations((prev) => ({
         ...prev,
         [currentWellId]: id,
       }));
@@ -129,7 +131,7 @@ const Piece = ({
   }, []);
 
   const movePiece = Gesture.Pan()
-    .enabled(!onBoard)
+    .enabled(!onBoard && myTurn)
     .onStart(() => {
       isHeld.value = true;
       runOnJS(deleteWellPieceLocationSV)();
@@ -170,9 +172,9 @@ const Piece = ({
 
         noCellFound = false;
 
-        const isSlot = selectedCell.id in slots;
-        const isSpace = selectedCell.id in spaces;
-        const isWell = selectedCell.id in wells[team];
+        const isSlot = selectedCell.id in layout.slots;
+        const isSpace = selectedCell.id in layout.spaces;
+        const isWell = selectedCell.id in layout.wells[team];
 
         let [nextRow, nextCol] = selectedCell.id.split("-").map(Number) as [
           number,
@@ -203,7 +205,7 @@ const Piece = ({
           while (true) {
             // extract to higher scope?
             const nextSpaceId = `${nextRow}-${nextCol}`;
-            const nextSpace = spaces[nextSpaceId];
+            const nextSpace = layout.spaces[nextSpaceId];
 
             const isOccupied =
               boardPieceLocationsSV.value[nextSpaceId] !== undefined;
@@ -258,7 +260,7 @@ const Piece = ({
           }
 
           const finalSpaceId = `${prevRow}-${prevCol}`;
-          const finalSpaceLayout = spaces[finalSpaceId];
+          const finalSpaceLayout = layout.spaces[finalSpaceId];
 
           if (!finalSpaceLayout) {
             console.warn("No layout for final board space", finalSpaceId);
@@ -336,12 +338,14 @@ const Piece = ({
             easing: Easing.inOut(Easing.quad),
           });
         }
+        // Piece placed on board
         if (
           isSlot
           // || isSpace (also need to check if it is aviable space)
         ) {
           onBoardSV.value = true;
           runOnJS(setOnBoard)(true);
+          runOnJS(goToNextTurn)();
         }
       }
       if (noCellFound) {
@@ -373,28 +377,28 @@ const Piece = ({
 
   // HANDLES PULLING ANIMATION
   useEffect(() => {
-    const nextSpaceId = Object.entries(boardPieceLocations).find(
+    const nextSpaceId = Object.entries(layout.boardPieceLocations).find(
       ([spaceId, pieceId]) => pieceId === id
     )?.[0];
 
-    if (nextSpaceId && spaces[nextSpaceId]) {
-      const layout = spaces[nextSpaceId];
+    if (nextSpaceId && layout.spaces[nextSpaceId]) {
+      const nextSpaceLayout = layout.spaces[nextSpaceId];
       translateX.value = withTiming(
-        layout.pageX + layout.width / 2 - PIECE_RADIUS,
+        nextSpaceLayout.pageX + nextSpaceLayout.width / 2 - PIECE_RADIUS,
         {
           duration: PIECE_DROP_DURATION,
           easing: Easing.bounce,
         }
       );
       translateY.value = withTiming(
-        layout.pageY + layout.height / 2 - PIECE_RADIUS,
+        nextSpaceLayout.pageY + nextSpaceLayout.height / 2 - PIECE_RADIUS,
         {
           duration: PIECE_DROP_DURATION,
           easing: Easing.bounce,
         }
       );
     }
-  }, [boardPieceLocations, spaces]);
+  }, [layout.boardPieceLocations, layout.spaces]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

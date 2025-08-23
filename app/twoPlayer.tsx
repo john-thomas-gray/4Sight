@@ -2,14 +2,19 @@ import Board from "@/components/Board";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import { useGameContext } from "@/context/GameContext";
-import React from "react";
+import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 const TwoPlayer = () => {
-  const { wells, layoutReady } = useGameContext();
+  const { layout, logic } = useGameContext();
 
-  const whiteWells = Object.entries(wells.white);
-  const blackWells = Object.entries(wells.black);
+  useEffect(() => {
+    logic.setGameMode("twoPlayer");
+  }, [logic]);
+
+  const whiteWells = Object.entries(layout.wells.white);
+  const blackWells = Object.entries(layout.wells.black);
+
   let pieceNumber = 0;
 
   const renderPieces = (
@@ -38,10 +43,10 @@ const TwoPlayer = () => {
         <Board className="mx-10" />
         <TeamWellGrid team="black" />
       </View>
-      {layoutReady && renderPieces(whiteWells, "white")}
-      {layoutReady && renderPieces(blackWells, "black")}
+      {layout.layoutReady && renderPieces(whiteWells, "white")}
+      {layout.layoutReady && renderPieces(blackWells, "black")}
       {/* Should be own component. Piece dropping anim. */}
-      {!layoutReady && (
+      {!layout.layoutReady && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#fff" />
           <Text style={styles.loadingText}>Loading game board…</Text>

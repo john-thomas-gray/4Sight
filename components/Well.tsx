@@ -6,11 +6,11 @@ import { View } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { registerCell } = useGameContext();
+  const { layout } = useGameContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      registerCell({
+      layout.registerCell({
         id,
         type: "well",
         team,

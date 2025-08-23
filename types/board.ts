@@ -1,15 +1,17 @@
+import { Team } from "./logic";
+
 export type CellProps = {
   id: string;
-  type: "space" | "slot" | "well" | "corner" | "error";
-  team?: CellTeam;
-  layout?: Layout;
+  type: CellType;
+  team?: Team;
+  layout?: CellLayout;
 };
 
-export type CellTeam = "white" | "black" | undefined;
-
-type Layout = {
+export type CellLayout = {
   pageX: number;
   pageY: number;
   width: number;
   height: number;
 };
+
+export type CellType = "space" | "slot" | "well" | "corner" | "error";

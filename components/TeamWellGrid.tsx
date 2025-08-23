@@ -1,11 +1,11 @@
 import { BASE_CELL_SIZE } from "@/constants/gameElements";
-import { CellTeam } from "@/types/board";
+import { Team } from "@/types/logic";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Well from "./Well";
 
 type TeamWellGridProps = {
-  team: CellTeam;
+  team: Team;
   className?: string;
 };
 
