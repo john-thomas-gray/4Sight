@@ -1,9 +1,15 @@
 import {
+  BOARD_COLOR_CHANGE_DURATION,
+  PIECE_DROP_DURATION,
+} from "@/constants/animations";
+import {
   BASE_CELL_SIZE,
   BOARD_SIZE,
   BOARD_SIZE_ZERO_IDX,
 } from "@/constants/gameElements";
+import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
+import { PullDirection } from "@/types/board";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -27,6 +33,7 @@ type BoardProps = {
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
+  const { logic } = useGameContext();
   const isSlotPosition = (row: number, col: number) => {
     return (
       (row === 0 && col > 0 && col < BOARD_SIZE_ZERO_IDX) || // Top
@@ -46,29 +53,36 @@ const Board = ({ className, onRotate }: BoardProps) => {
   };
 
   const pullPieces = useGravity();
+  const executePull = (direction: PullDirection) => {
+    pullPieces(direction);
+    setTimeout(
+      () => logic.nextTurn(),
+      PIECE_DROP_DURATION + BOARD_COLOR_CHANGE_DURATION
+    );
+  };
 
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      runOnJS(pullPieces)("left");
+      runOnJS(executePull)("left");
     });
 
   const pullRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      runOnJS(pullPieces)("right");
+      runOnJS(executePull)("right");
     });
 
   const pullUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      runOnJS(pullPieces)("up");
+      runOnJS(executePull)("up");
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      runOnJS(pullPieces)("down");
+      runOnJS(executePull)("down");
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);

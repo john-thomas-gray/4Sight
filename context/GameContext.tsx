@@ -1,5 +1,6 @@
-import { TEAM_ONE_COLOR, TEAM_TWO_COLOR } from "@/constants/gameElements";
+import { ColorTheme } from "@/constants/colorThemes";
 import { CellLayout, CellProps } from "@/types/board";
+import { THEME_MAP } from "@/utils/themeUtils";
 import {
   createContext,
   ReactNode,
@@ -34,7 +35,13 @@ type GameContextType = {
     currentTeam: Team;
     setGameMode: React.Dispatch<React.SetStateAction<GameMode>>;
   };
+  settings: {
+    colorTheme: ColorTheme;
+    setColorTheme: React.Dispatch<React.SetStateAction<ColorTheme>>;
+  };
 };
+
+// SETTINGS
 
 type TurnStrategy = {
   getNextTurn: (currentTurn: Turn) => Turn;
@@ -44,10 +51,14 @@ type TurnStrategy = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(THEME_MAP.CLASSIC);
   const [wells, setWells] = useState<{
-    [TEAM_ONE_COLOR]: Record<string, CellLayout>;
-    [TEAM_TWO_COLOR]: Record<string, CellLayout>;
-  }>({ [TEAM_ONE_COLOR]: {}, [TEAM_TWO_COLOR]: {} });
+    [colorTheme.TEAM_ONE_COLOR]: Record<string, CellLayout>;
+    [colorTheme.TEAM_TWO_COLOR]: Record<string, CellLayout>;
+  }>({
+    [colorTheme.TEAM_ONE_COLOR]: {},
+    [colorTheme.TEAM_TWO_COLOR]: {},
+  });
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
   const [corners, setCorners] = useState<Record<string, CellLayout>>({});
@@ -64,8 +75,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&
     Object.keys(corners).length > 0 &&
-    Object.keys(wells[TEAM_ONE_COLOR]).length > 0 &&
-    Object.keys(wells[TEAM_TWO_COLOR]).length > 0;
+    Object.keys(wells[colorTheme.TEAM_ONE_COLOR]).length > 0 &&
+    Object.keys(wells[colorTheme.TEAM_TWO_COLOR]).length > 0;
 
   const registerCell = useCallback(({ id, team, type, layout }: CellProps) => {
     if (type === "slot") {
@@ -105,12 +116,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     twoPlayer: {
       getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
       team: (currentTurn) =>
-        currentTurn === 1 ? TEAM_ONE_COLOR : TEAM_TWO_COLOR,
+        currentTurn === 1
+          ? colorTheme.TEAM_ONE_COLOR
+          : colorTheme.TEAM_TWO_COLOR,
     },
     fourPlayer: {
       getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
       team: (currentTurn) =>
-        currentTurn % 2 === 0 ? TEAM_TWO_COLOR : TEAM_ONE_COLOR,
+        currentTurn % 2 === 0
+          ? colorTheme.TEAM_TWO_COLOR
+          : colorTheme.TEAM_ONE_COLOR,
     },
   };
 
@@ -144,6 +159,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           turnCount,
           currentTeam,
           setGameMode,
+        },
+        settings: {
+          colorTheme,
+          setColorTheme,
         },
       }}
     >

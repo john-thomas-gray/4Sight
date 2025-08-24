@@ -15,3 +15,5 @@ export type CellLayout = {
 };
 
 export type CellType = "space" | "slot" | "well" | "corner" | "error";
+
+export type PullDirection = "up" | "down" | "left" | "right";

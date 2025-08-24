@@ -2,14 +2,10 @@ import fs from "fs";
 import path from "path";
 
 const assetDirs = {
-  icons: "./assets/icons",
   images: "./assets/images",
-  backgrounds: "./assets/backgrounds",
-  banners: "./assets/banners",
-  logos: "./assets/logos"
 };
 
-const outputFilePath = "./constants/index.ts";
+const outputFilePath = "./assets/index.ts";
 
 function toCamelCase(fileName: string): string {
   return fileName
@@ -54,7 +50,7 @@ function generateImportsAndExports() {
     images: [],
     backgrounds: [],
     banners: [],
-    logos: []
+    logos: [],
   };
 
   for (const [group, dir] of Object.entries(assetDirs)) {
@@ -91,7 +87,7 @@ function generateImportsAndExports() {
 
   const exportLines = Object.entries(exportGroups).map(
     ([groupName, identifiers]) => {
-      const items = identifiers.map(id => `  ${id},`).join("\n");
+      const items = identifiers.map((id) => `  ${id},`).join("\n");
       return `export const ${groupName} = {\n${items}\n};`;
     }
   );

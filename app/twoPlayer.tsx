@@ -1,7 +1,7 @@
 import Board from "@/components/Board";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
-import { TEAM_ONE_COLOR, TEAM_TWO_COLOR } from "@/constants/gameElements";
+import { ColorThemes } from "@/constants/";
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/logic";
 import React, { useEffect } from "react";
@@ -12,10 +12,14 @@ const TwoPlayer = () => {
 
   useEffect(() => {
     logic.setGameMode("twoPlayer");
-  }, [logic]);
+  }, []);
 
-  const teamOneWells = Object.entries(layout.wells[TEAM_ONE_COLOR]);
-  const teamTwoWells = Object.entries(layout.wells[TEAM_TWO_COLOR]);
+  const teamOneWells = Object.entries(
+    layout.wells[ColorThemes.MASTER.TEAM_ONE_COLOR]
+  );
+  const teamTwoWells = Object.entries(
+    layout.wells[ColorThemes.MASTER.TEAM_TWO_COLOR]
+  );
 
   let pieceNumber = 0;
 
@@ -39,14 +43,19 @@ const TwoPlayer = () => {
       />
     ));
   return (
-    <View className="flex-1 flex-row items-center justify-center mt-90 bg-[#065f46]">
+    <View
+      className="flex-1 flex-row items-center justify-center mt-90"
+      style={{ backgroundColor: ColorThemes.MASTER.FELT_TOP }}
+    >
       <View className="flex-row justify-between">
-        <TeamWellGrid team={TEAM_ONE_COLOR} />
+        <TeamWellGrid team={ColorThemes.MASTER.TEAM_ONE_COLOR} />
         <Board className="mx-10" />
-        <TeamWellGrid team={TEAM_TWO_COLOR} />
+        <TeamWellGrid team={ColorThemes.MASTER.TEAM_TWO_COLOR} />
       </View>
-      {layout.layoutReady && renderPieces(teamOneWells, TEAM_ONE_COLOR)}
-      {layout.layoutReady && renderPieces(teamTwoWells, TEAM_TWO_COLOR)}
+      {layout.layoutReady &&
+        renderPieces(teamOneWells, ColorThemes.MASTER.TEAM_ONE_COLOR)}
+      {layout.layoutReady &&
+        renderPieces(teamTwoWells, ColorThemes.MASTER.TEAM_TWO_COLOR)}
       {/* Should be own component. Piece dropping anim. */}
       {!layout.layoutReady && (
         <View style={styles.loadingOverlay}>

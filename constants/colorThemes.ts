@@ -1,0 +1,40 @@
+// COLORS
+
+export type ColorTheme = {
+  TEAM_ONE_COLOR: string;
+  TEAM_TWO_COLOR: string;
+  WELL_GRID_BACKGROUND_COLOR: string;
+  WELL_BACKGROUND_COLOR: string;
+  SLOT_BORDER_COLOR: string;
+  SLOT_BACKGROUND_COLOR: string;
+  SLOT_INSERT_COLOR: string;
+  ODD_SPACE_COLOR: string;
+  EVEN_SPACE_COLOR: string;
+  FELT_TOP: string;
+};
+
+export const CLASSIC: ColorTheme = {
+  TEAM_ONE_COLOR: "#ffffff",
+  TEAM_TWO_COLOR: "#000000",
+  WELL_GRID_BACKGROUND_COLOR: "#6E2C00",
+  WELL_BACKGROUND_COLOR: "#377a67ff",
+  SLOT_BORDER_COLOR: "#C0C0C0",
+  SLOT_BACKGROUND_COLOR: "#6E2C00",
+  SLOT_INSERT_COLOR: "#C0C0C0",
+  ODD_SPACE_COLOR: "#ffffff",
+  EVEN_SPACE_COLOR: "#d1fae5",
+  FELT_TOP: "#065f46",
+};
+
+export const SCHOOLHOUSE: ColorTheme = {
+  TEAM_ONE_COLOR: "#d8c744ff",
+  TEAM_TWO_COLOR: "#d84444ff",
+  WELL_GRID_BACKGROUND_COLOR: "#333333",
+  WELL_BACKGROUND_COLOR: "#f8c1c1ff",
+  SLOT_BORDER_COLOR: "#f5f5f5",
+  SLOT_BACKGROUND_COLOR: "#4473d8ff",
+  SLOT_INSERT_COLOR: "#c7e9ffff",
+  ODD_SPACE_COLOR: "#4473d8ff",
+  EVEN_SPACE_COLOR: "#b0b0b0ff",
+  FELT_TOP: "rgba(127, 190, 249, 1)",
+};

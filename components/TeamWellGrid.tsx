@@ -1,8 +1,4 @@
-import {
-  BASE_CELL_SIZE,
-  TEAM_ONE_COLOR,
-  TEAM_TWO_COLOR,
-} from "@/constants/gameElements";
+import { ColorThemes, GameElements } from "@/constants";
 import { Team } from "@/types/logic";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -16,9 +12,14 @@ const COLS = 3;
 const ROWS = 8;
 
 const TeamWellGrid = ({ team }: TeamWellGridProps) => {
-  const borderColor = team === TEAM_ONE_COLOR ? TEAM_ONE_COLOR : TEAM_TWO_COLOR;
+  const borderColor =
+    team === ColorThemes.MASTER.TEAM_ONE_COLOR
+      ? ColorThemes.MASTER.TEAM_ONE_COLOR
+      : ColorThemes.MASTER.TEAM_TWO_COLOR;
   const idNumOffset =
-    team === TEAM_ONE_COLOR ? { row: 9, col: 9 } : { row: 17, col: 12 };
+    team === ColorThemes.MASTER.TEAM_ONE_COLOR
+      ? { row: 9, col: 9 }
+      : { row: 17, col: 12 };
 
   return (
     <View style={[styles.container, { borderColor }]}>
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    height: BASE_CELL_SIZE,
+    height: GameElements.BASE_CELL_SIZE,
   },
 });
 

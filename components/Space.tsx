@@ -1,4 +1,5 @@
-import { SPACE_STYLE } from "@/constants/gameElements";
+import { ColorThemes, GameElements } from "@/constants";
+
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
 import { useEffect, useRef } from "react";
@@ -29,8 +30,10 @@ const Space = ({ id }: CellProps) => {
   const isEven = (row + col) % 2 === 0;
 
   const style: ViewStyle = {
-    ...SPACE_STYLE,
-    backgroundColor: isEven ? "#d1fae5" : "#ffffff",
+    ...GameElements.SPACE_STYLE,
+    backgroundColor: isEven
+      ? ColorThemes.MASTER.EVEN_SPACE_COLOR
+      : ColorThemes.MASTER.ODD_SPACE_COLOR,
   };
 
   return <View ref={viewRef} onLayout={reportLayout} style={style} />;

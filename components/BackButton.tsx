@@ -1,4 +1,4 @@
-import { images } from "@/constants";
+import { images } from "@/assets/images";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Pressable, Text } from "react-native";

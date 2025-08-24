@@ -1,3 +1,4 @@
+import { ColorThemes } from "@/constants";
 import { WELL_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
@@ -24,7 +25,16 @@ const Well = ({ id, team }: CellProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  return <View ref={viewRef} onLayout={reportLayout} style={WELL_STYLE} />;
+  return (
+    <View
+      ref={viewRef}
+      onLayout={reportLayout}
+      style={{
+        ...WELL_STYLE,
+        backgroundColor: ColorThemes.MASTER.WELL_BACKGROUND_COLOR,
+      }}
+    />
+  );
 };
 
 export default Well;

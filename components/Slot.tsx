@@ -1,13 +1,9 @@
-import {
-  SLOT_STYLE,
-  TEAM_ONE_COLOR,
-  TEAM_TWO_COLOR,
-} from "@/constants/gameElements";
+import { ColorThemes, GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { Image, View } from "react-native";
-import { icons } from "../constants";
+import { cellImages } from "../assets/images";
 
 // If a piece is held and the cursor is in the area of a slot space
 // project a preview of where that piece would go if released
@@ -15,6 +11,7 @@ import { icons } from "../constants";
 const Slot = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
   const { layout, logic } = useGameContext();
+
   team = logic.currentTeam;
 
   const reportLayout = () => {
@@ -40,22 +37,57 @@ const Slot = ({ id, team }: CellProps) => {
     return row === 8 ? "N" : row === 0 ? "S" : col === 0 ? "E" : "W";
   };
 
+  const direction = checkDirection(id);
+  const currentTeamColor =
+    team === ColorThemes.MASTER.TEAM_TWO_COLOR
+      ? ColorThemes.MASTER.TEAM_TWO_COLOR
+      : ColorThemes.MASTER.TEAM_ONE_COLOR;
+
+  const rotation =
+    direction === "S"
+      ? "90deg"
+      : direction === "N"
+      ? "270deg"
+      : direction === "W"
+      ? "180deg"
+      : "0deg";
+
   return (
-    <View ref={viewRef} style={SLOT_STYLE}>
+    <View
+      ref={viewRef}
+      style={{
+        ...GameElements.SLOT_STYLE,
+        borderColor: ColorThemes.MASTER.SLOT_BORDER_COLOR,
+        backgroundColor: ColorThemes.MASTER.SLOT_BACKGROUND_COLOR,
+        transform: [{ rotate: rotation }],
+      }}
+    >
       <View
         style={{
           position: "absolute",
           width: 28,
           height: 28,
           borderRadius: 14,
-          backgroundColor: "#C0C0C0",
+          backgroundColor: ColorThemes.MASTER.SLOT_INSERT_COLOR,
           zIndex: 0,
         }}
       />
+      <View
+        style={{
+          position: "absolute",
+          width: 18,
+          height: 8,
+          marginEnd: 2,
+          borderRadius: 14,
+          backgroundColor: currentTeamColor,
+        }}
+      ></View>
       <Image
         source={
-          icons.slot[checkDirection(id)][
-            team === TEAM_TWO_COLOR ? TEAM_TWO_COLOR : TEAM_ONE_COLOR
+          cellImages.slot["C"][
+            team === ColorThemes.MASTER.TEAM_TWO_COLOR
+              ? ColorThemes.MASTER.TEAM_TWO_COLOR
+              : ColorThemes.MASTER.TEAM_ONE_COLOR
           ]
         }
         style={{

@@ -30,34 +30,25 @@ export const SPACE_STYLE: ViewStyle = {
 };
 
 export const SLOT_BORDER_WIDTH: number = 2;
-export const SLOT_BORDER_COLOR: string = "#C0C0C0";
-export const SLOT_BACKGROUND_COLOR: string = "#6E2C00";
 export const SLOT_POSITION: "absolute" | "relative" = "relative";
 export const SLOT_STYLE: ViewStyle = {
   ...CELL_STYLE,
   borderWidth: SLOT_BORDER_WIDTH,
-  borderColor: SLOT_BORDER_COLOR,
-  backgroundColor: SLOT_BACKGROUND_COLOR,
   position: SLOT_POSITION,
 };
 
 export const WELL_MARGIN_H: number = 1;
-export const WELL_BACKGROUND_COLOR: string = "#6E2C00";
+
 export const WELL_STYLE: ViewStyle = {
   ...CELL_STYLE,
-  backgroundColor: "#377a67ff",
   marginLeft: WELL_MARGIN_H,
   marginRight: WELL_MARGIN_H,
 };
 
 export const CORNER_STYLE: ViewStyle = {
   ...CELL_STYLE,
-  backgroundColor: "#3a7331ff",
 };
 export const CORNER_BORDER_RADIUS: number = 8;
 
 export const PIECE_SIZE: number = 32;
 export const PIECE_RADIUS: number = PIECE_SIZE / 2;
-
-export const TEAM_ONE_COLOR: string = "black";
-export const TEAM_TWO_COLOR: string = "white";
