@@ -58,3 +58,6 @@ export const CORNER_BORDER_RADIUS: number = 8;
 
 export const PIECE_SIZE: number = 32;
 export const PIECE_RADIUS: number = PIECE_SIZE / 2;
+
+export const TEAM_ONE_COLOR: string = "black";
+export const TEAM_TWO_COLOR: string = "white";

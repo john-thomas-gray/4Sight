@@ -1,11 +1,19 @@
 import {
+  BOARD_COLOR_CHANGE_DURATION,
   PIECE_DROP_DURATION,
   SLOT_INSERT_DURATION,
   WELL_RETURN_DURATION,
 } from "@/constants/animations";
-import { BOARD_SIZE, PIECE_RADIUS, PIECE_SIZE } from "@/constants/gameElements";
+import {
+  BOARD_SIZE,
+  PIECE_RADIUS,
+  PIECE_SIZE,
+  TEAM_ONE_COLOR,
+  TEAM_TWO_COLOR,
+} from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
+import { Team } from "@/types/logic";
 import React, { useEffect, useState } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -19,7 +27,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 type PieceProps = {
-  team: "black" | "white";
+  team: Team;
   id: string;
   initialPosition: { x: number; y: number };
   currentWellId?: string;
@@ -27,7 +35,7 @@ type PieceProps = {
 };
 
 const Piece = ({
-  team = "white",
+  team = TEAM_ONE_COLOR,
   id = "X-0",
   initialPosition,
   currentWellId,
@@ -118,7 +126,10 @@ const Piece = ({
     }
   };
   const goToNextTurn = () => {
-    setTimeout(() => logic.nextTurn(), PIECE_DROP_DURATION + 250);
+    setTimeout(
+      () => logic.nextTurn(),
+      PIECE_DROP_DURATION + BOARD_COLOR_CHANGE_DURATION
+    );
   };
 
   useEffect(() => {
@@ -414,7 +425,7 @@ const Piece = ({
     height: PIECE_SIZE,
     width: PIECE_SIZE,
     borderRadius: PIECE_RADIUS,
-    backgroundColor: team === "white" ? "white" : "black",
+    backgroundColor: team === TEAM_ONE_COLOR ? TEAM_ONE_COLOR : TEAM_TWO_COLOR,
     borderWidth: 2,
     borderColor: "#9CA3AF",
     zIndex: 1000,

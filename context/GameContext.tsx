@@ -1,3 +1,4 @@
+import { TEAM_ONE_COLOR, TEAM_TWO_COLOR } from "@/constants/gameElements";
 import { CellLayout, CellProps } from "@/types/board";
 import {
   createContext,
@@ -10,10 +11,7 @@ import { GameMode, Team, Turn } from "../types/logic";
 
 type GameContextType = {
   layout: {
-    wells: {
-      white: Record<string, CellLayout>;
-      black: Record<string, CellLayout>;
-    };
+    wells: Record<Team, Record<string, CellLayout>>;
     spaces: Record<string, CellLayout>;
     corners: Record<string, CellLayout>;
     slots: Record<string, CellLayout>;
@@ -47,9 +45,9 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [wells, setWells] = useState<{
-    white: Record<string, CellLayout>;
-    black: Record<string, CellLayout>;
-  }>({ white: {}, black: {} });
+    [TEAM_ONE_COLOR]: Record<string, CellLayout>;
+    [TEAM_TWO_COLOR]: Record<string, CellLayout>;
+  }>({ [TEAM_ONE_COLOR]: {}, [TEAM_TWO_COLOR]: {} });
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
   const [corners, setCorners] = useState<Record<string, CellLayout>>({});
@@ -66,8 +64,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&
     Object.keys(corners).length > 0 &&
-    Object.keys(wells.white).length > 0 &&
-    Object.keys(wells.black).length > 0;
+    Object.keys(wells[TEAM_ONE_COLOR]).length > 0 &&
+    Object.keys(wells[TEAM_TWO_COLOR]).length > 0;
 
   const registerCell = useCallback(({ id, team, type, layout }: CellProps) => {
     if (type === "slot") {
@@ -80,16 +78,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         [id]: layout!,
       }));
-    } else if (type === "well") {
-      if (team) {
-        setWells((prev) => ({
-          ...prev,
-          [team]: {
-            ...prev[team],
-            [id]: layout!,
-          },
-        }));
-      }
+    } else if (type === "well" && team) {
+      setWells((prev) => ({
+        ...prev,
+        [team]: {
+          ...prev[team],
+          [id]: layout!,
+        },
+      }));
     } else if (type === "corner") {
       setCorners((prev) => ({
         ...prev,
@@ -108,11 +104,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const turnStrategies: Record<string, TurnStrategy> = {
     twoPlayer: {
       getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
-      team: (currentTurn) => (currentTurn === 1 ? "white" : "black"),
+      team: (currentTurn) =>
+        currentTurn === 1 ? TEAM_ONE_COLOR : TEAM_TWO_COLOR,
     },
     fourPlayer: {
       getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
-      team: (currentTurn) => (currentTurn % 2 === 0 ? "black" : "white"),
+      team: (currentTurn) =>
+        currentTurn % 2 === 0 ? TEAM_TWO_COLOR : TEAM_ONE_COLOR,
     },
   };
 

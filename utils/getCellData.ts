@@ -1,3 +1,4 @@
+import { TEAM_ONE_COLOR, TEAM_TWO_COLOR } from "@/constants/gameElements";
 import { CellProps } from "@/types/board";
 
 export const getCellData = (id: string) => {
@@ -28,9 +29,9 @@ export const getCellData = (id: string) => {
   } else if (row > 8 && col > 8) {
     type = "well";
     if (row > 16 && col > 11) {
-      team = "black";
+      team = TEAM_TWO_COLOR;
     } else {
-      team = "white";
+      team = TEAM_ONE_COLOR;
     }
   } else {
     throw new Error(

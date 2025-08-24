@@ -1,7 +1,9 @@
 import Board from "@/components/Board";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
+import { TEAM_ONE_COLOR, TEAM_TWO_COLOR } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
+import { Team } from "@/types/logic";
 import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
@@ -12,8 +14,8 @@ const TwoPlayer = () => {
     logic.setGameMode("twoPlayer");
   }, [logic]);
 
-  const whiteWells = Object.entries(layout.wells.white);
-  const blackWells = Object.entries(layout.wells.black);
+  const teamOneWells = Object.entries(layout.wells[TEAM_ONE_COLOR]);
+  const teamTwoWells = Object.entries(layout.wells[TEAM_TWO_COLOR]);
 
   let pieceNumber = 0;
 
@@ -22,7 +24,7 @@ const TwoPlayer = () => {
       string,
       { pageX: number; pageY: number; width: number; height: number }
     ][],
-    team: "white" | "black"
+    team: Team
   ) =>
     entries.map(([id, layout]) => (
       <Piece
@@ -39,12 +41,12 @@ const TwoPlayer = () => {
   return (
     <View className="flex-1 flex-row items-center justify-center mt-90 bg-[#065f46]">
       <View className="flex-row justify-between">
-        <TeamWellGrid team="white" />
+        <TeamWellGrid team={TEAM_ONE_COLOR} />
         <Board className="mx-10" />
-        <TeamWellGrid team="black" />
+        <TeamWellGrid team={TEAM_TWO_COLOR} />
       </View>
-      {layout.layoutReady && renderPieces(whiteWells, "white")}
-      {layout.layoutReady && renderPieces(blackWells, "black")}
+      {layout.layoutReady && renderPieces(teamOneWells, TEAM_ONE_COLOR)}
+      {layout.layoutReady && renderPieces(teamTwoWells, TEAM_TWO_COLOR)}
       {/* Should be own component. Piece dropping anim. */}
       {!layout.layoutReady && (
         <View style={styles.loadingOverlay}>

@@ -1,7 +1,10 @@
-import { SLOT_STYLE } from "@/constants/gameElements";
+import {
+  SLOT_STYLE,
+  TEAM_ONE_COLOR,
+  TEAM_TWO_COLOR,
+} from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
-import { Team } from "@/types/logic";
 import React, { useEffect, useRef } from "react";
 import { Image, View } from "react-native";
 import { icons } from "../constants";
@@ -50,7 +53,11 @@ const Slot = ({ id, team }: CellProps) => {
         }}
       />
       <Image
-        source={icons.slot[checkDirection(id)][team as Team]}
+        source={
+          icons.slot[checkDirection(id)][
+            team === TEAM_TWO_COLOR ? TEAM_TWO_COLOR : TEAM_ONE_COLOR
+          ]
+        }
         style={{
           width: 24,
           height: 24,
