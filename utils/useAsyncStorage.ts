@@ -17,7 +17,6 @@ export const saveAppState = async (state: Partial<PersistedAppState>) => {
         ? JSON.parse(existing)
         : {};
       const newState = { ...existingState, ...state };
-      console.log(newState);
       await AsyncStorage.setItem(APP_STATE_KEY, JSON.stringify(newState));
     }
   } catch (e) {

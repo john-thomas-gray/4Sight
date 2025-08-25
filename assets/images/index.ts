@@ -4,14 +4,6 @@ import cornerArrowSE from "./corner-arrow-SE.png";
 import cornerArrowSW from "./corner-arrow-SW.png";
 import cornerArrowNE from "./cornerArrowNE.png";
 import slotArrowClear from "./slot-arrow-clear.png";
-import slotArrowEastBlack from "./slot-arrow-east-two.png";
-import slotArrowEastWhite from "./slot-arrow-east.png";
-import slotArrowNorthBlack from "./slot-arrow-north-two.png";
-import slotArrowNorthWhite from "./slot-arrow-north.png";
-import slotArrowSouthBlack from "./slot-arrow-south-two.png";
-import slotArrowSouthWhite from "./slot-arrow-south.png";
-import slotArrowWestBlack from "./slot-arrow-west-two.png";
-import slotArrowWestWhite from "./slot-arrow-west.png";
 
 export const cellImages = {
   corner: {
@@ -22,20 +14,20 @@ export const cellImages = {
   },
   slot: {
     E: {
-      ["teamOne"]: slotArrowEastBlack,
-      ["teamTwo"]: slotArrowEastWhite,
+      ["teamOne"]: slotArrowClear,
+      ["teamTwo"]: slotArrowClear,
     },
     N: {
-      ["teamTwo"]: slotArrowNorthBlack,
-      ["teamOne"]: slotArrowNorthWhite,
+      ["teamTwo"]: slotArrowClear,
+      ["teamOne"]: slotArrowClear,
     },
     S: {
-      ["teamTwo"]: slotArrowSouthBlack,
-      ["teamOne"]: slotArrowSouthWhite,
+      ["teamTwo"]: slotArrowClear,
+      ["teamOne"]: slotArrowClear,
     },
     W: {
-      ["teamTwo"]: slotArrowWestBlack,
-      ["teamOne"]: slotArrowWestWhite,
+      ["teamTwo"]: slotArrowClear,
+      ["teamOne"]: slotArrowClear,
     },
     C: {
       ["teamTwo"]: slotArrowClear,

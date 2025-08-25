@@ -1,6 +1,7 @@
 import { CLASSIC, ColorThemeType } from "@/constants/colorThemes";
 import { CellLayout, CellProps, Team, WellState } from "@/types/board";
 import { loadAppState, saveAppState } from "@/utils/useAsyncStorage";
+import { checkXInARow } from "@/utils/xInARow";
 import {
   createContext,
   ReactNode,
@@ -144,9 +145,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const nextTurn = () => {
     const strategy = turnStrategies[gameMode];
-    setPlayersTurn(strategy.getNextTurn(playersTurn));
-    setTurnCount((prev) => prev + 1);
-    console.log("next turn. it is now turn:", turnCount);
+    const winner = checkXInARow(boardPieceLocations, 2);
+    if (winner) {
+      console.log("Winner is", winner);
+    } else {
+      setPlayersTurn(strategy.getNextTurn(playersTurn));
+      setTurnCount((prev) => prev + 1);
+      console.log("next turn. it is now turn:", turnCount);
+    }
   };
 
   const currentTeam = turnStrategies[gameMode].team(playersTurn);
@@ -160,6 +166,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   //   saveAppState({ boardPieceLocations });
   //   saveAppState({ wellPieceLocations });
   // }, [turnCount]);
+
+  useEffect(() => {
+    console.log(boardPieceLocations);
+    console.log("check X", checkXInARow(boardPieceLocations, 3));
+  }, [boardPieceLocations]);
 
   return (
     <GameContext.Provider

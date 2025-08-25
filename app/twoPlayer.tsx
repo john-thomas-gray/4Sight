@@ -28,7 +28,7 @@ const TwoPlayer = () => {
     entries.map(([id, layout]) => (
       <Piece
         key={id}
-        id={`${pieceNumber++}${team[0]}`}
+        id={`${pieceNumber++}`}
         team={team}
         currentWellId={id}
         initialPosition={{
