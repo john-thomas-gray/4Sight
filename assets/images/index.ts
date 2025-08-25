@@ -1,4 +1,3 @@
-import { MASTER } from "../../constants/colorThemes";
 import backArrow from "./backArrow.png";
 import cornerArrowNW from "./corner-arrow-NW.png";
 import cornerArrowSE from "./corner-arrow-SE.png";
@@ -23,24 +22,24 @@ export const cellImages = {
   },
   slot: {
     E: {
-      [MASTER.TEAM_TWO_COLOR]: slotArrowEastBlack,
-      [MASTER.TEAM_ONE_COLOR]: slotArrowEastWhite,
+      ["teamOne"]: slotArrowEastBlack,
+      ["teamTwo"]: slotArrowEastWhite,
     },
     N: {
-      [MASTER.TEAM_TWO_COLOR]: slotArrowNorthBlack,
-      [MASTER.TEAM_ONE_COLOR]: slotArrowNorthWhite,
+      ["teamTwo"]: slotArrowNorthBlack,
+      ["teamOne"]: slotArrowNorthWhite,
     },
     S: {
-      [MASTER.TEAM_TWO_COLOR]: slotArrowSouthBlack,
-      [MASTER.TEAM_ONE_COLOR]: slotArrowSouthWhite,
+      ["teamTwo"]: slotArrowSouthBlack,
+      ["teamOne"]: slotArrowSouthWhite,
     },
     W: {
-      [MASTER.TEAM_TWO_COLOR]: slotArrowWestBlack,
-      [MASTER.TEAM_ONE_COLOR]: slotArrowWestWhite,
+      ["teamTwo"]: slotArrowWestBlack,
+      ["teamOne"]: slotArrowWestWhite,
     },
     C: {
-      [MASTER.TEAM_TWO_COLOR]: slotArrowClear,
-      [MASTER.TEAM_ONE_COLOR]: slotArrowClear,
+      ["teamTwo"]: slotArrowClear,
+      ["teamOne"]: slotArrowClear,
     },
   },
 };

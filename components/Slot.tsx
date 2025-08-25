@@ -1,4 +1,4 @@
-import { ColorThemes, GameElements } from "@/constants";
+import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
 import React, { useEffect, useRef } from "react";
@@ -10,7 +10,7 @@ import { cellImages } from "../assets/images";
 
 const Slot = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { layout, logic } = useGameContext();
+  const { layout, logic, settings } = useGameContext();
 
   team = logic.currentTeam;
 
@@ -39,9 +39,9 @@ const Slot = ({ id, team }: CellProps) => {
 
   const direction = checkDirection(id);
   const currentTeamColor =
-    team === ColorThemes.MASTER.TEAM_TWO_COLOR
-      ? ColorThemes.MASTER.TEAM_TWO_COLOR
-      : ColorThemes.MASTER.TEAM_ONE_COLOR;
+    team === "teamOne"
+      ? settings.colorTheme.TEAM_ONE_COLOR
+      : settings.colorTheme.TEAM_TWO_COLOR;
 
   const rotation =
     direction === "S"
@@ -52,13 +52,15 @@ const Slot = ({ id, team }: CellProps) => {
       ? "180deg"
       : "0deg";
 
+  const slotImages = cellImages.slot["C"] as Record<string, any>;
+
   return (
     <View
       ref={viewRef}
       style={{
         ...GameElements.SLOT_STYLE,
-        borderColor: ColorThemes.MASTER.SLOT_BORDER_COLOR,
-        backgroundColor: ColorThemes.MASTER.SLOT_BACKGROUND_COLOR,
+        borderColor: settings.colorTheme.SLOT_BORDER_COLOR,
+        backgroundColor: settings.colorTheme.SLOT_BACKGROUND_COLOR,
         transform: [{ rotate: rotation }],
       }}
     >
@@ -68,7 +70,7 @@ const Slot = ({ id, team }: CellProps) => {
           width: 28,
           height: 28,
           borderRadius: 14,
-          backgroundColor: ColorThemes.MASTER.SLOT_INSERT_COLOR,
+          backgroundColor: settings.colorTheme.SLOT_INSERT_COLOR,
           zIndex: 0,
         }}
       />
@@ -83,13 +85,7 @@ const Slot = ({ id, team }: CellProps) => {
         }}
       ></View>
       <Image
-        source={
-          cellImages.slot["C"][
-            team === ColorThemes.MASTER.TEAM_TWO_COLOR
-              ? ColorThemes.MASTER.TEAM_TWO_COLOR
-              : ColorThemes.MASTER.TEAM_ONE_COLOR
-          ]
-        }
+        source={slotImages[team === "teamOne" ? "teamOne" : "teamTwo"]}
         style={{
           width: 24,
           height: 24,

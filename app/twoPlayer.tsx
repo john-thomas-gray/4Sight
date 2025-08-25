@@ -1,25 +1,20 @@
 import Board from "@/components/Board";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
-import { ColorThemes } from "@/constants/";
 import { useGameContext } from "@/context/GameContext";
-import { Team } from "@/types/logic";
+import { Team } from "@/types/board";
 import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 const TwoPlayer = () => {
-  const { layout, logic } = useGameContext();
+  const { layout, logic, settings } = useGameContext();
 
   useEffect(() => {
     logic.setGameMode("twoPlayer");
   }, []);
 
-  const teamOneWells = Object.entries(
-    layout.wells[ColorThemes.MASTER.TEAM_ONE_COLOR]
-  );
-  const teamTwoWells = Object.entries(
-    layout.wells[ColorThemes.MASTER.TEAM_TWO_COLOR]
-  );
+  const teamOneWells = Object.entries(layout.wells["teamOne"]);
+  const teamTwoWells = Object.entries(layout.wells["teamTwo"]);
 
   let pieceNumber = 0;
 
@@ -45,17 +40,15 @@ const TwoPlayer = () => {
   return (
     <View
       className="flex-1 flex-row items-center justify-center mt-90"
-      style={{ backgroundColor: ColorThemes.MASTER.FELT_TOP }}
+      style={{ backgroundColor: settings.colorTheme.FELT_TOP }}
     >
       <View className="flex-row justify-between">
-        <TeamWellGrid team={ColorThemes.MASTER.TEAM_ONE_COLOR} />
+        <TeamWellGrid team={"teamOne"} />
         <Board className="mx-10" />
-        <TeamWellGrid team={ColorThemes.MASTER.TEAM_TWO_COLOR} />
+        <TeamWellGrid team={"teamTwo"} />
       </View>
-      {layout.layoutReady &&
-        renderPieces(teamOneWells, ColorThemes.MASTER.TEAM_ONE_COLOR)}
-      {layout.layoutReady &&
-        renderPieces(teamTwoWells, ColorThemes.MASTER.TEAM_TWO_COLOR)}
+      {layout.layoutReady && renderPieces(teamOneWells, "teamOne")}
+      {layout.layoutReady && renderPieces(teamTwoWells, "teamTwo")}
       {/* Should be own component. Piece dropping anim. */}
       {!layout.layoutReady && (
         <View style={styles.loadingOverlay}>

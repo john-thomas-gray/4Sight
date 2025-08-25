@@ -9,9 +9,12 @@ import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Corner = ({ id }: CellProps) => {
-  const { layout, logic } = useGameContext();
+  const { layout, logic, settings } = useGameContext();
   const viewRef = useRef<View>(null);
-  const cornerColor = logic.currentTeam;
+  const cornerColor =
+    logic.currentTeam === "teamOne"
+      ? settings.colorTheme.CORNER_COLOR_T1
+      : settings.colorTheme.CORNER_COLOR_T2;
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {

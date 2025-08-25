@@ -1,4 +1,4 @@
-import { ColorThemes, GameElements } from "@/constants";
+import { GameElements } from "@/constants";
 
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Space = ({ id }: CellProps) => {
-  const { layout } = useGameContext();
+  const { layout, settings } = useGameContext();
   const viewRef = useRef<View>(null);
 
   const reportLayout = () => {
@@ -32,8 +32,8 @@ const Space = ({ id }: CellProps) => {
   const style: ViewStyle = {
     ...GameElements.SPACE_STYLE,
     backgroundColor: isEven
-      ? ColorThemes.MASTER.EVEN_SPACE_COLOR
-      : ColorThemes.MASTER.ODD_SPACE_COLOR,
+      ? settings.colorTheme.EVEN_SPACE_COLOR
+      : settings.colorTheme.ODD_SPACE_COLOR,
   };
 
   return <View ref={viewRef} onLayout={reportLayout} style={style} />;

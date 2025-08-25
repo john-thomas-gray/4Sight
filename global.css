@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Default theme (e.g., CLASSIC) */
+  --team-one-color: #ffffff;
+  --team-two-color: #000000;
+  --well-grid-background-color: #6e2c00;
+  --well-background-color: #377a67ff;
+  --slot-border-color: #c0c0c0;
+  --slot-background-color: #6e2c00;
+  --slot-insert-color: #c0c0c0;
+  --odd-space-color: #ffffff;
+  --even-space-color: #d1fae5;
+  --felt-top: #065f46;
+}
+
+.schoolhouse {
+  /* Schoolhouse theme overrides */
+  --team-one-color: #d8c744ff;
+  --team-two-color: #d84444ff;
+  --well-grid-background-color: #333333;
+  --well-background-color: #f8c1c1ff;
+  --slot-border-color: #f5f5f5;
+  --slot-background-color: #4473d8ff;
+  --slot-insert-color: #c7e9ffff;
+  --odd-space-color: #4473d8ff;
+  --even-space-color: #b0b0b0ff;
+  --felt-top: "rgba(127, 190, 249, 1)";
+}

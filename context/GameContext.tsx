@@ -1,6 +1,5 @@
-import { ColorTheme } from "@/constants/colorThemes";
-import { CellLayout, CellProps } from "@/types/board";
-import { THEME_MAP } from "@/utils/themeUtils";
+import { CLASSIC, ColorTheme } from "@/constants/colorThemes";
+import { CellLayout, CellProps, Team, WellState } from "@/types/board";
 import {
   createContext,
   ReactNode,
@@ -8,7 +7,7 @@ import {
   useContext,
   useState,
 } from "react";
-import { GameMode, Team, Turn } from "../types/logic";
+import { GameMode, Turn } from "../types/logic";
 
 type GameContextType = {
   layout: {
@@ -41,8 +40,6 @@ type GameContextType = {
   };
 };
 
-// SETTINGS
-
 type TurnStrategy = {
   getNextTurn: (currentTurn: Turn) => Turn;
   team: (currentTurn: Turn) => Team;
@@ -51,13 +48,10 @@ type TurnStrategy = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  const [colorTheme, setColorTheme] = useState<ColorTheme>(THEME_MAP.CLASSIC);
-  const [wells, setWells] = useState<{
-    [colorTheme.TEAM_ONE_COLOR]: Record<string, CellLayout>;
-    [colorTheme.TEAM_TWO_COLOR]: Record<string, CellLayout>;
-  }>({
-    [colorTheme.TEAM_ONE_COLOR]: {},
-    [colorTheme.TEAM_TWO_COLOR]: {},
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(CLASSIC);
+  const [wells, setWells] = useState<WellState>({
+    teamOne: {},
+    teamTwo: {},
   });
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
@@ -75,35 +69,38 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&
     Object.keys(corners).length > 0 &&
-    Object.keys(wells[colorTheme.TEAM_ONE_COLOR]).length > 0 &&
-    Object.keys(wells[colorTheme.TEAM_TWO_COLOR]).length > 0;
+    Object.keys(wells.teamOne).length > 0 &&
+    Object.keys(wells.teamTwo).length > 0;
 
   const registerCell = useCallback(({ id, team, type, layout }: CellProps) => {
-    if (type === "slot") {
-      setSlots((prev) => ({
-        ...prev,
-        [id]: layout!,
-      }));
-    } else if (type === "space") {
-      setSpaces((prev) => ({
-        ...prev,
-        [id]: layout!,
-      }));
-    } else if (type === "well" && team) {
-      setWells((prev) => ({
-        ...prev,
-        [team]: {
-          ...prev[team],
-          [id]: layout!,
-        },
-      }));
-    } else if (type === "corner") {
-      setCorners((prev) => ({
-        ...prev,
-        [id]: layout!,
-      }));
-    } else {
-      throw new Error("registerCell: unknown cell type");
+    if (!layout) return;
+
+    switch (type) {
+      case "slot":
+        setSlots((prev) => ({ ...prev, [id]: layout }));
+        break;
+
+      case "space":
+        setSpaces((prev) => ({ ...prev, [id]: layout }));
+        break;
+
+      case "well":
+        if (!team) throw new Error("Well must have a team");
+        setWells((prev) => ({
+          ...prev,
+          [team]: {
+            ...prev[team],
+            [id]: layout,
+          },
+        }));
+        break;
+
+      case "corner":
+        setCorners((prev) => ({ ...prev, [id]: layout }));
+        break;
+
+      default:
+        throw new Error(`registerCell: unknown type "${type}"`);
     }
   }, []);
 
@@ -115,17 +112,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const turnStrategies: Record<string, TurnStrategy> = {
     twoPlayer: {
       getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
-      team: (currentTurn) =>
-        currentTurn === 1
-          ? colorTheme.TEAM_ONE_COLOR
-          : colorTheme.TEAM_TWO_COLOR,
+      team: (currentTurn) => (currentTurn === 1 ? "teamOne" : "teamTwo"),
     },
     fourPlayer: {
       getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
-      team: (currentTurn) =>
-        currentTurn % 2 === 0
-          ? colorTheme.TEAM_TWO_COLOR
-          : colorTheme.TEAM_ONE_COLOR,
+      team: (currentTurn) => (currentTurn % 2 === 0 ? "teamTwo" : "teamOne"),
     },
   };
 

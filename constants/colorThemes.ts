@@ -3,6 +3,8 @@
 export type ColorTheme = {
   TEAM_ONE_COLOR: string;
   TEAM_TWO_COLOR: string;
+  CORNER_COLOR_T1: string;
+  CORNER_COLOR_T2: string;
   WELL_GRID_BACKGROUND_COLOR: string;
   WELL_BACKGROUND_COLOR: string;
   SLOT_BORDER_COLOR: string;
@@ -16,6 +18,8 @@ export type ColorTheme = {
 export const CLASSIC: ColorTheme = {
   TEAM_ONE_COLOR: "#ffffff",
   TEAM_TWO_COLOR: "#000000",
+  CORNER_COLOR_T1: "#ffffff",
+  CORNER_COLOR_T2: "#000000",
   WELL_GRID_BACKGROUND_COLOR: "#6E2C00",
   WELL_BACKGROUND_COLOR: "#377a67ff",
   SLOT_BORDER_COLOR: "#C0C0C0",
@@ -29,6 +33,8 @@ export const CLASSIC: ColorTheme = {
 export const SCHOOLHOUSE: ColorTheme = {
   TEAM_ONE_COLOR: "#d8c744ff",
   TEAM_TWO_COLOR: "#d84444ff",
+  CORNER_COLOR_T1: "#d8c744ff",
+  CORNER_COLOR_T2: "#d84444ff",
   WELL_GRID_BACKGROUND_COLOR: "#333333",
   WELL_BACKGROUND_COLOR: "#f8c1c1ff",
   SLOT_BORDER_COLOR: "#f5f5f5",

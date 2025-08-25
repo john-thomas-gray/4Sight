@@ -1,7 +1,6 @@
-import { Animations, ColorThemes, GameElements } from "@/constants";
+import { Animations, GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
-import { CellProps } from "@/types/board";
-import { Team } from "@/types/logic";
+import { Board } from "@/types";
 import React, { useEffect, useState } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -15,21 +14,21 @@ import Animated, {
 } from "react-native-reanimated";
 
 type PieceProps = {
-  team: Team;
   id: string;
+  team: Board.Team;
   initialPosition: { x: number; y: number };
   currentWellId?: string;
   currentBoardId?: string;
 };
 
 const Piece = ({
-  team = ColorThemes.MASTER.TEAM_ONE_COLOR,
+  team,
   id = "X-0",
   initialPosition,
   currentWellId,
   currentBoardId,
 }: PieceProps) => {
-  const { layout } = useGameContext();
+  const { layout, settings } = useGameContext();
 
   const wellArray = Object.entries(layout.wells[team]).map(([id, layout]) => ({
     id,
@@ -50,7 +49,11 @@ const Piece = ({
     type: "space" as const,
   }));
 
-  const allCells: CellProps[] = [...wellArray, ...slotArray, ...spaceArray];
+  const allCells: Board.CellProps[] = [
+    ...wellArray,
+    ...slotArray,
+    ...spaceArray,
+  ];
 
   const offset = useSharedValue({
     x: initialPosition.x,
@@ -65,7 +68,7 @@ const Piece = ({
 
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
-  const currentWellDataSV = useSharedValue<CellProps | null>(
+  const currentWellDataSV = useSharedValue<Board.CellProps | null>(
     currentWellId ? getCurrentWellData(currentWellId) : null
   );
   const [onBoard, setOnBoard] = React.useState(false);
@@ -427,9 +430,9 @@ const Piece = ({
     width: GameElements.PIECE_SIZE,
     borderRadius: GameElements.PIECE_RADIUS,
     backgroundColor:
-      team === ColorThemes.MASTER.TEAM_ONE_COLOR
-        ? ColorThemes.MASTER.TEAM_ONE_COLOR
-        : ColorThemes.MASTER.TEAM_TWO_COLOR,
+      team === "teamOne"
+        ? settings.colorTheme.TEAM_ONE_COLOR
+        : settings.colorTheme.TEAM_TWO_COLOR,
     borderWidth: 2,
     borderColor: "#9CA3AF",
     zIndex: 1000,

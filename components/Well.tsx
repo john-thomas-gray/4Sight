@@ -1,4 +1,3 @@
-import { ColorThemes } from "@/constants";
 import { WELL_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps } from "@/types/board";
@@ -7,7 +6,7 @@ import { View } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { layout } = useGameContext();
+  const { layout, settings } = useGameContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
@@ -31,7 +30,7 @@ const Well = ({ id, team }: CellProps) => {
       onLayout={reportLayout}
       style={{
         ...WELL_STYLE,
-        backgroundColor: ColorThemes.MASTER.WELL_BACKGROUND_COLOR,
+        backgroundColor: settings.colorTheme.WELL_BACKGROUND_COLOR,
       }}
     />
   );

@@ -1,5 +1,6 @@
-import { ColorThemes, GameElements } from "@/constants";
-import { Team } from "@/types/logic";
+import { GameElements } from "@/constants";
+import { useGameContext } from "@/context/GameContext";
+import { Team } from "@/types/board";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Well from "./Well";
@@ -12,14 +13,13 @@ const COLS = 3;
 const ROWS = 8;
 
 const TeamWellGrid = ({ team }: TeamWellGridProps) => {
+  const { settings } = useGameContext();
   const borderColor =
-    team === ColorThemes.MASTER.TEAM_ONE_COLOR
-      ? ColorThemes.MASTER.TEAM_ONE_COLOR
-      : ColorThemes.MASTER.TEAM_TWO_COLOR;
+    team === "teamOne"
+      ? settings.colorTheme.TEAM_ONE_COLOR
+      : settings.colorTheme.TEAM_TWO_COLOR;
   const idNumOffset =
-    team === ColorThemes.MASTER.TEAM_ONE_COLOR
-      ? { row: 9, col: 9 }
-      : { row: 17, col: 12 };
+    team === "teamOne" ? { row: 9, col: 9 } : { row: 17, col: 12 };
 
   return (
     <View style={[styles.container, { borderColor }]}>
