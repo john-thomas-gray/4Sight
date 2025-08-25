@@ -1,10 +1,12 @@
-import { CLASSIC, ColorTheme } from "@/constants/colorThemes";
+import { CLASSIC, ColorThemeType } from "@/constants/colorThemes";
 import { CellLayout, CellProps, Team, WellState } from "@/types/board";
+import { loadAppState, saveAppState } from "@/utils/useAsyncStorage";
 import {
   createContext,
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { GameMode, Turn } from "../types/logic";
@@ -35,8 +37,8 @@ type GameContextType = {
     setGameMode: React.Dispatch<React.SetStateAction<GameMode>>;
   };
   settings: {
-    colorTheme: ColorTheme;
-    setColorTheme: React.Dispatch<React.SetStateAction<ColorTheme>>;
+    colorTheme: ColorThemeType;
+    setColorTheme: React.Dispatch<React.SetStateAction<ColorThemeType>>;
   };
 };
 
@@ -48,7 +50,27 @@ type TurnStrategy = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  const [colorTheme, setColorTheme] = useState<ColorTheme>(CLASSIC);
+  useEffect(() => {
+    const loadState = async () => {
+      const saved = await loadAppState();
+
+      if (saved.theme) {
+        setColorTheme(saved.theme);
+      }
+
+      // if (saved.boardPieceLocations) {
+      //   setBoardPieceLocations(saved.boardPieceLocations);
+      // }
+
+      // if (saved.wellPieceLocations) {
+      //   setWellPieceLocations(saved.wellPieceLocations);
+      // }
+    };
+
+    loadState();
+  }, []);
+
+  const [colorTheme, setColorTheme] = useState<ColorThemeType>(CLASSIC);
   const [wells, setWells] = useState<WellState>({
     teamOne: {},
     teamTwo: {},
@@ -128,6 +150,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const currentTeam = turnStrategies[gameMode].team(playersTurn);
+
+  useEffect(() => {
+    saveAppState({ theme: colorTheme });
+  }, [colorTheme]);
+
+  // useEffect(() => {
+  //   console.log("turn changed");
+  //   saveAppState({ boardPieceLocations });
+  //   saveAppState({ wellPieceLocations });
+  // }, [turnCount]);
 
   return (
     <GameContext.Provider

@@ -1,6 +1,6 @@
 // COLORS
 
-export type ColorTheme = {
+export type ColorThemeType = {
   TEAM_ONE_COLOR: string;
   TEAM_TWO_COLOR: string;
   CORNER_COLOR_T1: string;
@@ -15,7 +15,7 @@ export type ColorTheme = {
   FELT_TOP: string;
 };
 
-export const CLASSIC: ColorTheme = {
+export const CLASSIC: ColorThemeType = {
   TEAM_ONE_COLOR: "#ffffff",
   TEAM_TWO_COLOR: "#000000",
   CORNER_COLOR_T1: "#ffffff",
@@ -30,7 +30,7 @@ export const CLASSIC: ColorTheme = {
   FELT_TOP: "#065f46",
 };
 
-export const SCHOOLHOUSE: ColorTheme = {
+export const SCHOOLHOUSE: ColorThemeType = {
   TEAM_ONE_COLOR: "#d8c744ff",
   TEAM_TWO_COLOR: "#d84444ff",
   CORNER_COLOR_T1: "#d8c744ff",
@@ -43,4 +43,9 @@ export const SCHOOLHOUSE: ColorTheme = {
   ODD_SPACE_COLOR: "#4473d8ff",
   EVEN_SPACE_COLOR: "#b0b0b0ff",
   FELT_TOP: "rgba(127, 190, 249, 1)",
+};
+
+export const COLOR_THEMES = {
+  CLASSIC,
+  SCHOOLHOUSE,
 };
