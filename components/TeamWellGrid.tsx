@@ -1,6 +1,7 @@
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
-import { Team } from "@/types/board";
+import { CellType, Team } from "@/types/board";
+import { Winner } from "@/types/logic";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Well from "./Well";
@@ -15,11 +16,11 @@ const ROWS = 8;
 const TeamWellGrid = ({ team }: TeamWellGridProps) => {
   const { settings } = useGameContext();
   const borderColor =
-    team === "teamOne"
+    team === Winner.TeamOne
       ? settings.colorTheme.TEAM_ONE_COLOR
       : settings.colorTheme.TEAM_TWO_COLOR;
   const idNumOffset =
-    team === "teamOne" ? { row: 9, col: 9 } : { row: 17, col: 12 };
+    team === Winner.TeamOne ? { row: 9, col: 9 } : { row: 17, col: 12 };
 
   return (
     <View style={[styles.container, { borderColor }]}>
@@ -27,7 +28,7 @@ const TeamWellGrid = ({ team }: TeamWellGridProps) => {
         <View key={row} style={styles.row}>
           {Array.from({ length: COLS }).map((_, col) => {
             const id = `${row + idNumOffset.row}-${col + idNumOffset.col}`;
-            return <Well key={id} id={id} type="well" team={team} />;
+            return <Well key={id} id={id} type={CellType.Well} team={team} />;
           })}
         </View>
       ))}

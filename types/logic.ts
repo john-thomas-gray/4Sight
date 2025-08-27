@@ -1,2 +1,23 @@
-export type Turn = 1 | 2 | 3 | 4;
-export type GameMode = "twoPlayer" | "fourPlayer";
+export enum Turn {
+  One = 1,
+  Two = 2,
+  Three = 3,
+  Four = 4,
+}
+export enum GameMode {
+  TwoPlayer = "twoPlayer",
+  FourPlayer = "fourPlayer",
+}
+export enum Winner {
+  TeamOne = "teamOne",
+  TeamTwo = "TeamTwo",
+  Tie = "tie",
+  Null = "",
+}
+export enum GameState {
+  PreGame = "preGame",
+  Loading = "loading",
+  Ready = "ready",
+  Playing = "playing",
+  Finished = "finished",
+}

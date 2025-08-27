@@ -1,20 +1,29 @@
 import Board from "@/components/Board";
+import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
-import React, { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { GameMode, Winner } from "@/types/logic";
+import React, { useEffect, useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 
-const TwoPlayer = () => {
+const GamePlay = () => {
   const { layout, logic, settings } = useGameContext();
 
   useEffect(() => {
-    logic.setGameMode("twoPlayer");
+    logic.setGameMode(GameMode.TwoPlayer);
   }, []);
 
-  const teamOneWells = Object.entries(layout.wells["teamOne"]);
-  const teamTwoWells = Object.entries(layout.wells["teamTwo"]);
+  const teamOneWells = useMemo(
+    () => Object.entries(layout.wells[Winner.TeamOne]),
+    [layout.wells[Winner.TeamOne]]
+  );
+
+  const teamTwoWells = useMemo(
+    () => Object.entries(layout.wells[Winner.TeamTwo]),
+    [layout.wells[Winner.TeamTwo]]
+  );
 
   let pieceNumber = 0;
 
@@ -43,19 +52,15 @@ const TwoPlayer = () => {
       style={{ backgroundColor: settings.colorTheme.FELT_TOP }}
     >
       <View className="flex-row justify-between">
-        <TeamWellGrid team={"teamOne"} />
+        <TeamWellGrid team={Winner.TeamOne} />
         <Board className="mx-10" />
-        <TeamWellGrid team={"teamTwo"} />
+        <TeamWellGrid team={Winner.TeamTwo} />
       </View>
-      {layout.layoutReady && renderPieces(teamOneWells, "teamOne")}
-      {layout.layoutReady && renderPieces(teamTwoWells, "teamTwo")}
+      {layout.layoutReady && renderPieces(teamOneWells, Winner.TeamOne)}
+      {layout.layoutReady && renderPieces(teamTwoWells, Winner.TeamTwo)}
       {/* Should be own component. Piece dropping anim. */}
-      {!layout.layoutReady && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Loading game board…</Text>
-        </View>
-      )}
+
+      {!layout.layoutReady && <LoadingScreen />}
     </View>
   );
 };
@@ -79,4 +84,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TwoPlayer;
+export default GamePlay;

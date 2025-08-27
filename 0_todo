@@ -1,0 +1,59 @@
+Zoom on board
+Swipe/Rotate touch controls
+
+Block slot
+Slot visualizations
+
+4 player logic
+
+Menu (restart, quit, settings)
+
+Tutorial
+
+Async Storage
+
+Five swipes back and forth to forfeit
+
+Graphics
+
+- all slot arrows turn the direction of the pull
+- Board lifts up when turning is possible
+- Long press on opposite side of board for pull preview
+  Bugs:
+- Fix well piece locations
+- Can drop pieces while pull is animating
+- Can pull when you pull
+- Retrict pull to space grid
+- Placed pieces bounce when you return to the page
+
+Win State
+
+- Animation? Pieces fill in gold jump and jiggle in a cascade
+- Message?
+- Disable movements
+  - Allow pieces to be taken off the board anyone can put pieces on the board.
+  - Swipe / shake phone knocks all the pieces off and they go back to their wells
+  - Winning pieces are highlighted
+
+Near Win State
+
+- Three pieces in a row with an accessible empty square as the next space are highlighted
+  $ create function that checks if a space is accessible
+  $ function that checks the condition above
+
+4 Player
+
+- turns handled differently
+- can only drop from one side
+  $ Available slot visual
+- can only pull from one side
+- rotate function
+  - rotate animation: long touch, pan, flick
+
+Previews
+
+- hover piece over slot shows preview
+- pressing the opposite side of the board shows where pushed pieces would go.
+- hightlights three pieces in a row with flashing beacons
+
+refactor piece

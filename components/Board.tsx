@@ -1,15 +1,12 @@
 import {
-  BOARD_COLOR_CHANGE_DURATION,
-  PIECE_DROP_DURATION,
-} from "@/constants/animations";
-import {
   BASE_CELL_SIZE,
   BOARD_SIZE,
   BOARD_SIZE_ZERO_IDX,
 } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
-import { PullDirection } from "@/types/board";
+import { CellType, Direction } from "@/types/board";
+import { GameState } from "@/types/logic";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -33,7 +30,7 @@ type BoardProps = {
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { logic } = useGameContext();
+  const { logic, layout } = useGameContext();
   const isSlotPosition = (row: number, col: number) => {
     return (
       (row === 0 && col > 0 && col < BOARD_SIZE_ZERO_IDX) || // Top
@@ -53,36 +50,33 @@ const Board = ({ className, onRotate }: BoardProps) => {
   };
 
   const pullPieces = useGravity();
-  const executePull = (direction: PullDirection) => {
+  const executePull = (direction: Direction) => {
+    if (logic.gameState === GameState.Finished) return;
     pullPieces(direction);
-    setTimeout(
-      () => logic.nextTurn(),
-      PIECE_DROP_DURATION + BOARD_COLOR_CHANGE_DURATION
-    );
   };
 
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      runOnJS(executePull)("left");
+      runOnJS(executePull)(Direction.Left);
     });
 
   const pullRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      runOnJS(executePull)("right");
+      runOnJS(executePull)(Direction.Right);
     });
 
   const pullUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      runOnJS(executePull)("up");
+      runOnJS(executePull)(Direction.Up);
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      runOnJS(executePull)("down");
+      runOnJS(executePull)(Direction.Down);
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);
@@ -119,11 +113,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
             {Array.from({ length: BOARD_SIZE }).map((_, col) => {
               const id = `${row}-${col}`;
               if (isCornerPosition(row, col)) {
-                return <Corner key={id} id={id} type="corner" />;
+                return <Corner key={id} id={id} type={CellType.Corner} />;
               } else if (isSlotPosition(row, col)) {
-                return <Slot key={id} id={id} type="slot" />;
+                return <Slot key={id} id={id} type={CellType.Slot} />;
               }
-              return <Space key={id} id={id} type="space" />;
+              return <Space key={id} id={id} type={CellType.Space} />;
             })}
           </View>
         ))}

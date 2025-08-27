@@ -16,7 +16,7 @@ function InnerIndexLayout() {
     <SafeAreaView className="flex-1 border-2 border-red-50 items-center justify-evenly bg-white">
       <Text className="text-black font-bold text-8xl">FourSight</Text>
       <View className="flex-col items-center space-y-4">
-        <Link href="/twoPlayer" className="text-lg">
+        <Link href="/gamePlay" className="text-lg">
           Two Player
         </Link>
         <Link href="/fourPlayer" className="text-lg">

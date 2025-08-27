@@ -1,6 +1,6 @@
 import { WELL_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
-import { CellProps } from "@/types/board";
+import { CellProps, CellType } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 
@@ -12,7 +12,7 @@ const Well = ({ id, team }: CellProps) => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       layout.registerCell({
         id,
-        type: "well",
+        type: CellType.Well,
         team,
         layout: { pageX, pageY, width, height },
       });

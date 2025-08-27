@@ -1,6 +1,7 @@
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
-import { CellProps } from "@/types/board";
+import { CellProps, CellType } from "@/types/board";
+import { Winner } from "@/types/logic";
 import React, { useEffect, useRef } from "react";
 import { Image, View } from "react-native";
 import { cellImages } from "../assets/images";
@@ -18,7 +19,7 @@ const Slot = ({ id, team }: CellProps) => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       layout.registerCell({
         id,
-        type: "slot",
+        type: CellType.Slot,
         layout: { pageX, pageY, width, height },
       });
     });
@@ -39,7 +40,7 @@ const Slot = ({ id, team }: CellProps) => {
 
   const direction = checkDirection(id);
   const currentTeamColor =
-    team === "teamOne"
+    team === Winner.TeamOne
       ? settings.colorTheme.TEAM_ONE_COLOR
       : settings.colorTheme.TEAM_TWO_COLOR;
 
@@ -85,7 +86,9 @@ const Slot = ({ id, team }: CellProps) => {
         }}
       ></View>
       <Image
-        source={slotImages[team === "teamOne" ? "teamOne" : "teamTwo"]}
+        source={
+          slotImages[team === Winner.TeamOne ? Winner.TeamOne : Winner.TeamTwo]
+        }
         style={{
           width: 24,
           height: 24,

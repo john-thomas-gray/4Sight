@@ -1,16 +1,24 @@
+import { Animations } from "@/constants";
 import { CLASSIC, ColorThemeType } from "@/constants/colorThemes";
-import { CellLayout, CellProps, Team, WellState } from "@/types/board";
+import {
+  CellLayout,
+  CellProps,
+  CellType,
+  Team,
+  WellState,
+} from "@/types/board";
 import { loadAppState, saveAppState } from "@/utils/useAsyncStorage";
-import { checkXInARow } from "@/utils/xInARow";
+import { xInARow } from "@/utils/xInARow";
 import {
   createContext,
   ReactNode,
+  SetStateAction,
   useCallback,
   useContext,
   useEffect,
   useState,
 } from "react";
-import { GameMode, Turn } from "../types/logic";
+import { GameMode, GameState, Turn, Winner } from "../types/logic";
 
 type GameContextType = {
   layout: {
@@ -32,10 +40,14 @@ type GameContextType = {
   };
   logic: {
     gameMode: GameMode;
-    nextTurn: () => void;
     turnCount: number;
     currentTeam: Team;
     setGameMode: React.Dispatch<React.SetStateAction<GameMode>>;
+    checkGameFinished: (updatedBoard: Record<string, string>) => void;
+    gameState: GameState;
+    setGameState: React.Dispatch<SetStateAction<GameState>>;
+    winner: Winner;
+    setWinner: React.Dispatch<React.SetStateAction<Winner>>;
   };
   settings: {
     colorTheme: ColorThemeType;
@@ -51,6 +63,7 @@ type TurnStrategy = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
+  // Async Cache
   useEffect(() => {
     const loadState = async () => {
       const saved = await loadAppState();
@@ -71,10 +84,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     loadState();
   }, []);
 
-  const [colorTheme, setColorTheme] = useState<ColorThemeType>(CLASSIC);
+  // ** Layout ** //
+
   const [wells, setWells] = useState<WellState>({
-    teamOne: {},
-    teamTwo: {},
+    [Winner.TeamOne]: {},
+    [Winner.TeamTwo]: {},
   });
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
@@ -92,22 +106,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&
     Object.keys(corners).length > 0 &&
-    Object.keys(wells.teamOne).length > 0 &&
-    Object.keys(wells.teamTwo).length > 0;
+    Object.keys(wells[Winner.TeamOne]).length > 0 &&
+    Object.keys(wells[Winner.TeamTwo]).length > 0;
 
   const registerCell = useCallback(({ id, team, type, layout }: CellProps) => {
     if (!layout) return;
 
     switch (type) {
-      case "slot":
+      case CellType.Slot:
         setSlots((prev) => ({ ...prev, [id]: layout }));
         break;
 
-      case "space":
+      case CellType.Space:
         setSpaces((prev) => ({ ...prev, [id]: layout }));
         break;
 
-      case "well":
+      case CellType.Well:
         if (!team) throw new Error("Well must have a team");
         setWells((prev) => ({
           ...prev,
@@ -118,7 +132,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }));
         break;
 
-      case "corner":
+      case CellType.Corner:
         setCorners((prev) => ({ ...prev, [id]: layout }));
         break;
 
@@ -127,36 +141,71 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // TURN RULES
-  const [playersTurn, setPlayersTurn] = useState<1 | 2 | 3 | 4>(1);
-  const [turnCount, setTurnCount] = useState<number>(1);
-  const [gameMode, setGameMode] = useState<GameMode>("twoPlayer");
+  // ** Logic ** //
 
-  const turnStrategies: Record<string, TurnStrategy> = {
+  const [gameMode, setGameMode] = useState<GameMode>(GameMode.TwoPlayer);
+
+  const [playersTurn, setPlayersTurn] = useState<1 | 2 | 3 | 4>(1);
+
+  const [turnCount, setTurnCount] = useState<number>(0);
+
+  const logicalStrategies: Record<string, TurnStrategy> = {
     twoPlayer: {
       getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
-      team: (currentTurn) => (currentTurn === 1 ? "teamOne" : "teamTwo"),
+      team: (currentTurn) =>
+        currentTurn === 1 ? Winner.TeamOne : Winner.TeamTwo,
     },
     fourPlayer: {
       getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
-      team: (currentTurn) => (currentTurn % 2 === 0 ? "teamTwo" : "teamOne"),
+      team: (currentTurn) =>
+        currentTurn % 2 === 0 ? Winner.TeamTwo : Winner.TeamOne,
     },
   };
 
-  // Broken
   const nextTurn = () => {
-    const strategy = turnStrategies[gameMode];
-    const winner = checkXInARow(boardPieceLocations, 2);
-    if (winner) {
-      console.log("Winner is", winner);
-    } else {
-      setPlayersTurn(strategy.getNextTurn(playersTurn));
-      setTurnCount((prev) => prev + 1);
-      console.log("next turn. it is now turn:", turnCount);
+    const strategy = logicalStrategies[gameMode];
+    setPlayersTurn(strategy.getNextTurn(playersTurn));
+    setTurnCount((prev) => prev + 1);
+  };
+
+  const currentTeam = logicalStrategies[gameMode].team(playersTurn);
+
+  const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
+  const [winner, setWinner] = useState<Winner>(Winner.Null);
+
+  // Broken AF
+  const gameCycle = (turn: number) => {
+    if (gameState !== GameState.Playing && gameState !== GameState.Finished) {
+      if (turn === 0) {
+        setGameState(GameState.Ready);
+      } else if (turn > 0) {
+        setGameState(GameState.Playing);
+      }
+    }
+    console.log(gameState);
+    return gameState;
+  };
+
+  const checkGameFinished = (
+    updatedBoardPieceLocations: typeof boardPieceLocations
+  ) => {
+    const winnerCheck = xInARow(updatedBoardPieceLocations, 4);
+    if (!winnerCheck) {
+      setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE_DURATION);
+    } else if (typeof winnerCheck === "string") {
+      console.log("Winner found!", winnerCheck);
+      setWinner(winner);
+      setGameState(GameState.Finished);
     }
   };
 
-  const currentTeam = turnStrategies[gameMode].team(playersTurn);
+  useEffect(() => {
+    gameCycle(turnCount + 1);
+  }, [turnCount, gameMode]);
+
+  // ** Settings ** //
+
+  const [colorTheme, setColorTheme] = useState<ColorThemeType>(CLASSIC);
 
   useEffect(() => {
     saveAppState({ theme: colorTheme });
@@ -168,10 +217,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   //   saveAppState({ wellPieceLocations });
   // }, [turnCount]);
 
-  useEffect(() => {
-    console.log(boardPieceLocations);
-    console.log("check X", checkXInARow(boardPieceLocations, 3));
-  }, [boardPieceLocations]);
+  // useEffect(() => {
+  //   console.log(boardPieceLocations);
+  //   console.log("check X", checkXInARow(boardPieceLocations, 3));
+  // }, [boardPieceLocations]);
 
   return (
     <GameContext.Provider
@@ -190,10 +239,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         },
         logic: {
           gameMode,
-          nextTurn,
+          checkGameFinished,
           turnCount,
           currentTeam,
           setGameMode,
+          winner,
+          setWinner,
+          gameState,
+          setGameState,
         },
         settings: {
           colorTheme,

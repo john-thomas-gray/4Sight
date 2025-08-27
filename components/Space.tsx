@@ -1,7 +1,7 @@
 import { GameElements } from "@/constants";
 
 import { useGameContext } from "@/context/GameContext";
-import { CellProps } from "@/types/board";
+import { CellProps, CellType } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
@@ -13,7 +13,7 @@ const Space = ({ id }: CellProps) => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       layout.registerCell({
         id,
-        type: "space",
+        type: CellType.Space,
         layout: { pageX, pageY, width, height },
       });
     });

@@ -39,3 +39,6 @@ yarn-error.*
 # local env files
 .env*.local
 .env
+
+# Editor directories and files
+.0_todo

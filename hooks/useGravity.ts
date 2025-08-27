@@ -1,7 +1,8 @@
 import { useGameContext } from "@/context/GameContext";
+import { Direction } from "@/types/board";
 
 type GravityProps = {
-  direction: "up" | "down" | "left" | "right";
+  direction: Direction.Up | Direction.Down | Direction.Left | Direction.Right;
 };
 
 export const useGravity = () => {
@@ -11,7 +12,7 @@ export const useGravity = () => {
   const applyGravity = (direction: GravityProps["direction"]) => {
     const updatedPieceLocations = { ...layout.boardPieceLocations };
 
-    if (direction === "up") {
+    if (direction === Direction.Up) {
       for (let row = 2; row <= 7; row++) {
         for (let col = 1; col <= 7; col++) {
           const currentSpaceId = `${row}-${col}`;
@@ -38,7 +39,7 @@ export const useGravity = () => {
           }
         }
       }
-    } else if (direction === "down") {
+    } else if (direction === Direction.Down) {
       for (let row = 6; row >= 1; row--) {
         for (let col = 1; col <= 7; col++) {
           const currentSpaceId = `${row}-${col}`;
@@ -63,7 +64,7 @@ export const useGravity = () => {
           }
         }
       }
-    } else if (direction === "left") {
+    } else if (direction === Direction.Left) {
       for (let col = 2; col <= 7; col++) {
         for (let row = 1; row <= 7; row++) {
           const currentSpaceId = `${row}-${col}`;
@@ -89,7 +90,7 @@ export const useGravity = () => {
           }
         }
       }
-    } else if (direction === "right") {
+    } else if (direction === Direction.Right) {
       for (let col = 6; col >= 1; col--) {
         for (let row = 1; row <= 7; row++) {
           const currentSpaceId = `${row}-${col}`;

@@ -1,6 +1,8 @@
 import { Animations, GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { Board } from "@/types";
+import { CellType } from "@/types/board";
+import { GameState, Winner } from "@/types/logic";
 import React, { useEffect, useState } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -28,25 +30,25 @@ const Piece = ({
   currentWellId,
   currentBoardId,
 }: PieceProps) => {
-  const { layout, settings } = useGameContext();
+  const { layout, settings, logic } = useGameContext();
 
   const wellArray = Object.entries(layout.wells[team]).map(([id, layout]) => ({
     id,
     layout,
-    type: "well" as const,
+    type: CellType.Well as const,
     team,
   }));
 
   const slotArray = Object.entries(layout.slots).map(([id, layout]) => ({
     id,
     layout,
-    type: "slot" as const,
+    type: CellType.Slot as const,
   }));
 
   const spaceArray = Object.entries(layout.spaces).map(([id, layout]) => ({
     id,
     layout,
-    type: "space" as const,
+    type: CellType.Space as const,
   }));
 
   const allCells: Board.CellProps[] = [
@@ -64,8 +66,6 @@ const Piece = ({
     return wellArray.find((well) => well.id === id) || null;
   };
 
-  const { logic } = useGameContext();
-
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
   const currentWellDataSV = useSharedValue<Board.CellProps | null>(
@@ -79,7 +79,7 @@ const Piece = ({
 
   useEffect(() => {
     setMyTurn(team === logic.currentTeam);
-  }, [logic.nextTurn]);
+  }, [logic.turnCount]);
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
@@ -94,10 +94,11 @@ const Piece = ({
   }, [currentWellId]);
   //
   const setBoardPieceLocationsSV = (finalSpaceId: string) => {
-    layout.setBoardPieceLocations((prev) => ({
-      ...prev,
-      [finalSpaceId]: id,
-    }));
+    const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
+
+    layout.setBoardPieceLocations(updated);
+
+    logic.checkGameFinished(updated);
   };
   //
   const setWellPieceLocationsSV = (wellId: string) => {
@@ -116,12 +117,6 @@ const Piece = ({
       });
     }
   };
-  const goToNextTurn = () => {
-    setTimeout(
-      () => logic.nextTurn(),
-      Animations.PIECE_DROP_DURATION + Animations.BOARD_COLOR_CHANGE_DURATION
-    );
-  };
 
   useEffect(() => {
     if (currentWellId) {
@@ -133,7 +128,10 @@ const Piece = ({
   }, []);
 
   const movePiece = Gesture.Pan()
-    .enabled(!onBoard && myTurn)
+    .enabled(
+      // (onBoard && logic.gameover) ||
+      logic.gameState !== GameState.Finished && !onBoard && myTurn
+    )
     .onStart(() => {
       isHeld.value = true;
       runOnJS(deleteWellPieceLocationSV)();
@@ -356,7 +354,6 @@ const Piece = ({
         ) {
           onBoardSV.value = true;
           runOnJS(setOnBoard)(true);
-          runOnJS(goToNextTurn)();
         }
       }
       if (noCellFound) {
@@ -430,7 +427,7 @@ const Piece = ({
     width: GameElements.PIECE_SIZE,
     borderRadius: GameElements.PIECE_RADIUS,
     backgroundColor:
-      team === "teamOne"
+      team === Winner.TeamOne
         ? settings.colorTheme.TEAM_ONE_COLOR
         : settings.colorTheme.TEAM_TWO_COLOR,
     borderWidth: 2,

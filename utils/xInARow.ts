@@ -1,15 +1,18 @@
-type Board = Record<string, string>; // key = "row-col", value = piece id like "11t"
+import { Team } from "@/types/board";
+import { Winner } from "@/types/logic";
 
-export const checkXInARow = (
+type Board = Record<string, string>;
+
+export const xInARow = (
   board: Board,
   X: number,
   rows = 9,
   cols = 9
-): string | "tie" | null => {
+): Winner => {
   const getTeam = (r: number, c: number) => {
     const piece = board[`${r}-${c}`];
     if (!piece) return null;
-    return Number(piece) < 24 ? "teamOne" : "teamTwo";
+    return Number(piece) < 24 ? Winner.TeamOne : Winner.TeamTwo;
   };
 
   const directions = [
@@ -19,7 +22,7 @@ export const checkXInARow = (
     [-1, 1], // diagonal up-right
   ];
 
-  const winners = new Set<string>();
+  const winners = new Set<Team>();
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -42,7 +45,7 @@ export const checkXInARow = (
     }
   }
 
-  if (winners.size === 2) return "tie";
+  if (winners.size === 2) return Winner.Tie;
   if (winners.size === 1) return Array.from(winners)[0];
-  return null;
+  return Winner.Null;
 };
