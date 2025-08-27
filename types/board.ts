@@ -35,3 +35,17 @@ export type WellState = {
   [Winner.TeamOne]: Record<string, CellLayout>;
   [Winner.TeamTwo]: Record<string, CellLayout>;
 };
+
+export type PieceProps = {
+  team: Team;
+  id: string;
+  initialPosition: { x: number; y: number };
+  currentWellId?: string;
+  currentBoardId?: string;
+};
+
+export enum HighlightProps {
+  Off = "off",
+  Almost = "almost",
+  Winner = "winner",
+}

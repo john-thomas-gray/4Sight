@@ -19,7 +19,9 @@ Graphics
 - all slot arrows turn the direction of the pull
 - Board lifts up when turning is possible
 - Long press on opposite side of board for pull preview
-  Bugs:
+
+Bugs:
+
 - Fix well piece locations
 - Can drop pieces while pull is animating
 - Can pull when you pull
@@ -29,11 +31,10 @@ Graphics
 Win State
 
 - Animation? Pieces fill in gold jump and jiggle in a cascade
-- Message?
+- Message. Appears and disappears.
 - Disable movements
-  - Allow pieces to be taken off the board anyone can put pieces on the board.
+  - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
   - Swipe / shake phone knocks all the pieces off and they go back to their wells
-  - Winning pieces are highlighted
 
 Near Win State
 

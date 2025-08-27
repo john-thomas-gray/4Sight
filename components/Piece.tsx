@@ -1,9 +1,10 @@
 import { Animations, GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
+import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
-import { CellType } from "@/types/board";
+import { CellType, HighlightProps, PieceProps } from "@/types/board";
 import { GameState, Winner } from "@/types/logic";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -14,14 +15,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-
-type PieceProps = {
-  id: string;
-  team: Board.Team;
-  initialPosition: { x: number; y: number };
-  currentWellId?: string;
-  currentBoardId?: string;
-};
+import Highlight from "./Highlight";
 
 const Piece = ({
   team,
@@ -71,18 +65,18 @@ const Piece = ({
   const currentWellDataSV = useSharedValue<Board.CellProps | null>(
     currentWellId ? getCurrentWellData(currentWellId) : null
   );
-  const [onBoard, setOnBoard] = React.useState(false);
+  const { onBoard, setOnBoard, myTurn } = usePieceState(
+    team,
+    currentWellId,
+    id
+  );
   const onBoardSV = useSharedValue(false);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
-  const [myTurn, setMyTurn] = useState(false);
-
-  useEffect(() => {
-    setMyTurn(team === logic.currentTeam);
-  }, [logic.turnCount]);
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
+    console.log(layout.boardPieceLocations);
   }, [layout.boardPieceLocations]);
 
   useEffect(() => {
@@ -452,9 +446,13 @@ const Piece = ({
   };
 
   return (
-    <GestureDetector gesture={movePiece}>
-      <Animated.View style={[baseStyle, animatedStyles]} />
-    </GestureDetector>
+    <>
+      <GestureDetector gesture={movePiece}>
+        <Animated.View style={[baseStyle, animatedStyles]}>
+          <Highlight status={HighlightProps.Off} />
+        </Animated.View>
+      </GestureDetector>
+    </>
   );
 };
 

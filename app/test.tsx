@@ -1,3 +1,4 @@
+import Highlight from "@/components/Highlight";
 import { Button, View } from "react-native";
 import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
 const Test = () => {
@@ -15,6 +16,7 @@ const Test = () => {
           backgroundColor: "violet",
         }}
       />
+      <Highlight />
       <Button onPress={handlePress} title="Click me" />
     </View>
   );
