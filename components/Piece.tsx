@@ -1,9 +1,12 @@
 import { Animations, GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
+import useBoardPullAnimation from "@/hooks/useBoardPullAnimation";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
-import { CellType, HighlightProps, PieceProps } from "@/types/board";
+import { HighlightProps, PieceProps } from "@/types/board";
 import { GameState, Winner } from "@/types/logic";
+import { animateReturnToWell } from "@/utils/animations";
+import { getCellArray } from "@/utils/boardLogic";
 import React, { useEffect } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -26,30 +29,7 @@ const Piece = ({
 }: PieceProps) => {
   const { layout, settings, logic } = useGameContext();
 
-  const wellArray = Object.entries(layout.wells[team]).map(([id, layout]) => ({
-    id,
-    layout,
-    type: CellType.Well as const,
-    team,
-  }));
-
-  const slotArray = Object.entries(layout.slots).map(([id, layout]) => ({
-    id,
-    layout,
-    type: CellType.Slot as const,
-  }));
-
-  const spaceArray = Object.entries(layout.spaces).map(([id, layout]) => ({
-    id,
-    layout,
-    type: CellType.Space as const,
-  }));
-
-  const allCells: Board.CellProps[] = [
-    ...wellArray,
-    ...slotArray,
-    ...spaceArray,
-  ];
+  const allCells = getCellArray({ layout, result: "all", team });
 
   const offset = useSharedValue({
     x: initialPosition.x,
@@ -57,7 +37,11 @@ const Piece = ({
   });
 
   const getCurrentWellData = (id: string) => {
-    return wellArray.find((well) => well.id === id) || null;
+    return (
+      getCellArray({ layout, result: "wells", team }).find(
+        (well) => well.id === id
+      ) || null
+    );
   };
 
   const translateX = useSharedValue(initialPosition.x);
@@ -230,25 +214,11 @@ const Piece = ({
               currentWellDataSV.value?.id
             ) {
               runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
-
-              translateX.value = withTiming(
-                currentWellDataSV.value.layout.pageX +
-                  currentWellDataSV.value.layout.width / 2 -
-                  GameElements.PIECE_RADIUS,
-                {
-                  duration: Animations.WELL_RETURN_DURATION,
-                  easing: Easing.inOut(Easing.quad),
-                }
-              );
-              translateY.value = withTiming(
-                currentWellDataSV.value.layout.pageY +
-                  currentWellDataSV.value.layout.height / 2 -
-                  GameElements.PIECE_RADIUS,
-                {
-                  duration: Animations.WELL_RETURN_DURATION,
-                  easing: Easing.inOut(Easing.quad),
-                }
-              );
+              animateReturnToWell({
+                translateX: translateX,
+                translateY,
+                targetWellData: currentWellDataSV,
+              });
             }
             return;
           }
@@ -272,7 +242,7 @@ const Piece = ({
                 finalSpaceLayout.width / 2 -
                 GameElements.PIECE_RADIUS,
               {
-                duration: Animations.PIECE_DROP_DURATION,
+                duration: Animations.SLOT_TO_SPACE_DURATION,
                 easing: Easing.bounce,
               }
             )
@@ -288,7 +258,7 @@ const Piece = ({
                 finalSpaceLayout.width / 2 -
                 GameElements.PIECE_RADIUS,
               {
-                duration: Animations.PIECE_DROP_DURATION,
+                duration: Animations.SLOT_TO_SPACE_DURATION,
                 easing: Easing.bounce,
               }
             )
@@ -300,24 +270,11 @@ const Piece = ({
           if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
             runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
 
-            translateX.value = withTiming(
-              currentWellDataSV.value.layout.pageX +
-                currentWellDataSV.value.layout.width / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            );
-            translateY.value = withTiming(
-              currentWellDataSV.value.layout.pageY +
-                currentWellDataSV.value.layout.height / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            );
+            animateReturnToWell({
+              translateX: translateX,
+              translateY,
+              targetWellData: currentWellDataSV,
+            });
           }
 
           // Check N,S,E,W if there is no piece by the time you reach a slot
@@ -354,57 +311,22 @@ const Piece = ({
         console.log("Dropped outside any valid space");
         if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
           runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
-
-          translateX.value = withTiming(
-            currentWellDataSV.value.layout.pageX +
-              currentWellDataSV.value.layout.width / 2 -
-              GameElements.PIECE_RADIUS,
-            {
-              duration: Animations.WELL_RETURN_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }
-          );
-          translateY.value = withTiming(
-            currentWellDataSV.value.layout.pageY +
-              currentWellDataSV.value.layout.height / 2 -
-              GameElements.PIECE_RADIUS,
-            {
-              duration: Animations.WELL_RETURN_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }
-          );
+          animateReturnToWell({
+            translateX: translateX,
+            translateY,
+            targetWellData: currentWellDataSV,
+          });
         }
       }
     });
 
-  // HANDLES PULLING ANIMATION
-  useEffect(() => {
-    const nextSpaceId = Object.entries(layout.boardPieceLocations).find(
-      ([spaceId, pieceId]) => pieceId === id
-    )?.[0];
-
-    if (nextSpaceId && layout.spaces[nextSpaceId]) {
-      const nextSpaceLayout = layout.spaces[nextSpaceId];
-      translateX.value = withTiming(
-        nextSpaceLayout.pageX +
-          nextSpaceLayout.width / 2 -
-          GameElements.PIECE_RADIUS,
-        {
-          duration: Animations.PIECE_DROP_DURATION,
-          easing: Easing.bounce,
-        }
-      );
-      translateY.value = withTiming(
-        nextSpaceLayout.pageY +
-          nextSpaceLayout.height / 2 -
-          GameElements.PIECE_RADIUS,
-        {
-          duration: Animations.PIECE_DROP_DURATION,
-          easing: Easing.bounce,
-        }
-      );
-    }
-  }, [layout.boardPieceLocations, layout.spaces]);
+  useBoardPullAnimation({
+    pieceIdIn: id,
+    boardPieceLocations: layout.boardPieceLocations,
+    spaces: layout.spaces,
+    translateX,
+    translateY,
+  });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

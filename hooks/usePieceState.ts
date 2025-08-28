@@ -14,7 +14,6 @@ export const usePieceState = (
     setMyTurn(team === logic.currentTeam);
   }, [logic.turnCount]);
 
-  // sync well location when piece mounts
   useEffect(() => {
     if (currentWellId) {
       layout.setWellPieceLocations((prev) => ({

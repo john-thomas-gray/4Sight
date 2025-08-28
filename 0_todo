@@ -58,3 +58,5 @@ Previews
 - hightlights three pieces in a row with flashing beacons
 
 refactor piece
+
+Grabbing piece raises z index above all other pieces
