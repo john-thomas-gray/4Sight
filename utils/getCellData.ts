@@ -1,5 +1,4 @@
 import { CellProps, CellType } from "@/types/board";
-import { Winner } from "@/types/logic";
 
 export const getCellData = (id: string) => {
   const [row, col] = id.split("-").map(Number) as [number, number];
@@ -29,9 +28,9 @@ export const getCellData = (id: string) => {
   } else if (row > 8 && col > 8) {
     type = CellType.Well;
     if (row > 16 && col > 11) {
-      team = Winner.TeamTwo;
+      team = Team.TeamTwo;
     } else {
-      team = Winner.TeamOne;
+      team = Team.TeamOne;
     }
   } else {
     throw new Error(

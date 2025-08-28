@@ -1,3 +1,5 @@
+import { Team } from "./board";
+
 export enum Turn {
   One = 1,
   Two = 2,
@@ -9,8 +11,8 @@ export enum GameMode {
   FourPlayer = "fourPlayer",
 }
 export enum Winner {
-  TeamOne = "teamOne",
-  TeamTwo = "TeamTwo",
+  TeamOne = Team.TeamOne,
+  TeamTwo = Team.TeamTwo,
   Tie = "tie",
   Null = "",
 }

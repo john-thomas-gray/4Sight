@@ -4,6 +4,7 @@ import {
   CellLayout,
   CellProps,
   CellType,
+  PieceProps,
   Team,
   WellState,
 } from "@/types/board";
@@ -38,6 +39,8 @@ type GameContextType = {
     >;
     currentBoardId?: string | null;
     layoutReady: boolean;
+    pieces: Record<string, PieceProps>;
+    setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
   };
   logic: {
     gameMode: GameMode;
@@ -88,12 +91,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   // ** Layout ** //
 
   const [wells, setWells] = useState<WellState>({
-    [Winner.TeamOne]: {},
-    [Winner.TeamTwo]: {},
+    [Team.TeamOne]: {},
+    [Team.TeamTwo]: {},
   });
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
   const [corners, setCorners] = useState<Record<string, CellLayout>>({});
+  const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
 
   // Merge these to pieceLocations well and in play
   const [wellPieceLocations, setWellPieceLocations] = useState<
@@ -107,8 +111,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&
     Object.keys(corners).length > 0 &&
-    Object.keys(wells[Winner.TeamOne]).length > 0 &&
-    Object.keys(wells[Winner.TeamTwo]).length > 0;
+    Object.keys(wells[Team.TeamOne]).length > 0 &&
+    Object.keys(wells[Team.TeamTwo]).length > 0;
 
   const registerCell = useCallback(({ id, team, type, layout }: CellProps) => {
     if (!layout) return;
@@ -153,13 +157,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const logicalStrategies: Record<string, TurnStrategy> = {
     twoPlayer: {
       getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
-      team: (currentTurn) =>
-        currentTurn === 1 ? Winner.TeamOne : Winner.TeamTwo,
+      team: (currentTurn) => (currentTurn === 1 ? Team.TeamOne : Team.TeamTwo),
     },
     fourPlayer: {
       getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
       team: (currentTurn) =>
-        currentTurn % 2 === 0 ? Winner.TeamTwo : Winner.TeamOne,
+        currentTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne,
     },
   };
 
@@ -237,6 +240,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           boardPieceLocations,
           setBoardPieceLocations,
           layoutReady,
+          pieces,
+          setPieces,
         },
         logic: {
           gameMode,

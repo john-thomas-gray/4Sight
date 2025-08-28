@@ -3,85 +3,88 @@ import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import { useGameContext } from "@/context/GameContext";
-import { Team } from "@/types/board";
-import { GameMode, Winner } from "@/types/logic";
-import React, { useEffect, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { PieceProps, Team } from "@/types/board";
+import React, { useEffect, useMemo, useRef } from "react";
+import { View } from "react-native";
 
 const GamePlay = () => {
-  const { layout, logic, settings } = useGameContext();
-
-  useEffect(() => {
-    logic.setGameMode(GameMode.TwoPlayer);
-  }, []);
+  const { layout, settings } = useGameContext();
 
   const teamOneWells = useMemo(
-    () => Object.entries(layout.wells[Winner.TeamOne]),
-    [layout.wells[Winner.TeamOne]]
+    () => Object.entries(layout.wells[Team.TeamOne]),
+    [layout.wells[Team.TeamOne]]
   );
 
   const teamTwoWells = useMemo(
-    () => Object.entries(layout.wells[Winner.TeamTwo]),
-    [layout.wells[Winner.TeamTwo]]
+    () => Object.entries(layout.wells[Team.TeamTwo]),
+    [layout.wells[Team.TeamTwo]]
   );
 
-  let pieceNumber = 0;
+  const initialized = useRef(false);
 
-  const renderPieces = (
+  const toPieces = (
     entries: [
       string,
       { pageX: number; pageY: number; width: number; height: number }
     ][],
     team: Team
-  ) =>
-    entries.map(([id, layout]) => (
+  ): Record<string, PieceProps> =>
+    Object.fromEntries(
+      entries.map(([wellId, l], idx) => {
+        const id = `${idx}`;
+        return [
+          id,
+          {
+            id,
+            team,
+            currentWellId: wellId,
+            initialPosition: {
+              x: l.pageX + l.width / 2 - 16,
+              y: l.pageY + l.height / 2 - 16,
+            },
+          } as PieceProps,
+        ];
+      })
+    );
+
+  useEffect(() => {
+    if (!layout.layoutReady || initialized.current) return;
+
+    const built: Record<string, PieceProps> = {
+      ...toPieces(teamOneWells, Team.TeamOne),
+      ...toPieces(teamTwoWells, Team.TeamTwo),
+    };
+
+    layout.setPieces(built);
+    initialized.current = true;
+  }, [layout.layoutReady, teamOneWells, teamTwoWells]);
+
+  const renderPieces = (piecesRecord: Record<string, PieceProps>) =>
+    Object.entries(piecesRecord).map(([id, p]) => (
       <Piece
         key={id}
-        id={`${pieceNumber++}`}
-        team={team}
-        currentWellId={id}
-        initialPosition={{
-          x: layout.pageX + layout.width / 2 - 16,
-          y: layout.pageY + layout.height / 2 - 16,
-        }}
+        id={id}
+        team={p.team}
+        currentWellId={p.currentWellId}
+        initialPosition={p.initialPosition}
       />
     ));
+
   return (
     <View
       className="flex-1 flex-row items-center justify-center mt-90"
       style={{ backgroundColor: settings.colorTheme.FELT_TOP }}
     >
       <View className="flex-row justify-between">
-        <TeamWellGrid team={Winner.TeamOne} />
+        <TeamWellGrid team={Team.TeamOne} />
         <Board className="mx-10" />
-        <TeamWellGrid team={Winner.TeamTwo} />
+        <TeamWellGrid team={Team.TeamTwo} />
       </View>
-      {layout.layoutReady && renderPieces(teamOneWells, Winner.TeamOne)}
-      {layout.layoutReady && renderPieces(teamTwoWells, Winner.TeamTwo)}
-      {/* Should be own component. Piece dropping anim. */}
 
+      {layout.layoutReady && renderPieces(layout.pieces)}
       {!layout.layoutReady && <LoadingScreen />}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 9999,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: "#fff",
-    fontSize: 16,
-  },
-});
 
 export default GamePlay;

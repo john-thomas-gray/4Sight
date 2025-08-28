@@ -1,4 +1,3 @@
-import { Team } from "@/types/board";
 import { Winner } from "@/types/logic";
 
 type Board = Record<string, string>;
@@ -22,7 +21,7 @@ export const xInARow = (
     [-1, 1], // diagonal up-right
   ];
 
-  const winners = new Set<Team>();
+  const winners = new Set<Winner>();
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {

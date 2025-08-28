@@ -1,7 +1,12 @@
 // utils/animations.ts
 import { Animations, GameElements } from "@/constants";
 import { Board } from "@/types";
-import { Easing, SharedValue, withTiming } from "react-native-reanimated";
+import {
+  Easing,
+  SharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 type animateReturnToWellProps = {
   translateX: SharedValue<number>;
@@ -112,26 +117,40 @@ export const animatePieceDrop = ({
   spaceWidth: number;
   spaceHeight: number;
 }) => {
-  const slotProps: AnimatePlaceInSlotProps = {
-    translateX,
-    translateY,
-    selectedCellX: slotX,
-    selectedCellY: slotY,
-    selectedCellWidthX: slotWidth,
-    selectedCellHeightY: slotHeight,
-  };
+  translateX.value = withSequence(
+    withTiming(slotX + slotWidth / 2 - GameElements.PIECE_RADIUS, {
+      duration: Animations.SLOT_INSERT_DURATION,
+      easing: Easing.inOut(Easing.quad),
+    }),
+    withTiming(spaceX + spaceWidth / 2 - GameElements.PIECE_RADIUS, {
+      duration: Animations.SLOT_TO_SPACE_DURATION,
+      easing: Easing.bounce,
+    })
+  );
 
-  const spaceProps: AnimatePlaceInSlotProps = {
-    translateX,
-    translateY,
-    selectedCellX: spaceX,
-    selectedCellY: spaceY,
-    selectedCellWidthX: spaceWidth,
-    selectedCellHeightY: spaceHeight,
-  };
-
-  animatePlaceInSlot(slotProps);
-  setTimeout(() => {
-    animateSlotToSpace(spaceProps);
-  }, Animations.SLOT_INSERT_DURATION);
+  translateY.value = withSequence(
+    withTiming(slotY + slotHeight / 2 - GameElements.PIECE_RADIUS, {
+      duration: Animations.SLOT_INSERT_DURATION,
+      easing: Easing.inOut(Easing.quad),
+    }),
+    withTiming(spaceY + spaceHeight / 2 - GameElements.PIECE_RADIUS, {
+      duration: Animations.SLOT_TO_SPACE_DURATION,
+      easing: Easing.bounce,
+    })
+  );
 };
+
+// animatePieceDrop({
+//   translateX,
+//   translateY,
+//   slotX: scX,
+//   slotY: scY,
+//   slotWidth: scWidth,
+//   slotHeight: scHeight,
+//   spaceX: finalSpaceLayout.pageY,
+//   spaceY: finalSpaceLayout.pageX,
+//   spaceWidth: finalSpaceLayout.width,
+//   spaceHeight: finalSpaceLayout.height,
+// });
+
+// const animateToWell;

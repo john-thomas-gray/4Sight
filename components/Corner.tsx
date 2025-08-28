@@ -4,8 +4,7 @@ import {
   CORNER_STYLE,
 } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
-import { CellProps, CellType } from "@/types/board";
-import { Winner } from "@/types/logic";
+import { CellProps, CellType, Team } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
@@ -13,7 +12,7 @@ const Corner = ({ id }: CellProps) => {
   const { layout, logic, settings } = useGameContext();
   const viewRef = useRef<View>(null);
   const cornerColor =
-    logic.currentTeam === Winner.TeamOne
+    logic.currentTeam === Team.TeamOne
       ? settings.colorTheme.CORNER_COLOR_T1
       : settings.colorTheme.CORNER_COLOR_T2;
 

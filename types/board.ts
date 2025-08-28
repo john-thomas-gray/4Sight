@@ -1,5 +1,3 @@
-import { Winner } from "./logic";
-
 export type CellProps = {
   id: string;
   type: CellType;
@@ -29,11 +27,14 @@ export enum Direction {
   Right = "right",
 }
 
-export type Team = Winner.TeamOne | Winner.TeamTwo;
+export enum Team {
+  TeamOne = "teamOne",
+  TeamTwo = "teamTwo",
+}
 
 export type WellState = {
-  [Winner.TeamOne]: Record<string, CellLayout>;
-  [Winner.TeamTwo]: Record<string, CellLayout>;
+  [Team.TeamOne]: Record<string, CellLayout>;
+  [Team.TeamTwo]: Record<string, CellLayout>;
 };
 
 export type PieceProps = {
@@ -41,7 +42,6 @@ export type PieceProps = {
   id: string;
   initialPosition: { x: number; y: number };
   currentWellId?: string;
-  currentBoardId?: string;
 };
 
 export enum HighlightProps {

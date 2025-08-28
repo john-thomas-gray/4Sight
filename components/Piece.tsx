@@ -3,8 +3,8 @@ import { useGameContext } from "@/context/GameContext";
 import useBoardPullAnimation from "@/hooks/useBoardPullAnimation";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
-import { HighlightProps, PieceProps } from "@/types/board";
-import { GameState, Winner } from "@/types/logic";
+import { HighlightProps, PieceProps, Team } from "@/types/board";
+import { GameState } from "@/types/logic";
 import { animateReturnToWell } from "@/utils/animations";
 import { getCellArray } from "@/utils/boardLogic";
 import React, { useEffect } from "react";
@@ -25,7 +25,6 @@ const Piece = ({
   id = "X-0",
   initialPosition,
   currentWellId,
-  currentBoardId,
 }: PieceProps) => {
   const { layout, settings, logic } = useGameContext();
 
@@ -283,6 +282,15 @@ const Piece = ({
           // It runs if slot
         } else if (isWell) {
           runOnJS(setWellPieceLocationsSV)(selectedCell.id);
+
+          // animateReturnToWell({
+          //   translateX,
+          //   translateY,
+          //   scX,
+          //   scWidth,
+          //   scY,
+          //   scHeight,
+          // });
           translateX.value = withTiming(
             scX + scWidth / 2 - GameElements.PIECE_RADIUS,
             {
@@ -343,7 +351,7 @@ const Piece = ({
     width: GameElements.PIECE_SIZE,
     borderRadius: GameElements.PIECE_RADIUS,
     backgroundColor:
-      team === Winner.TeamOne
+      team === Team.TeamOne
         ? settings.colorTheme.TEAM_ONE_COLOR
         : settings.colorTheme.TEAM_TWO_COLOR,
     borderWidth: 2,

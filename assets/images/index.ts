@@ -1,4 +1,4 @@
-import { Winner } from "@/types/logic";
+import { Team } from "@/types/board";
 import backArrow from "./backArrow.png";
 import cornerArrowNW from "./corner-arrow-NW.png";
 import cornerArrowSE from "./corner-arrow-SE.png";
@@ -15,24 +15,24 @@ export const cellImages = {
   },
   slot: {
     E: {
-      [Winner.TeamOne]: slotArrowClear,
-      [Winner.TeamTwo]: slotArrowClear,
+      [Team.TeamOne]: slotArrowClear,
+      [Team.TeamTwo]: slotArrowClear,
     },
     N: {
-      [Winner.TeamTwo]: slotArrowClear,
-      [Winner.TeamOne]: slotArrowClear,
+      [Team.TeamTwo]: slotArrowClear,
+      [Team.TeamOne]: slotArrowClear,
     },
     S: {
-      [Winner.TeamTwo]: slotArrowClear,
-      [Winner.TeamOne]: slotArrowClear,
+      [Team.TeamTwo]: slotArrowClear,
+      [Team.TeamOne]: slotArrowClear,
     },
     W: {
-      [Winner.TeamTwo]: slotArrowClear,
-      [Winner.TeamOne]: slotArrowClear,
+      [Team.TeamTwo]: slotArrowClear,
+      [Team.TeamOne]: slotArrowClear,
     },
     C: {
-      [Winner.TeamTwo]: slotArrowClear,
-      [Winner.TeamOne]: slotArrowClear,
+      [Team.TeamTwo]: slotArrowClear,
+      [Team.TeamOne]: slotArrowClear,
     },
   },
 };
