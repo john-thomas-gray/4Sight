@@ -186,7 +186,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setGameState(GameState.Playing);
       }
     }
-    console.log(gameState);
+    // console.log(gameState);
     return gameState;
   };
 

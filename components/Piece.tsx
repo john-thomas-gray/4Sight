@@ -6,6 +6,7 @@ import { Board } from "@/types";
 import { HighlightProps, PieceProps, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
+import isReachable from "@/utils/isReachable";
 import React, { useEffect } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -58,7 +59,7 @@ const Piece = ({
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
-    console.log(layout.boardPieceLocations);
+    // console.log(layout.boardPieceLocations);
   }, [layout.boardPieceLocations]);
 
   useEffect(() => {
@@ -137,6 +138,12 @@ const Piece = ({
           width: scWidth,
           height: scHeight,
         } = selectedCell.layout;
+
+        const id = selectedCell.id;
+
+        const reachable = runOnJS((reachable: boolean) => {})(
+          isReachable(layout.boardPieceLocations, id)
+        );
 
         const cellFound =
           pieceCenter.x >= scX &&
@@ -280,7 +287,9 @@ const Piece = ({
 
           runOnJS(setBoardPieceLocationsSV)(finalSpaceId);
         } else if (isSpace) {
-          console.log("That space is blocked!");
+          console.log("That space is not reachable!");
+
+          console.log(reachable, "!");
           if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
             runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
 
@@ -347,7 +356,7 @@ const Piece = ({
         }
       }
       if (noCellFound) {
-        console.log("Dropped outside any valid space");
+        // console.log("Dropped outside any valid space");
         if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
           runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
           // animateMisplacedPiece

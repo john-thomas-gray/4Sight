@@ -29,9 +29,9 @@ export const useGravity = () => {
 
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
-              console.log(
-                `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              );
+              // console.log(
+              //   `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
+              // );
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -54,9 +54,9 @@ export const useGravity = () => {
             }
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
-              console.log(
-                `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              );
+              // console.log(
+              //   `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
+              // );
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -80,9 +80,9 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
-              console.log(
-                `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              );
+              // console.log(
+              //   `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
+              // );
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -106,11 +106,11 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
-              console.log(
-                `Moving ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              );
-              updatedPieceLocations[targetSpaceId] =
-                updatedPieceLocations[currentSpaceId];
+              // console.log(
+              //   `Moving ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
+              // );
+              // updatedPieceLocations[targetSpaceId] =
+              updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
             }
           }
