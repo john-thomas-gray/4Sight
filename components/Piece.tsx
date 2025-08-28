@@ -5,7 +5,6 @@ import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
 import { HighlightProps, PieceProps, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
-import { animateReturnToWell } from "@/utils/animations";
 import { getCellArray } from "@/utils/boardLogic";
 import React, { useEffect } from "react";
 import { ViewStyle } from "react-native";
@@ -213,11 +212,27 @@ const Piece = ({
               currentWellDataSV.value?.id
             ) {
               runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
-              animateReturnToWell({
-                translateX: translateX,
-                translateY,
-                targetWellData: currentWellDataSV,
-              });
+              // animateMisplacedPiece
+              const well = currentWellDataSV.value;
+              if (!well || !well.layout) return;
+              translateX.value = withTiming(
+                well.layout.pageX +
+                  well.layout.width / 2 -
+                  GameElements.PIECE_RADIUS,
+                {
+                  duration: Animations.WELL_RETURN_DURATION,
+                  easing: Easing.inOut(Easing.quad),
+                }
+              );
+              translateY.value = withTiming(
+                well.layout.pageY +
+                  well.layout.height / 2 -
+                  GameElements.PIECE_RADIUS,
+                {
+                  duration: Animations.WELL_RETURN_DURATION,
+                  easing: Easing.inOut(Easing.quad),
+                }
+              );
             }
             return;
           }
@@ -269,11 +284,27 @@ const Piece = ({
           if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
             runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
 
-            animateReturnToWell({
-              translateX: translateX,
-              translateY,
-              targetWellData: currentWellDataSV,
-            });
+            // animateMisplacedPiece
+            const well = currentWellDataSV.value;
+            if (!well || !well.layout) return;
+            translateX.value = withTiming(
+              well.layout.pageX +
+                well.layout.width / 2 -
+                GameElements.PIECE_RADIUS,
+              {
+                duration: Animations.WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
+            translateY.value = withTiming(
+              well.layout.pageY +
+                well.layout.height / 2 -
+                GameElements.PIECE_RADIUS,
+              {
+                duration: Animations.WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
           }
 
           // Check N,S,E,W if there is no piece by the time you reach a slot
@@ -283,7 +314,7 @@ const Piece = ({
         } else if (isWell) {
           runOnJS(setWellPieceLocationsSV)(selectedCell.id);
 
-          // animateReturnToWell({
+          // animateMisplacedPiece({
           //   translateX,
           //   translateY,
           //   scX,
@@ -319,11 +350,27 @@ const Piece = ({
         console.log("Dropped outside any valid space");
         if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
           runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
-          animateReturnToWell({
-            translateX: translateX,
-            translateY,
-            targetWellData: currentWellDataSV,
-          });
+          // animateMisplacedPiece
+          const well = currentWellDataSV.value;
+          if (!well || !well.layout) return;
+          translateX.value = withTiming(
+            well.layout.pageX +
+              well.layout.width / 2 -
+              GameElements.PIECE_RADIUS,
+            {
+              duration: Animations.WELL_RETURN_DURATION,
+              easing: Easing.inOut(Easing.quad),
+            }
+          );
+          translateY.value = withTiming(
+            well.layout.pageY +
+              well.layout.height / 2 -
+              GameElements.PIECE_RADIUS,
+            {
+              duration: Animations.WELL_RETURN_DURATION,
+              easing: Easing.inOut(Easing.quad),
+            }
+          );
         }
       }
     });

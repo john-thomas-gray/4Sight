@@ -8,17 +8,17 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-type animateReturnToWellProps = {
+type animateMisplacedPieceProps = {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   targetWellData: SharedValue<Board.CellProps | null>;
 };
 
-export const animateReturnToWell = ({
+export const animateMisplacedPiece = ({
   translateX,
   translateY,
   targetWellData,
-}: animateReturnToWellProps) => {
+}: animateMisplacedPieceProps) => {
   const well = targetWellData.value;
   if (!well || !well.layout) return;
   translateX.value = withTiming(
