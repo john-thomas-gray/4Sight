@@ -1,4 +1,5 @@
 import { Animations, GameElements } from "@/constants";
+import { BOARD_SIZE_ZERO_IDX } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
 import useBoardPullAnimation from "@/hooks/useBoardPullAnimation";
 import { usePieceState } from "@/hooks/usePieceState";
@@ -6,7 +7,6 @@ import { Board } from "@/types";
 import { HighlightProps, PieceProps, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
-import isReachable from "@/utils/isReachable";
 import React, { useEffect } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -29,6 +29,8 @@ const Piece = ({
   const { layout, settings, logic } = useGameContext();
 
   const allCells = getCellArray({ layout, result: "all", team });
+
+  const slots = getCellArray({ layout, result: "slots", team });
 
   const offset = useSharedValue({
     x: initialPosition.x,
@@ -56,10 +58,11 @@ const Piece = ({
   const onBoardSV = useSharedValue(false);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
+  type DropSlotData = { id: string; distance: number } | null;
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
-    // console.log(layout.boardPieceLocations);
+    console.log(layout.boardPieceLocations);
   }, [layout.boardPieceLocations]);
 
   useEffect(() => {
@@ -70,22 +73,22 @@ const Piece = ({
     }
   }, [currentWellId]);
   //
-  const setBoardPieceLocationsSV = (finalSpaceId: string) => {
+  const setBPLUI = (finalSpaceId: string) => {
     const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
 
     layout.setBoardPieceLocations(updated);
-
+    console.log(layout.boardPieceLocations);
     logic.checkGameFinished(updated);
   };
   //
-  const setWellPieceLocationsSV = (wellId: string) => {
+  const setWPLUI = (wellId: string) => {
     layout.setWellPieceLocations((prev) => ({
       ...prev,
       [wellId]: id,
     }));
   };
   //
-  const deleteWellPieceLocationSV = () => {
+  const deleteWPLUI = () => {
     if (currentWellId) {
       layout.setWellPieceLocations((prev) => {
         const updated = { ...prev };
@@ -112,7 +115,7 @@ const Piece = ({
     )
     .onStart(() => {
       isHeld.value = true;
-      runOnJS(deleteWellPieceLocationSV)();
+      runOnJS(deleteWPLUI)();
     })
     .onUpdate((event) => {
       translateX.value = event.absoluteX - GameElements.PIECE_RADIUS;
@@ -134,19 +137,19 @@ const Piece = ({
         if (!selectedCell.layout) continue;
 
         const {
-          pageX: scX,
-          pageY: scY,
-          width: scWidth,
-          height: scHeight,
+          pageX: sourceCellCoordX,
+          pageY: sourceCellCoordY,
+          width: sourceCellWidth,
+          height: sourceCellHeight,
         } = selectedCell.layout;
 
         const id = selectedCell.id;
 
         const cellFound =
-          pieceCenter.x >= scX &&
-          pieceCenter.x <= scX + scWidth &&
-          pieceCenter.y >= scY &&
-          pieceCenter.y <= scY + scHeight;
+          pieceCenter.x >= sourceCellCoordX &&
+          pieceCenter.x <= sourceCellCoordX + sourceCellWidth &&
+          pieceCenter.y >= sourceCellCoordY &&
+          pieceCenter.y <= sourceCellCoordY + sourceCellHeight;
 
         if (!cellFound) continue;
 
@@ -215,7 +218,7 @@ const Piece = ({
               currentWellDataSV.value?.layout &&
               currentWellDataSV.value?.id
             ) {
-              runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
+              runOnJS(setWPLUI)(currentWellDataSV.value.id);
               // animateMisplacedPiece
               const well = currentWellDataSV.value;
               if (!well || !well.layout) return;
@@ -248,13 +251,17 @@ const Piece = ({
             console.warn("No layout for final board space", finalSpaceId);
             return;
           }
-
           // Animate to slot
           translateX.value = withSequence(
-            withTiming(scX + scWidth / 2 - GameElements.PIECE_RADIUS, {
-              duration: Animations.SLOT_INSERT_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }),
+            withTiming(
+              sourceCellCoordX +
+                sourceCellWidth / 2 -
+                GameElements.PIECE_RADIUS,
+              {
+                duration: Animations.SLOT_INSERT_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            ),
             withTiming(
               finalSpaceLayout.pageX +
                 finalSpaceLayout.width / 2 -
@@ -267,10 +274,15 @@ const Piece = ({
           );
 
           translateY.value = withSequence(
-            withTiming(scY + scHeight / 2 - GameElements.PIECE_RADIUS, {
-              duration: Animations.SLOT_INSERT_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }),
+            withTiming(
+              sourceCellCoordY +
+                sourceCellHeight / 2 -
+                GameElements.PIECE_RADIUS,
+              {
+                duration: Animations.SLOT_INSERT_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            ),
             withTiming(
               finalSpaceLayout.pageY +
                 finalSpaceLayout.width / 2 -
@@ -282,61 +294,219 @@ const Piece = ({
             )
           );
 
-          runOnJS(setBoardPieceLocationsSV)(finalSpaceId);
+          runOnJS(setBPLUI)(finalSpaceId);
         } else if (isSpace) {
-          const reachable = isReachable(layout.boardPieceLocations, id);
-          console.log(reachable);
+          const getReachableSlot = (
+            board: Record<string, string>,
+            targetCell: string
+          ) => {
+            const [row, col] = targetCell.split("-").map(Number);
 
-          if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
-            runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
+            const distanceToSlot: Record<string, number> = {
+              Up: row,
+              Down: BOARD_SIZE_ZERO_IDX - row,
+              Right: BOARD_SIZE_ZERO_IDX - col,
+              Left: col,
+            };
 
-            // animateMisplacedPiece
-            const well = currentWellDataSV.value;
-            if (!well || !well.layout) return;
-            translateX.value = withTiming(
-              well.layout.pageX +
-                well.layout.width / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
+            const directionVectors: Record<string, [number, number]> = {
+              Up: [-1, 0],
+              Down: [1, 0],
+              Right: [0, 1],
+              Left: [0, -1],
+            };
+
+            const direction: Record<string, string> = {
+              Up: "Up",
+              Down: "Down",
+              Right: "Right",
+              Left: "Left",
+            };
+
+            const reverseDirection: Record<string, string> = {
+              Up: "Down",
+              Down: "Up",
+              Right: "Left",
+              Left: "Right",
+            };
+
+            const cellStatus = (r: number, c: number, step: number) => {
+              if (r === 0 || r === 8 || c === 0 || c === 8) {
+                return step === 1 ? "slotNeighbor" : "slot";
               }
-            );
-            translateY.value = withTiming(
-              well.layout.pageY +
-                well.layout.height / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
+              const piece = board[`${r}-${c}`];
+              if (piece) {
+                return step === 1 ? "neighbor" : "blocked";
               }
+
+              return "empty";
+            };
+
+            const layout: Record<string, any> = {};
+            layout.dropSlot = { id: "null", distance: 99 };
+
+            if (cellStatus(row, col, 0) === "blocked")
+              return (layout.dropSlot = { id: "abort", distance: 99 });
+
+            for (const dir of Object.values(direction)) {
+              const [dRow, dCol] = directionVectors[dir];
+              const distance = distanceToSlot[dir];
+
+              for (let i = 1; i <= distance; i++) {
+                const r = row + dRow * i;
+                const c = col + dCol * i;
+                const id = `${r}-${c}`;
+                if (r > 8 || r < 0 || c > 8 || c < 0) {
+                  return (layout.dropSlot = {
+                    id: "out of bounds",
+                    distance: 99,
+                  });
+                }
+                const status = cellStatus(r, c, i);
+
+                if (status === "empty") {
+                  layout[dir] = { cell: status, id: id, distance: i };
+                  continue;
+                }
+
+                if (status === "slotNeighbor") {
+                  layout[dir] = { cell: status, id: id, distance: i };
+                  break;
+                } else if (status === "neighbor") {
+                  layout[dir] = { cell: status, id: id, distance: i };
+                  break;
+                } else if (status === "blocked") {
+                  layout[dir] = { cell: status, id: id, distance: i };
+                  break;
+                } else if (status === "slot") {
+                  layout[dir] = { cell: status, id: id, distance: i };
+                  break;
+                }
+              }
+            }
+
+            for (const dir of Object.keys(direction)) {
+              const reverse = reverseDirection[dir];
+              if (
+                (layout[dir].cell === "slot" &&
+                  layout[reverse].cell === "neighbor") ||
+                (layout[dir].cell === "slot" &&
+                  layout[reverse].cell === "slotNeighbor") ||
+                (layout[dir].cell === "slotNeighbor" &&
+                  layout[reverse].cell === "neighbor")
+              ) {
+                if (layout[dir].distance < layout.dropSlot.distance) {
+                  layout.dropSlot = {
+                    id: layout[dir].id,
+                    distance: layout[dir].distance,
+                  };
+                }
+              }
+            }
+            return layout;
+          };
+          console.log("isSpace");
+          const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
+          console.log(dropSlotData);
+          if (dropSlotData.dropSlot) {
+            const slotData = slots.find(
+              (s) => s.id === dropSlotData.dropSlot.id
             );
+            if (slotData) {
+              // console.log(slotData);
+
+              translateX.value = withSequence(
+                withTiming(
+                  slotData!.layout!.pageX +
+                    slotData!.layout!.width / 2 -
+                    GameElements.PIECE_RADIUS,
+                  {
+                    duration: Animations.SLOT_INSERT_DURATION,
+                    easing: Easing.inOut(Easing.quad),
+                  }
+                ),
+                withTiming(
+                  sourceCellCoordX +
+                    sourceCellWidth / 2 -
+                    GameElements.PIECE_RADIUS,
+                  {
+                    duration: Animations.SLOT_TO_SPACE_DURATION,
+                    easing: Easing.bounce,
+                  }
+                )
+              );
+
+              translateY.value = withSequence(
+                withTiming(
+                  slotData!.layout!.pageY +
+                    slotData!.layout!.height / 2 -
+                    GameElements.PIECE_RADIUS,
+                  {
+                    duration: Animations.SLOT_INSERT_DURATION,
+                    easing: Easing.inOut(Easing.quad),
+                  }
+                ),
+                withTiming(
+                  sourceCellCoordY +
+                    sourceCellHeight / 2 -
+                    GameElements.PIECE_RADIUS,
+                  {
+                    duration: Animations.SLOT_TO_SPACE_DURATION,
+                    easing: Easing.bounce,
+                  }
+                )
+              );
+            }
+            runOnJS(setBPLUI)(id);
+          } else {
+            if (
+              currentWellDataSV.value?.layout &&
+              currentWellDataSV.value?.id
+            ) {
+              runOnJS(setWPLUI)(currentWellDataSV.value.id);
+              // animateMisplacedPiece
+              const well = currentWellDataSV.value;
+              if (!well || !well.layout) return;
+              translateX.value = withTiming(
+                well.layout.pageX +
+                  well.layout.width / 2 -
+                  GameElements.PIECE_RADIUS,
+                {
+                  duration: Animations.WELL_RETURN_DURATION,
+                  easing: Easing.inOut(Easing.quad),
+                }
+              );
+              translateY.value = withTiming(
+                well.layout.pageY +
+                  well.layout.height / 2 -
+                  GameElements.PIECE_RADIUS,
+                {
+                  duration: Animations.WELL_RETURN_DURATION,
+                  easing: Easing.inOut(Easing.quad),
+                }
+              );
+            }
           }
-
-          // Check N,S,E,W if there is no piece by the time you reach a slot
-          // in one of those directions, break
-          // Animate the piece to the slot in the slot in that direction.
-          // It runs if slot
         } else if (isWell) {
-          runOnJS(setWellPieceLocationsSV)(selectedCell.id);
+          runOnJS(setWPLUI)(selectedCell.id);
 
           // animateMisplacedPiece({
           //   translateX,
           //   translateY,
-          //   scX,
-          //   scWidth,
-          //   scY,
-          //   scHeight,
+          //   sourceCellCoordX,
+          //   sourceCellWidth,
+          //   sourceCellCoordY,
+          //   sourceCellHeight,
           // });
           translateX.value = withTiming(
-            scX + scWidth / 2 - GameElements.PIECE_RADIUS,
+            sourceCellCoordX + sourceCellWidth / 2 - GameElements.PIECE_RADIUS,
             {
               duration: Animations.WELL_RETURN_DURATION,
               easing: Easing.inOut(Easing.quad),
             }
           );
           translateY.value = withTiming(
-            scY + scHeight / 2 - GameElements.PIECE_RADIUS,
+            sourceCellCoordY + sourceCellHeight / 2 - GameElements.PIECE_RADIUS,
             {
               duration: Animations.WELL_RETURN_DURATION,
               easing: Easing.inOut(Easing.quad),
@@ -355,7 +525,7 @@ const Piece = ({
       if (noCellFound) {
         // console.log("Dropped outside any valid space");
         if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
-          runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
+          runOnJS(setWPLUI)(currentWellDataSV.value.id);
           // animateMisplacedPiece
           const well = currentWellDataSV.value;
           if (!well || !well.layout) return;
