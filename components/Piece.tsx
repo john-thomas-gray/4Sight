@@ -107,7 +107,8 @@ const Piece = ({
   const movePiece = Gesture.Pan()
     .enabled(
       // (onBoard && logic.gameover) ||
-      logic.gameState !== GameState.Finished && !onBoard && myTurn
+      logic.gameState !== GameState.Finished && !onBoard
+      // && myTurn
     )
     .onStart(() => {
       isHeld.value = true;
@@ -140,10 +141,6 @@ const Piece = ({
         } = selectedCell.layout;
 
         const id = selectedCell.id;
-
-        const reachable = runOnJS((reachable: boolean) => {})(
-          isReachable(layout.boardPieceLocations, id)
-        );
 
         const cellFound =
           pieceCenter.x >= scX &&
@@ -287,9 +284,9 @@ const Piece = ({
 
           runOnJS(setBoardPieceLocationsSV)(finalSpaceId);
         } else if (isSpace) {
-          console.log("That space is not reachable!");
+          const reachable = isReachable(layout.boardPieceLocations, id);
+          console.log(reachable);
 
-          console.log(reachable, "!");
           if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
             runOnJS(setWellPieceLocationsSV)(currentWellDataSV.value.id);
 
