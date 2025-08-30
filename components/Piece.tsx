@@ -56,13 +56,14 @@ const Piece = ({
     id
   );
   const onBoardSV = useSharedValue(false);
+  const foundSpace = useSharedValue(false);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
   type DropSlotData = { id: string; distance: number } | null;
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
-    console.log(layout.boardPieceLocations);
+    // console.log(layout.boardPieceLocations);
   }, [layout.boardPieceLocations]);
 
   useEffect(() => {
@@ -77,7 +78,6 @@ const Piece = ({
     const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
 
     layout.setBoardPieceLocations(updated);
-    console.log(layout.boardPieceLocations);
     logic.checkGameFinished(updated);
   };
   //
@@ -405,15 +405,13 @@ const Piece = ({
             }
             return layout;
           };
-          console.log("isSpace");
           const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
-          console.log(dropSlotData);
           if (dropSlotData.dropSlot) {
             const slotData = slots.find(
               (s) => s.id === dropSlotData.dropSlot.id
             );
             if (slotData) {
-              // console.log(slotData);
+              foundSpace.value = true;
 
               translateX.value = withSequence(
                 withTiming(
@@ -456,35 +454,35 @@ const Piece = ({
                   }
                 )
               );
-            }
-            runOnJS(setBPLUI)(id);
-          } else {
-            if (
-              currentWellDataSV.value?.layout &&
-              currentWellDataSV.value?.id
-            ) {
-              runOnJS(setWPLUI)(currentWellDataSV.value.id);
-              // animateMisplacedPiece
-              const well = currentWellDataSV.value;
-              if (!well || !well.layout) return;
-              translateX.value = withTiming(
-                well.layout.pageX +
-                  well.layout.width / 2 -
-                  GameElements.PIECE_RADIUS,
-                {
-                  duration: Animations.WELL_RETURN_DURATION,
-                  easing: Easing.inOut(Easing.quad),
-                }
-              );
-              translateY.value = withTiming(
-                well.layout.pageY +
-                  well.layout.height / 2 -
-                  GameElements.PIECE_RADIUS,
-                {
-                  duration: Animations.WELL_RETURN_DURATION,
-                  easing: Easing.inOut(Easing.quad),
-                }
-              );
+              runOnJS(setBPLUI)(id);
+            } else {
+              if (
+                currentWellDataSV.value?.layout &&
+                currentWellDataSV.value?.id
+              ) {
+                runOnJS(setWPLUI)(currentWellDataSV.value.id);
+                // animateMisplacedPiece
+                const well = currentWellDataSV.value;
+                if (!well || !well.layout) return;
+                translateX.value = withTiming(
+                  well.layout.pageX +
+                    well.layout.width / 2 -
+                    GameElements.PIECE_RADIUS,
+                  {
+                    duration: Animations.WELL_RETURN_DURATION,
+                    easing: Easing.inOut(Easing.quad),
+                  }
+                );
+                translateY.value = withTiming(
+                  well.layout.pageY +
+                    well.layout.height / 2 -
+                    GameElements.PIECE_RADIUS,
+                  {
+                    duration: Animations.WELL_RETURN_DURATION,
+                    easing: Easing.inOut(Easing.quad),
+                  }
+                );
+              }
             }
           }
         } else if (isWell) {
@@ -513,11 +511,8 @@ const Piece = ({
             }
           );
         }
-        // Piece placed on board
-        if (
-          isSlot
-          // || isSpace (also need to check if it is aviable space)
-        ) {
+        // Piece placed on board successfully
+        if (isSlot || (isSpace && foundSpace.value)) {
           onBoardSV.value = true;
           runOnJS(setOnBoard)(true);
         }
