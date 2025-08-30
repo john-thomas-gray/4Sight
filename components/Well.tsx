@@ -1,6 +1,6 @@
 import { WELL_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
-import { CellProps, CellType } from "@/types/board";
+import { CellProps, CellType, Team } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 
@@ -23,14 +23,16 @@ const Well = ({ id, team }: CellProps) => {
     const timer = setTimeout(reportLayout, 0);
     return () => clearTimeout(timer);
   }, []);
-
   return (
     <View
       ref={viewRef}
       onLayout={reportLayout}
       style={{
         ...WELL_STYLE,
-        backgroundColor: settings.colorTheme.WELL_BACKGROUND_COLOR,
+        backgroundColor:
+          team === Team.TeamOne
+            ? settings.colorTheme.WELL_BG_COLOR_ONE
+            : settings.colorTheme.WELL_BG_COLOR_TWO,
       }}
     />
   );
