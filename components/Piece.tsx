@@ -59,7 +59,6 @@ const Piece = ({
   const foundSpace = useSharedValue(false);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
-  type DropSlotData = { id: string; distance: number } | null;
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
