@@ -4,14 +4,10 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const HowToPlay = () => {
-  const [twoPlayerSelected, setTwoPlayerSelected] = useState(true);
+  const [isTwoPlayer, setIsTwoPlayer] = useState(true);
 
-  const handleSelectTwoPlayer = () => {
-    if (!twoPlayerSelected) setTwoPlayerSelected(true);
-  };
-
-  const handleSelectFourPlayer = () => {
-    if (twoPlayerSelected) setTwoPlayerSelected(false);
+  const handleSelectGameType = (isTwoPlayer: boolean) => {
+    setIsTwoPlayer(isTwoPlayer);
   };
 
   return (
@@ -24,19 +20,20 @@ const HowToPlay = () => {
         </Text>
 
         <View className="flex-row justify-evenly mb-8">
-          <Pressable onPress={handleSelectTwoPlayer}>
+          <Pressable onPress={() => handleSelectGameType(true)}>
             <Text
               className={`text-2xl font-bold ${
-                twoPlayerSelected ? "text-black" : "text-gray-500"
+                isTwoPlayer ? "text-black" : "text-gray-500"
               }`}
             >
               Two Player
             </Text>
           </Pressable>
-          <Pressable onPress={handleSelectFourPlayer}>
+
+          <Pressable onPress={() => handleSelectGameType(false)}>
             <Text
               className={`text-2xl font-bold ${
-                !twoPlayerSelected ? "text-black" : "text-gray-500"
+                !isTwoPlayer ? "text-black" : "text-gray-500"
               }`}
             >
               Four Player
@@ -45,7 +42,7 @@ const HowToPlay = () => {
         </View>
 
         <View className="w-full">
-          {twoPlayerSelected ? (
+          {isTwoPlayer ? (
             <Text className="leading-8 text-lg text-black">
               Each player takes a turn dropping a piece into the board.{"\n"}
               Pieces are dropped into any side of the board and fall to the

@@ -12,9 +12,18 @@ const BackButton = () => {
       onPress={() => {
         router.replace("/");
       }}
+      accessible
+      accessibilityRole="button"
     >
-      <Image source={images.backArrow} className="h-6 w-6" />
-      <Text className="text-black text-lg">Back</Text>
+      <Image
+        source={images.backArrow}
+        className="h-6 w-6"
+        accessible
+        accessibilityRole="image"
+      />
+      <Text className="text-black text-lg" accessible accessibilityRole="text">
+        Back
+      </Text>
     </Pressable>
   );
 };

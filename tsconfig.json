@@ -4,6 +4,14 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"]
+    },
+    "types": ["jest", "node"]
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "testEnvironment": "jsdom",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
     }
   },
   "include": [

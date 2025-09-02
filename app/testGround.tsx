@@ -1,6 +1,6 @@
 import { Button, View } from "react-native";
 import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
-const Test = () => {
+const TestGround = () => {
   const width = useSharedValue(100);
 
   const handlePress = () => {
@@ -20,4 +20,4 @@ const Test = () => {
   );
 };
 
-export default Test;
+export default TestGround;
