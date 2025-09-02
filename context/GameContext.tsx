@@ -27,7 +27,6 @@ type GameContextType = {
     spaces: Record<string, CellLayout>;
     corners: Record<string, CellLayout>;
     slots: Record<string, CellLayout>;
-    // Need pieces
     wellPieceLocations: Record<string, string>;
     boardPieceLocations: Record<string, string>;
     registerCell: ({ id, type, team, layout }: CellProps) => void;

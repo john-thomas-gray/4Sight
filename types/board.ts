@@ -32,6 +32,12 @@ export enum Team {
   TeamTwo = "teamTwo",
 }
 
+export enum Capturer {
+  TeamOne = Team.TeamOne,
+  TeamTwo = Team.TeamTwo,
+  Neutral = "none",
+}
+
 export type WellState = {
   [Team.TeamOne]: Record<string, CellLayout>;
   [Team.TeamTwo]: Record<string, CellLayout>;

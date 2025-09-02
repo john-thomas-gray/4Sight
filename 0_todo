@@ -61,9 +61,4 @@ refactor piece
 
 Grabbing piece raises z index above all other pieces
 
-when a piece is not blocked:
-
-- when one of the slots is not blocked and the space has either a slot
-  or a neighbor opposite that slot
-
-A space is reachable when one of the slots in either the horizontal or vertical direction is not blocked AND the cell directly next to the cell in the opposite direction is a slot or an occupied space. When a cell is reachable, set at randomthe id of one of the slots it is reachable from to be returned
+Cells should be a class
