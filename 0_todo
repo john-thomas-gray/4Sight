@@ -1,8 +1,4 @@
 Zoom on board
-Swipe/Rotate touch controls
-
-Block slot
-Slot visualizations
 
 4 player logic
 
@@ -51,14 +47,21 @@ Near Win State
 - rotate function
   - rotate animation: long touch, pan, flick
 
-Previews
+Feedforward:
 
 - hover piece over slot shows preview
 - pressing the opposite side of the board shows where pushed pieces would go.
 - hightlights three pieces in a row with flashing beacons
 
-refactor piece
+Signifiers
 
+- Available slot visualizations
+
+Feedback:
+Piece dropped on inaccessible space bounces off glass.
 Grabbing piece raises z index above all other pieces
+Piece placed in unavailable slot bumps the piece that's blocking it
 
+Refactoring:
 Cells should be a class
+refactor piece

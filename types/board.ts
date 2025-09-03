@@ -30,12 +30,7 @@ export enum Direction {
 export enum Team {
   TeamOne = "teamOne",
   TeamTwo = "teamTwo",
-}
-
-export enum Capturer {
-  TeamOne = Team.TeamOne,
-  TeamTwo = Team.TeamTwo,
-  Neutral = "none",
+  Unassigned = "unassigned",
 }
 
 export type WellState = {
