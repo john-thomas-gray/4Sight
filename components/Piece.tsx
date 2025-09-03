@@ -125,8 +125,6 @@ const Piece = ({
         y: translateY.value + GameElements.PIECE_RADIUS,
       };
 
-      let noCellFound = true;
-
       for (const selectedCell of allCells) {
         if (!selectedCell.layout) continue;
 
@@ -137,8 +135,6 @@ const Piece = ({
           height: sourceCellHeight,
         } = selectedCell.layout;
 
-        const id = selectedCell.id;
-
         const cellFound =
           pieceCenter.x >= sourceCellCoordX &&
           pieceCenter.x <= sourceCellCoordX + sourceCellWidth &&
@@ -146,8 +142,19 @@ const Piece = ({
           pieceCenter.y <= sourceCellCoordY + sourceCellHeight;
 
         if (!cellFound) continue;
+        console.log("local:", selectedCell);
 
-        noCellFound = false;
+        // const selectedCell = selectCell({ translateX, translateY, allCells });
+
+        // console.log("from helper:", selectedCell);
+
+        // if (!selectedCell || !selectedCell.layout) return;
+        // const {
+        //   pageX: sourceCellCoordX,
+        //   pageY: sourceCellCoordY,
+        //   width: sourceCellWidth,
+        //   height: sourceCellHeight,
+        // } = selectedCell.layout;
 
         const isSlot = selectedCell.id in layout.slots;
         const isSpace = selectedCell.id in layout.spaces;
@@ -326,32 +333,33 @@ const Piece = ({
           onBoardSV.value = true;
           runOnJS(setOnBoard)(true);
         }
-      }
-      if (noCellFound) {
-        // console.log("Dropped outside any valid space");
-        if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
-          runOnJS(setWPLUI)(currentWellDataSV.value.id);
-          // animateMisplacedPiece
-          const well = currentWellDataSV.value;
-          if (!well || !well.layout) return;
-          translateX.value = withTiming(
-            well.layout.pageX +
-              well.layout.width / 2 -
-              GameElements.PIECE_RADIUS,
-            {
-              duration: Animations.WELL_RETURN_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }
-          );
-          translateY.value = withTiming(
-            well.layout.pageY +
-              well.layout.height / 2 -
-              GameElements.PIECE_RADIUS,
-            {
-              duration: Animations.WELL_RETURN_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }
-          );
+
+        if (true) {
+          // console.log("Dropped outside any valid space");
+          if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
+            runOnJS(setWPLUI)(currentWellDataSV.value.id);
+            // animateMisplacedPiece
+            const well = currentWellDataSV.value;
+            if (!well || !well.layout) return;
+            translateX.value = withTiming(
+              well.layout.pageX +
+                well.layout.width / 2 -
+                GameElements.PIECE_RADIUS,
+              {
+                duration: Animations.WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
+            translateY.value = withTiming(
+              well.layout.pageY +
+                well.layout.height / 2 -
+                GameElements.PIECE_RADIUS,
+              {
+                duration: Animations.WELL_RETURN_DURATION,
+                easing: Easing.inOut(Easing.quad),
+              }
+            );
+          }
         }
       }
     });
