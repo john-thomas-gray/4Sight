@@ -1,3 +1,4 @@
+import AnimTest from "@/components/AnimTest";
 import Board from "@/components/Board";
 import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
@@ -75,6 +76,7 @@ const GamePlay = () => {
       className="flex-1 flex-row items-center justify-center mt-90"
       style={{ backgroundColor: settings.colorTheme.FELT_TOP }}
     >
+      <AnimTest team={Team.TeamOne} />
       <View className="flex-row justify-between">
         <TeamWellGrid team={Team.TeamOne} />
         <Board className="mx-10" />

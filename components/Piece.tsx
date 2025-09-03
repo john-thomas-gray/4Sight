@@ -1,3 +1,7 @@
+import {
+  animateMisplacedPiece,
+  animatePieceDrop,
+} from "@/animations/animations";
 import { Animations, GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import useBoardPullAnimation from "@/hooks/useBoardPullAnimation";
@@ -15,7 +19,6 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
   withTiming,
 } from "react-native-reanimated";
 import Highlight from "./Highlight";
@@ -31,11 +34,6 @@ const Piece = ({
   const allCells = getCellArray({ layout, result: "all", team });
 
   const slots = getCellArray({ layout, result: "slots", team });
-
-  const offset = useSharedValue({
-    x: initialPosition.x,
-    y: initialPosition.y,
-  });
 
   const getCurrentWellData = (id: string) => {
     return (
@@ -96,7 +94,6 @@ const Piece = ({
       });
     }
   };
-
   useEffect(() => {
     if (currentWellId) {
       layout.setWellPieceLocations((prev) => ({
@@ -122,8 +119,6 @@ const Piece = ({
     })
     .onEnd(() => {
       isHeld.value = false;
-      offset.value.x = translateX.value;
-      offset.value.y = translateY.value;
 
       const pieceCenter = {
         x: translateX.value + GameElements.PIECE_RADIUS,
@@ -218,27 +213,12 @@ const Piece = ({
               currentWellDataSV.value?.id
             ) {
               runOnJS(setWPLUI)(currentWellDataSV.value.id);
-              // animateMisplacedPiece
-              const well = currentWellDataSV.value;
-              if (!well || !well.layout) return;
-              translateX.value = withTiming(
-                well.layout.pageX +
-                  well.layout.width / 2 -
-                  GameElements.PIECE_RADIUS,
-                {
-                  duration: Animations.WELL_RETURN_DURATION,
-                  easing: Easing.inOut(Easing.quad),
-                }
-              );
-              translateY.value = withTiming(
-                well.layout.pageY +
-                  well.layout.height / 2 -
-                  GameElements.PIECE_RADIUS,
-                {
-                  duration: Animations.WELL_RETURN_DURATION,
-                  easing: Easing.inOut(Easing.quad),
-                }
-              );
+
+              animateMisplacedPiece({
+                translateX,
+                translateY,
+                currentWellDataSV,
+              });
             }
             return;
           }
@@ -250,48 +230,19 @@ const Piece = ({
             console.warn("No layout for final board space", finalSpaceId);
             return;
           }
-          // Animate to slot
-          translateX.value = withSequence(
-            withTiming(
-              sourceCellCoordX +
-                sourceCellWidth / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.SLOT_INSERT_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            ),
-            withTiming(
-              finalSpaceLayout.pageX +
-                finalSpaceLayout.width / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.SLOT_TO_SPACE_DURATION,
-                easing: Easing.bounce,
-              }
-            )
-          );
 
-          translateY.value = withSequence(
-            withTiming(
-              sourceCellCoordY +
-                sourceCellHeight / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.SLOT_INSERT_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            ),
-            withTiming(
-              finalSpaceLayout.pageY +
-                finalSpaceLayout.width / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.SLOT_TO_SPACE_DURATION,
-                easing: Easing.bounce,
-              }
-            )
-          );
+          animatePieceDrop({
+            translateX,
+            translateY,
+            slotX: sourceCellCoordX,
+            slotY: sourceCellCoordY,
+            slotWidth: sourceCellWidth,
+            slotHeight: sourceCellHeight,
+            spaceX: finalSpaceLayout.pageX,
+            spaceY: finalSpaceLayout.pageY,
+            spaceWidth: finalSpaceLayout.width,
+            spaceHeight: finalSpaceLayout.height,
+          });
 
           runOnJS(setBPLUI)(finalSpaceId);
         } else if (isSpace) {
@@ -303,47 +254,19 @@ const Piece = ({
             if (slotData) {
               foundSpace.value = true;
 
-              translateX.value = withSequence(
-                withTiming(
-                  slotData!.layout!.pageX +
-                    slotData!.layout!.width / 2 -
-                    GameElements.PIECE_RADIUS,
-                  {
-                    duration: Animations.SLOT_INSERT_DURATION,
-                    easing: Easing.inOut(Easing.quad),
-                  }
-                ),
-                withTiming(
-                  sourceCellCoordX +
-                    sourceCellWidth / 2 -
-                    GameElements.PIECE_RADIUS,
-                  {
-                    duration: Animations.SLOT_TO_SPACE_DURATION,
-                    easing: Easing.bounce,
-                  }
-                )
-              );
+              animatePieceDrop({
+                translateX,
+                translateY,
+                slotX: slotData!.layout!.pageX,
+                slotY: slotData!.layout!.pageY,
+                slotWidth: slotData!.layout!.width,
+                slotHeight: slotData!.layout!.height,
+                spaceX: sourceCellCoordX,
+                spaceY: sourceCellCoordY,
+                spaceWidth: sourceCellWidth,
+                spaceHeight: sourceCellHeight,
+              });
 
-              translateY.value = withSequence(
-                withTiming(
-                  slotData!.layout!.pageY +
-                    slotData!.layout!.height / 2 -
-                    GameElements.PIECE_RADIUS,
-                  {
-                    duration: Animations.SLOT_INSERT_DURATION,
-                    easing: Easing.inOut(Easing.quad),
-                  }
-                ),
-                withTiming(
-                  sourceCellCoordY +
-                    sourceCellHeight / 2 -
-                    GameElements.PIECE_RADIUS,
-                  {
-                    duration: Animations.SLOT_TO_SPACE_DURATION,
-                    easing: Easing.bounce,
-                  }
-                )
-              );
               runOnJS(setBPLUI)(id);
             } else {
               if (
@@ -378,14 +301,11 @@ const Piece = ({
         } else if (isWell) {
           runOnJS(setWPLUI)(selectedCell.id);
 
-          // animateMisplacedPiece({
-          //   translateX,
-          //   translateY,
-          //   sourceCellCoordX,
-          //   sourceCellWidth,
-          //   sourceCellCoordY,
-          //   sourceCellHeight,
-          // });
+          animateMisplacedPiece({
+            translateX,
+            translateY,
+            currentWellDataSV,
+          });
           translateX.value = withTiming(
             sourceCellCoordX + sourceCellWidth / 2 - GameElements.PIECE_RADIUS,
             {
@@ -450,7 +370,7 @@ const Piece = ({
         { translateX: translateX.value },
         { translateY: translateY.value },
       ],
-      // backgroundColor: isHeld.value ? "red" : team,
+      // Scale, translateZ
     };
   });
 
@@ -470,17 +390,6 @@ const Piece = ({
     position: "absolute",
     top: 0,
     left: 0,
-  };
-
-  const isHeldStyle: ViewStyle = {
-    height: 48,
-    width: 48,
-    borderRadius: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: GameElements.PIECE_RADIUS,
-    elevation: 8,
   };
 
   return (

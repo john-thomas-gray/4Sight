@@ -11,15 +11,17 @@ import {
 type animateMisplacedPieceProps = {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
-  targetWellData: SharedValue<Board.CellProps | null>;
+  currentWellDataSV: SharedValue<Board.CellProps | null>;
 };
 
 export const animateMisplacedPiece = ({
   translateX,
   translateY,
-  targetWellData,
+  currentWellDataSV,
 }: animateMisplacedPieceProps) => {
-  const well = targetWellData.value;
+  "worklet";
+  console.log("columbus");
+  const well = currentWellDataSV.value;
   if (!well || !well.layout) return;
   translateX.value = withTiming(
     well.layout.pageX + well.layout.width / 2 - GameElements.PIECE_RADIUS,
@@ -54,6 +56,7 @@ export const animatePlaceInSlot = ({
   selectedCellWidthX,
   selectedCellHeightY,
 }: AnimatePlaceInSlotProps) => {
+  "worklet";
   translateX.value = withTiming(
     selectedCellX + selectedCellWidthX / 2 - GameElements.PIECE_RADIUS,
     {
@@ -78,6 +81,7 @@ export const animateSlotToSpace = ({
   selectedCellWidthX,
   selectedCellHeightY,
 }: AnimatePlaceInSlotProps) => {
+  "worklet";
   translateX.value = withTiming(
     selectedCellX + selectedCellWidthX / 2 - GameElements.PIECE_RADIUS,
     {
@@ -117,6 +121,7 @@ export const animatePieceDrop = ({
   spaceWidth: number;
   spaceHeight: number;
 }) => {
+  "worklet";
   translateX.value = withSequence(
     withTiming(slotX + slotWidth / 2 - GameElements.PIECE_RADIUS, {
       duration: Animations.SLOT_INSERT_DURATION,
