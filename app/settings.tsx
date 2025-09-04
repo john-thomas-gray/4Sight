@@ -1,10 +1,10 @@
 import { CLASSIC, SCHOOLHOUSE } from "@/constants/colorThemes";
-import { useSettingsContext } from "@/context/SettingsContext";
+import { useMegaContext } from "@/context/MegaContext";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
 const Settings = () => {
-  const { settings } = useSettingsContext();
+  const { settings } = useMegaContext();
 
   return (
     <View>

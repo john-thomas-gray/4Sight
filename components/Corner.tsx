@@ -4,12 +4,14 @@ import {
   CORNER_STYLE,
 } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
+import { useMegaContext } from "@/context/MegaContext";
 import { CellProps, CellType, Team } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Corner = ({ id }: CellProps) => {
-  const { layout, logic, settings } = useGameContext();
+  const { layout, logic } = useGameContext();
+  const { settings } = useMegaContext();
   const viewRef = useRef<View>(null);
   const cornerColor =
     logic.currentTeam === Team.TeamOne

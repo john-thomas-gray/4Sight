@@ -1,12 +1,14 @@
 import { WELL_STYLE } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
+import { useMegaContext } from "@/context/MegaContext";
 import { CellProps, CellType, Team } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { layout, settings } = useGameContext();
+  const { layout } = useGameContext();
+  const { settings } = useMegaContext();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {

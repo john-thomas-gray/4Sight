@@ -5,6 +5,7 @@ import {
 } from "@/animations/animations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
+import { useMegaContext } from "@/context/MegaContext";
 import animateGravity from "@/hooks/animateGravity";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
@@ -28,7 +29,8 @@ const Piece = ({
   initialPosition,
   currentWellId,
 }: PieceProps) => {
-  const { layout, settings, logic } = useGameContext();
+  const { layout, logic } = useGameContext();
+  const { settings } = useMegaContext();
 
   const allCells = getCellArray({ layout, result: "all", team });
 

@@ -10,10 +10,8 @@ import React, {
 } from "react";
 
 type SettingsContextType = {
-  settings: {
-    colorTheme: ColorThemeType;
-    setColorTheme: React.Dispatch<React.SetStateAction<ColorThemeType>>;
-  };
+  colorTheme: ColorThemeType;
+  setColorTheme: React.Dispatch<React.SetStateAction<ColorThemeType>>;
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -53,13 +51,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
     saveAppState({ theme: colorTheme });
   }, [colorTheme]);
 
-  const settings = {
-    colorTheme,
-    setColorTheme,
-  };
-
   return (
-    <SettingsContext.Provider value={{ settings }}>
+    <SettingsContext.Provider value={{ colorTheme, setColorTheme }}>
       {children}
     </SettingsContext.Provider>
   );
