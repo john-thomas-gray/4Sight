@@ -5,6 +5,8 @@ import {
 } from "@/animations/animations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
+import animateGravity from "@/hooks/animateGravity";
+import { useGravity } from "@/hooks/useGravity";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
 import { HighlightProps, PieceProps, Team } from "@/types/board";
@@ -24,8 +26,7 @@ import Highlight from "./Highlight";
 const Piece = ({
   team,
   id = "X-0",
-  translateX,
-  translateY,
+  initialPosition,
   currentWellId,
 }: PieceProps) => {
   const { layout, settings, logic } = useGameContext();
@@ -42,8 +43,9 @@ const Piece = ({
     );
   };
 
-  translateX = useSharedValue(translateX);
-  translateY = useSharedValue(translateY);
+  const translateX = useSharedValue(initialPosition.x);
+  const translateY = useSharedValue(initialPosition.y);
+
   const currentWellDataSV = useSharedValue<Board.CellProps | null>(
     currentWellId ? getCurrentWellData(currentWellId) : null
   );
@@ -56,6 +58,10 @@ const Piece = ({
   const foundSpace = useSharedValue(false);
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
+
+  useEffect(() => {
+    animateGravity({ pieceId: id, translateX, translateY, layout });
+  }, [useGravity]);
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;

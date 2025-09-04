@@ -20,7 +20,7 @@ import {
 } from "react";
 import { GameMode, GameState, Turn } from "../types/logic";
 
-type GameContextType = {
+export type GameContextType = {
   layout: {
     wells: Record<Team, Record<string, CellLayout>>;
     spaces: Record<string, CellLayout>;
@@ -56,6 +56,7 @@ type GameContextType = {
     setColorTheme: React.Dispatch<React.SetStateAction<ColorThemeType>>;
   };
 };
+export type Layout = GameContextType["layout"];
 
 type TurnStrategy = {
   getNextTurn: (currentTurn: Turn) => Turn;

@@ -1,4 +1,3 @@
-import animateGravity from "@/animations/animateGravity";
 import {
   BASE_CELL_SIZE,
   BOARD_SIZE,
@@ -48,14 +47,15 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const pullPieces = useGravity();
   const executePull = (direction: Direction) => {
     if (logic.gameState === GameState.Finished) return;
+    console.log("executePull");
     pullPieces(direction);
-    animateGravity(layout.boardPieceLocations);
   };
 
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
       runOnJS(executePull)(Direction.Left);
+      console.log("cuint");
     });
 
   const pullRight = Gesture.Fling()
