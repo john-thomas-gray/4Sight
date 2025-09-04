@@ -2,7 +2,7 @@ import { PieceProps, Team } from "@/types/board";
 
 interface FindPieceRelationships {
   boardPieceLocations: Record<string, string>;
-  j: number;
+  winLen: number;
   initialSpaceId?: string;
   allPieces: AllPieces;
 }
@@ -25,7 +25,7 @@ interface PieceRelationships {
 
 const findPieceRelationships = ({
   boardPieceLocations,
-  j,
+  winLen,
   initialSpaceId,
   allPieces,
 }: FindPieceRelationships) => {
@@ -44,12 +44,12 @@ const findPieceRelationships = ({
     },
   };
 
-  const directions = [
-    { name: "row", dx: 1, dy: 0 },
-    { name: "column", dx: 0, dy: 1 },
-    { name: "diagDown", dx: 1, dy: 1 },
-    { name: "diagUp", dx: 1, dy: -1 },
-  ];
+  // const directions = [
+  //   { name: "row", dx: 1, dy: 0 },
+  //   { name: "column", dx: 0, dy: 1 },
+  //   { name: "diagDown", dx: -1, dy: 1 },
+  //   { name: "diagUp", dx: -1, dy: 1 },
+  // ];
 
   const SIZE = 7;
 
@@ -64,11 +64,11 @@ const findPieceRelationships = ({
 
       const team = lastTeam;
 
-      if (run.length >= j) {
+      if (run.length >= winLen) {
         if (team === Team.TeamOne || team === Team.TeamTwo) {
           pieceRelationships.winners[team].push(run);
         }
-      } else if (run.length === j - 1) {
+      } else if (run.length === winLen - 1) {
       }
       run = [];
     };

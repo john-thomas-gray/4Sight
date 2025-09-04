@@ -1,4 +1,3 @@
-import AnimTest from "@/components/AnimTest";
 import Board from "@/components/Board";
 import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
@@ -7,13 +6,6 @@ import { useGameContext } from "@/context/GameContext";
 import { PieceProps, Team } from "@/types/board";
 import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
-
-// type PieceProps = {
-//    team: Team;
-//    id: string;
-//    initialPosition: { x: number; y: number };
-//    currentWellId?: string;
-//  };
 
 const GamePlay = () => {
   const { layout, settings } = useGameContext();
@@ -76,7 +68,6 @@ const GamePlay = () => {
       className="flex-1 flex-row items-center justify-center mt-90"
       style={{ backgroundColor: settings.colorTheme.FELT_TOP }}
     >
-      <AnimTest team={Team.TeamOne} />
       <View className="flex-row justify-between">
         <TeamWellGrid team={Team.TeamOne} />
         <Board className="mx-10" />

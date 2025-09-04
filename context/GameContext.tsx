@@ -6,10 +6,9 @@ import {
   CellType,
   PieceProps,
   Team,
-  WellState,
 } from "@/types/board";
+import findPieceRelationships from "@/utils/findPieceRelationships";
 import { loadAppState, saveAppState } from "@/utils/useAsyncStorage";
-import { xInARow } from "@/utils/xInARow";
 import {
   createContext,
   ReactNode,
@@ -19,7 +18,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { GameMode, GameState, Turn, Winner } from "../types/logic";
+import { GameMode, GameState, Turn } from "../types/logic";
 
 type GameContextType = {
   layout: {
@@ -49,8 +48,8 @@ type GameContextType = {
     checkGameFinished: (updatedBoard: Record<string, string>) => void;
     gameState: GameState;
     setGameState: React.Dispatch<SetStateAction<GameState>>;
-    winner: Winner;
-    setWinner: React.Dispatch<React.SetStateAction<Winner>>;
+    winner: Team;
+    setWinner: React.Dispatch<React.SetStateAction<Team>>;
   };
   settings: {
     colorTheme: ColorThemeType;
@@ -89,9 +88,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   // ** Layout ** //
 
-  const [wells, setWells] = useState<WellState>({
+  type WellState = {
+    [Team.TeamOne]: Record<string, CellLayout>;
+    [Team.TeamTwo]: Record<string, CellLayout>;
+  };
+  const [wells, setWells] = useState<Record<Team, Record<string, CellLayout>>>({
     [Team.TeamOne]: {},
     [Team.TeamTwo]: {},
+    [Team.Both]: {},
+    [Team.Unassigned]: {},
   });
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
@@ -174,7 +179,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const currentTeam = logicalStrategies[gameMode].team(playersTurn);
 
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
-  const [winner, setWinner] = useState<Winner>(Winner.Null);
+  const [winner, setWinner] = useState<Team>(Team.Unassigned);
 
   // Broken AF
   const gameCycle = (turn: number) => {
@@ -192,15 +197,40 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const checkGameFinished = (
     updatedBoardPieceLocations: typeof boardPieceLocations
   ) => {
-    const winnerCheck = xInARow(updatedBoardPieceLocations, 4);
-    if (!winnerCheck) {
-      setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE_DURATION);
-    } else if (typeof winnerCheck === "string") {
-      console.log("Winner found!", winnerCheck);
+    const pieceRelationships = findPieceRelationships({
+      boardPieceLocations,
+      winLen: 4,
+      allPieces: pieces,
+    });
+    const teamOneWins =
+      Object.keys(pieceRelationships.winners.teamOne).length > 0;
+    const teamTwoWins =
+      Object.keys(pieceRelationships.winners.teamTwo).length > 0;
+    const bothTeamsWin = teamOneWins && teamTwoWins;
+
+    const winner = bothTeamsWin
+      ? Team.Both
+      : teamOneWins
+      ? Team.TeamOne
+      : teamTwoWins
+      ? Team.TeamTwo
+      : Team.Unassigned;
+
+    if (winner !== Team.Unassigned) {
+      console.log("Winner found!", winner);
       setWinner(winner);
       setGameState(GameState.Finished);
+    } else {
+      setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE_DURATION);
     }
   };
+
+  useEffect(() => {
+    setTimeout(
+      () => checkGameFinished(boardPieceLocations),
+      Animations.SLOT_TO_SPACE_DURATION
+    );
+  }, [boardPieceLocations]);
 
   useEffect(() => {
     gameCycle(turnCount + 1);

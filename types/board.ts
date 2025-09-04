@@ -30,13 +30,9 @@ export enum Direction {
 export enum Team {
   TeamOne = "teamOne",
   TeamTwo = "teamTwo",
+  Both = "both",
   Unassigned = "unassigned",
 }
-
-export type WellState = {
-  [Team.TeamOne]: Record<string, CellLayout>;
-  [Team.TeamTwo]: Record<string, CellLayout>;
-};
 
 export type PieceProps = {
   team: Team;

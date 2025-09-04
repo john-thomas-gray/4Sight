@@ -9,7 +9,6 @@ import useBoardPullAnimation from "@/hooks/useBoardPullAnimation";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
 import { HighlightProps, PieceProps, Team } from "@/types/board";
-import { GameState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import React, { useEffect } from "react";
@@ -106,7 +105,8 @@ const Piece = ({
     .enabled(
       // (onBoard
       // && logic.gameover) ||
-      logic.gameState !== GameState.Finished && !onBoard
+      // logic.gameState !== GameState.Finished &&
+      !onBoard
       // && myTurn
     )
     .onStart(() => {

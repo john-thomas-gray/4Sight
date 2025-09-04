@@ -11,6 +11,8 @@ export const usePieceState = (
   const [myTurn, setMyTurn] = useState(false);
 
   useEffect(() => {
+    // Commented part doesn't work
+    // if (logic.gameState === GameState.Finished) return;
     setMyTurn(team === logic.currentTeam);
   }, [logic.turnCount]);
 
