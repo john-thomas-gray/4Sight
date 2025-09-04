@@ -2,14 +2,14 @@ import Board from "@/components/Board";
 import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
-import { useMegaContext } from "@/context/MegaContext";
+import { useGameContext } from "@/context/GameContext";
 import { PieceProps, Team } from "@/types/board";
 import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 
 const GamePlay = () => {
-  const { layout, logic } = useMegaContext();
-  const { settings } = useMegaContext();
+  const { layout, logic } = useGameContext();
+  const { settings } = useGameContext();
 
   const teamOneWells = useMemo(
     () => Object.entries(layout.wells[Team.TeamOne]),

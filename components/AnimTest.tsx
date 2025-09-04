@@ -1,6 +1,6 @@
 import animateTest from "@/animations/animateTest";
 import { GameElements } from "@/constants";
-import { useMegaContext } from "@/context/MegaContext";
+import { useGameContext } from "@/context/GameContext";
 import { HighlightProps, Team } from "@/types/board";
 import React from "react";
 import { Pressable, ViewStyle } from "react-native";
@@ -13,7 +13,7 @@ import Animated, {
 import Highlight from "./Highlight";
 
 const AnimTest = ({ team }: { team: Team }) => {
-  const { settings } = useMegaContext();
+  const { settings } = useGameContext();
   const translateX = useSharedValue(25);
   const translateY = useSharedValue(25);
   const mockWellData = useSharedValue({

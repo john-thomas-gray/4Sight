@@ -1,4 +1,4 @@
-import { useMegaContext } from "@/context/MegaContext";
+import { useGameContext } from "@/context/GameContext";
 import { Direction } from "@/types/board";
 
 type GravityProps = {
@@ -18,7 +18,7 @@ const moveConsole = ({
 };
 
 export const useGravity = () => {
-  const { layout } = useMegaContext();
+  const { layout } = useGameContext();
   const applyGravity = (direction: GravityProps["direction"]) => {
     const updatedPieceLocations = { ...layout.boardPieceLocations };
 

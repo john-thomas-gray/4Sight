@@ -1,9 +1,9 @@
-import { useMegaContext } from "@/context/MegaContext";
+import { useGameContext } from "@/context/GameContext";
 
 type RotateProps = { direction: "clockwise" | "counterclockwise" };
 
 const useRotate = () => {
-  const {} = useMegaContext();
+  const {} = useGameContext();
 
   const rotate = (props: RotateProps) => {};
 };

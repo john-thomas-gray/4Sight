@@ -1,13 +1,13 @@
 import { GameElements } from "@/constants";
 
-import { useMegaContext } from "@/context/MegaContext";
+import { useGameContext } from "@/context/GameContext";
 import { CellProps, CellType } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Space = ({ id }: CellProps) => {
-  const { layout } = useMegaContext();
-  const { settings } = useMegaContext();
+  const { layout } = useGameContext();
+  const { settings } = useGameContext();
   const viewRef = useRef<View>(null);
 
   const reportLayout = () => {

@@ -1,5 +1,5 @@
 import { Animations, GameElements } from "@/constants";
-import { Layout, Logic } from "@/context/MegaContext";
+import { Layout, Logic } from "@/context/GameContext";
 import { Easing, SharedValue, withTiming } from "react-native-reanimated";
 
 const animateGravity = ({
