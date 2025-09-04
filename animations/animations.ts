@@ -39,6 +39,38 @@ export const animateMisplacedPiece = ({
   );
 };
 
+type AnimateToSelectedCell = {
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  selectedCell: Board.CellProps;
+};
+
+export const animateToSelectedCell = ({
+  translateX,
+  translateY,
+  selectedCell,
+}: AnimateToSelectedCell) => {
+  "worklet";
+  translateX.value = withTiming(
+    selectedCell.layout!.pageX +
+      selectedCell.layout!.height / 2 -
+      GameElements.PIECE_RADIUS,
+    {
+      duration: Animations.WELL_RETURN_DURATION,
+      easing: Easing.inOut(Easing.quad),
+    }
+  );
+  translateY.value = withTiming(
+    selectedCell.layout!.pageY +
+      selectedCell.layout!.height / 2 -
+      GameElements.PIECE_RADIUS,
+    {
+      duration: Animations.WELL_RETURN_DURATION,
+      easing: Easing.inOut(Easing.quad),
+    }
+  );
+};
+
 type AnimatePlaceInSlotProps = {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;

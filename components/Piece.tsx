@@ -1,8 +1,9 @@
 import {
   animateMisplacedPiece,
   animatePieceDrop,
+  animateToSelectedCell,
 } from "@/animations/animations";
-import { Animations, GameElements } from "@/constants";
+import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import useBoardPullAnimation from "@/hooks/useBoardPullAnimation";
 import { usePieceState } from "@/hooks/usePieceState";
@@ -15,11 +16,9 @@ import React, { useEffect } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  Easing,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
 } from "react-native-reanimated";
 import Highlight from "./Highlight";
 
@@ -105,7 +104,8 @@ const Piece = ({
 
   const movePiece = Gesture.Pan()
     .enabled(
-      // (onBoard && logic.gameover) ||
+      // (onBoard
+      // && logic.gameover) ||
       logic.gameState !== GameState.Finished && !onBoard
       // && myTurn
     )
@@ -129,33 +129,20 @@ const Piece = ({
         if (!selectedCell.layout) continue;
 
         const {
-          pageX: sourceCellCoordX,
-          pageY: sourceCellCoordY,
-          width: sourceCellWidth,
-          height: sourceCellHeight,
+          pageX: selectedCellCoordX,
+          pageY: selectedCellCoordY,
+          width: selectedCellWidth,
+          height: selectedCellHeight,
         } = selectedCell.layout;
 
         const cellFound =
-          pieceCenter.x >= sourceCellCoordX &&
-          pieceCenter.x <= sourceCellCoordX + sourceCellWidth &&
-          pieceCenter.y >= sourceCellCoordY &&
-          pieceCenter.y <= sourceCellCoordY + sourceCellHeight;
-
+          pieceCenter.x >= selectedCellCoordX &&
+          pieceCenter.x <= selectedCellCoordX + selectedCellWidth &&
+          pieceCenter.y >= selectedCellCoordY &&
+          pieceCenter.y <= selectedCellCoordY + selectedCellHeight;
         if (!cellFound) continue;
-        console.log("local:", selectedCell);
 
-        // const selectedCell = selectCell({ translateX, translateY, allCells });
-
-        // console.log("from helper:", selectedCell);
-
-        // if (!selectedCell || !selectedCell.layout) return;
-        // const {
-        //   pageX: sourceCellCoordX,
-        //   pageY: sourceCellCoordY,
-        //   width: sourceCellWidth,
-        //   height: sourceCellHeight,
-        // } = selectedCell.layout;
-
+        const id = selectedCell.id;
         const isSlot = selectedCell.id in layout.slots;
         const isSpace = selectedCell.id in layout.spaces;
         const isWell = selectedCell.id in layout.wells[team];
@@ -187,7 +174,6 @@ const Piece = ({
           nextCol += deltas[slotDirection].dc;
 
           while (true) {
-            // extract to higher scope?
             const nextSpaceId = `${nextRow}-${nextCol}`;
             const nextSpace = layout.spaces[nextSpaceId];
 
@@ -241,10 +227,10 @@ const Piece = ({
           animatePieceDrop({
             translateX,
             translateY,
-            slotX: sourceCellCoordX,
-            slotY: sourceCellCoordY,
-            slotWidth: sourceCellWidth,
-            slotHeight: sourceCellHeight,
+            slotX: selectedCellCoordX,
+            slotY: selectedCellCoordY,
+            slotWidth: selectedCellWidth,
+            slotHeight: selectedCellHeight,
             spaceX: finalSpaceLayout.pageX,
             spaceY: finalSpaceLayout.pageY,
             spaceWidth: finalSpaceLayout.width,
@@ -268,10 +254,10 @@ const Piece = ({
                 slotY: slotData!.layout!.pageY,
                 slotWidth: slotData!.layout!.width,
                 slotHeight: slotData!.layout!.height,
-                spaceX: sourceCellCoordX,
-                spaceY: sourceCellCoordY,
-                spaceWidth: sourceCellWidth,
-                spaceHeight: sourceCellHeight,
+                spaceX: selectedCellCoordX,
+                spaceY: selectedCellCoordY,
+                spaceWidth: selectedCellWidth,
+                spaceHeight: selectedCellHeight,
               });
 
               runOnJS(setBPLUI)(id);
@@ -281,85 +267,22 @@ const Piece = ({
                 currentWellDataSV.value?.id
               ) {
                 runOnJS(setWPLUI)(currentWellDataSV.value.id);
-                // animateMisplacedPiece
-                const well = currentWellDataSV.value;
-                if (!well || !well.layout) return;
-                translateX.value = withTiming(
-                  well.layout.pageX +
-                    well.layout.width / 2 -
-                    GameElements.PIECE_RADIUS,
-                  {
-                    duration: Animations.WELL_RETURN_DURATION,
-                    easing: Easing.inOut(Easing.quad),
-                  }
-                );
-                translateY.value = withTiming(
-                  well.layout.pageY +
-                    well.layout.height / 2 -
-                    GameElements.PIECE_RADIUS,
-                  {
-                    duration: Animations.WELL_RETURN_DURATION,
-                    easing: Easing.inOut(Easing.quad),
-                  }
-                );
+                animateMisplacedPiece({
+                  translateX,
+                  translateY,
+                  currentWellDataSV,
+                });
               }
             }
           }
         } else if (isWell) {
           runOnJS(setWPLUI)(selectedCell.id);
-
-          animateMisplacedPiece({
-            translateX,
-            translateY,
-            currentWellDataSV,
-          });
-          translateX.value = withTiming(
-            sourceCellCoordX + sourceCellWidth / 2 - GameElements.PIECE_RADIUS,
-            {
-              duration: Animations.WELL_RETURN_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }
-          );
-          translateY.value = withTiming(
-            sourceCellCoordY + sourceCellHeight / 2 - GameElements.PIECE_RADIUS,
-            {
-              duration: Animations.WELL_RETURN_DURATION,
-              easing: Easing.inOut(Easing.quad),
-            }
-          );
+          animateToSelectedCell({ translateX, translateY, selectedCell });
         }
         // Piece placed on board successfully
         if (isSlot || (isSpace && foundSpace.value)) {
           onBoardSV.value = true;
           runOnJS(setOnBoard)(true);
-        }
-
-        if (true) {
-          // console.log("Dropped outside any valid space");
-          if (currentWellDataSV.value?.layout && currentWellDataSV.value?.id) {
-            runOnJS(setWPLUI)(currentWellDataSV.value.id);
-            // animateMisplacedPiece
-            const well = currentWellDataSV.value;
-            if (!well || !well.layout) return;
-            translateX.value = withTiming(
-              well.layout.pageX +
-                well.layout.width / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            );
-            translateY.value = withTiming(
-              well.layout.pageY +
-                well.layout.height / 2 -
-                GameElements.PIECE_RADIUS,
-              {
-                duration: Animations.WELL_RETURN_DURATION,
-                easing: Easing.inOut(Easing.quad),
-              }
-            );
-          }
         }
       }
     });

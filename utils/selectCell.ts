@@ -37,3 +37,15 @@ const selectCell = ({ translateX, translateY, allCells }: SelectCellProps) => {
 };
 
 export default selectCell;
+
+// const selectedCell = selectCell({ translateX, translateY, allCells });
+
+// console.log("from helper:", selectedCell);
+
+// if (!selectedCell || !selectedCell.layout) return;
+// const {
+//   pageX: sourceCellCoordX,
+//   pageY: sourceCellCoordY,
+//   width: sourceCellWidth,
+//   height: sourceCellHeight,
+// } = selectedCell.layout;

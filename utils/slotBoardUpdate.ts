@@ -1,17 +1,15 @@
 import { GameElements } from "@/constants";
-import { CellLayout, CellProps } from "@/types/board";
+import { CellProps } from "@/types/board";
 import { runOnJS, SharedValue } from "react-native-reanimated";
 
 type SlotBoardUpdate = {
   selectedCell: CellProps;
-  boardLayout: Record<string, CellLayout>;
   setBPLUI: (finalSpaceId: string) => void;
   bPLSV: SharedValue<Record<string, string>>;
 };
 
 const slotBoardUpdate = ({
   selectedCell,
-  boardLayout,
   bPLSV,
   setBPLUI,
 }: SlotBoardUpdate) => {
@@ -38,7 +36,7 @@ const slotBoardUpdate = ({
 
   while (true) {
     const nextSpaceId = `${nextRow}-${nextCol}`;
-    const nextSpace = boardLayout[nextSpaceId];
+    const nextSpace = bPLSV.value[nextSpaceId];
 
     const isOccupied = bPLSV.value[nextSpaceId] !== undefined;
 
@@ -68,7 +66,7 @@ const slotBoardUpdate = ({
   }
 
   const finalSpaceId = `${prevRow}-${prevCol}`;
-  const finalSpaceLayout = boardLayout[finalSpaceId];
+  const finalSpaceLayout = bPLSV.value[finalSpaceId];
 
   if (!finalSpaceLayout) {
     console.warn("No layout for final board space", finalSpaceId);
@@ -81,3 +79,9 @@ const slotBoardUpdate = ({
 };
 
 export default slotBoardUpdate;
+
+// const update = slotBoardUpdate({
+//   selectedCell: selectedCell,
+//   bPLSV: boardPieceLocationsSV,
+//   setBPLUI,
+// });
