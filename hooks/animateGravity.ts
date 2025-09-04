@@ -1,5 +1,5 @@
 import { Animations, GameElements } from "@/constants";
-import { Layout } from "@/context/GameContext";
+import { Layout, Logic } from "@/context/MegaContext";
 import { Easing, SharedValue, withTiming } from "react-native-reanimated";
 
 const animateGravity = ({
@@ -7,11 +7,13 @@ const animateGravity = ({
   translateX,
   translateY,
   layout,
+  logic,
 }: {
   pieceId: string;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   layout: Layout;
+  logic: Logic;
 }) => {
   "worklet";
   const entry = Object.entries(layout.boardPieceLocations).find(
@@ -19,18 +21,18 @@ const animateGravity = ({
   );
   if (entry) {
     const [spaceId, pieceId] = entry;
-    const piece = layout.pieces[pieceId];
+    const piece = logic.pieces[pieceId];
 
-    const spaceLayout = layout.spaces[spaceId];
+    const spacelayout = layout.spaces[spaceId];
     translateX.value = withTiming(
-      spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
+      spacelayout.pageX + spacelayout.width / 2 - GameElements.PIECE_RADIUS,
       {
         duration: Animations.SLOT_TO_SPACE_DURATION,
         easing: Easing.bounce,
       }
     );
     translateY.value = withTiming(
-      spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
+      spacelayout.pageY + spacelayout.height / 2 - GameElements.PIECE_RADIUS,
       {
         duration: Animations.SLOT_TO_SPACE_DURATION,
         easing: Easing.bounce,

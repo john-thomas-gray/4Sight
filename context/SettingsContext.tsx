@@ -1,4 +1,3 @@
-// SettingsContext.tsx
 import { CLASSIC, ColorThemeType } from "@/constants/colorThemes";
 import { loadAppState, saveAppState } from "@/utils/useAsyncStorage";
 import React, {

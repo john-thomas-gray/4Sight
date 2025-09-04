@@ -3,7 +3,7 @@ import {
   BOARD_SIZE,
   BOARD_SIZE_ZERO_IDX,
 } from "@/constants/gameElements";
-import { useGameContext } from "@/context/GameContext";
+import { useMegaContext } from "@/context/MegaContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction } from "@/types/board";
 import { GameState } from "@/types/logic";
@@ -25,7 +25,7 @@ type BoardProps = {
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { logic, layout } = useGameContext();
+  const { logic, layout } = useMegaContext();
   const isSlotPosition = (row: number, col: number) => {
     return (
       (row === 0 && col > 0 && col < BOARD_SIZE_ZERO_IDX) || // Top

@@ -2,14 +2,13 @@ import Board from "@/components/Board";
 import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
-import { useGameContext } from "@/context/GameContext";
 import { useMegaContext } from "@/context/MegaContext";
 import { PieceProps, Team } from "@/types/board";
 import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 
 const GamePlay = () => {
-  const { layout } = useGameContext();
+  const { layout, logic } = useMegaContext();
   const { settings } = useMegaContext();
 
   const teamOneWells = useMemo(
@@ -50,7 +49,7 @@ const GamePlay = () => {
       ...toPieces(teamOneWells, Team.TeamOne, 0),
       ...toPieces(teamTwoWells, Team.TeamTwo, 24),
     };
-    layout.setPieces(built);
+    logic.setPieces(built);
     initialized.current = true;
   }, [layout.layoutReady, teamOneWells, teamTwoWells]);
 
@@ -76,7 +75,7 @@ const GamePlay = () => {
         <TeamWellGrid team={Team.TeamTwo} />
       </View>
 
-      {layout.layoutReady && renderPieces(layout.pieces)}
+      {layout.layoutReady && renderPieces(logic.pieces)}
       {!layout.layoutReady && <LoadingScreen />}
     </View>
   );

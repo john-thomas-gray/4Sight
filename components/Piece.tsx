@@ -4,7 +4,6 @@ import {
   animateToSelectedCell,
 } from "@/animations/animations";
 import { GameElements } from "@/constants";
-import { useGameContext } from "@/context/GameContext";
 import { useMegaContext } from "@/context/MegaContext";
 import animateGravity from "@/hooks/animateGravity";
 import { usePieceState } from "@/hooks/usePieceState";
@@ -29,7 +28,7 @@ const Piece = ({
   initialPosition,
   currentWellId,
 }: PieceProps) => {
-  const { layout, logic } = useGameContext();
+  const { layout, logic } = useMegaContext();
   const { settings } = useMegaContext();
 
   const allCells = getCellArray({ layout, result: "all", team });
@@ -64,7 +63,7 @@ const Piece = ({
 
   useEffect(() => {
     if (onBoard) {
-      animateGravity({ pieceId: id, translateX, translateY, layout });
+      animateGravity({ pieceId: id, translateX, translateY, layout, logic });
     }
     boardPieceLocationsSV.value = layout.boardPieceLocations;
   }, [layout.boardPieceLocations]);

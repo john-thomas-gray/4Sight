@@ -1,5 +1,4 @@
 import { GameElements } from "@/constants";
-import { useGameContext } from "@/context/GameContext";
 import { useMegaContext } from "@/context/MegaContext";
 import { CellProps, CellType, Team } from "@/types/board";
 import React, { useEffect, useRef } from "react";
@@ -11,7 +10,7 @@ import { cellImages } from "../assets/images";
 
 const Slot = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { layout, logic } = useGameContext();
+  const { layout, logic } = useMegaContext();
   const { settings } = useMegaContext();
 
   team = logic.currentTeam;

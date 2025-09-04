@@ -1,4 +1,4 @@
-import { useGameContext } from "@/context/GameContext";
+import { useMegaContext } from "@/context/MegaContext";
 import { useEffect, useState } from "react";
 
 export const usePieceState = (
@@ -6,7 +6,7 @@ export const usePieceState = (
   currentWellId: string | undefined,
   id: string
 ) => {
-  const { layout, logic } = useGameContext();
+  const { layout, logic } = useMegaContext();
   const [onBoard, setOnBoard] = useState(false);
   const [myTurn, setMyTurn] = useState(false);
 

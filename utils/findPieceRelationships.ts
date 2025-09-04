@@ -80,6 +80,7 @@ const findPieceRelationships = ({
         continue;
       }
       const piece = allPieces[pieceId];
+      console.log(pieceId);
 
       if (piece.team === lastTeam) {
         run.push({ spaceId, pieceId: piece.id });
