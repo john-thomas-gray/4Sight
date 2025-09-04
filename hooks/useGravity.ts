@@ -1,3 +1,4 @@
+import animateGravity from "@/animations/animateGravity";
 import { useGameContext } from "@/context/GameContext";
 import { Direction } from "@/types/board";
 
@@ -7,11 +8,15 @@ type GravityProps = {
 
 export const useGravity = () => {
   const { layout } = useGameContext();
-  // console.log("board piece locations", boardPieceLocations);
+  // console.log("board piece locations!", layout.boardPieceLocations);
 
   const applyGravity = (direction: GravityProps["direction"]) => {
     const updatedPieceLocations = { ...layout.boardPieceLocations };
-
+    animateGravity({
+      boardPieceLocations: updatedPieceLocations,
+      spaces: layout.spaces,
+      pieces: layout.pieces,
+    });
     if (direction === Direction.Up) {
       for (let row = 2; row <= 7; row++) {
         for (let col = 1; col <= 7; col++) {
@@ -123,6 +128,5 @@ export const useGravity = () => {
 
     layout.setBoardPieceLocations(updatedPieceLocations);
   };
-
   return applyGravity;
 };

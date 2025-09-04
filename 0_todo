@@ -62,6 +62,22 @@ Piece dropped on inaccessible space bounces off glass.
 Grabbing piece raises z index above all other pieces
 Piece placed in unavailable slot bumps the piece that's blocking it
 
-Refactoring:
-Cells should be a class
-refactor piece
+Today I will focus on creating animation states for the pieces.
+The first of these will be triggered by the winState.
+I will create a transition to the win state, followed by
+the looping win state.
+
+1. The findPieceRelationships outputs a list of groups of winners.
+
+2. Iterate through each group of winners, starting with the most recently placed.
+   On each loop set the piece state to "winner".
+   setWinningPieces(Record< Team, []>)
+   set piece state to "winner"
+   return list of winner ids
+
+3. On first iteration this will make the
+   highlight appear. Whe refined it will trigger a one-time "becoming winner" animation
+   and a looping winner state.
+
+animateChangeToWinner()
+animateWinnerLoop()

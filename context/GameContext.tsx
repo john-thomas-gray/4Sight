@@ -88,10 +88,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   // ** Layout ** //
 
-  type WellState = {
-    [Team.TeamOne]: Record<string, CellLayout>;
-    [Team.TeamTwo]: Record<string, CellLayout>;
-  };
   const [wells, setWells] = useState<Record<Team, Record<string, CellLayout>>>({
     [Team.TeamOne]: {},
     [Team.TeamTwo]: {},

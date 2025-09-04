@@ -5,10 +5,10 @@ import {
 } from "@/animations/animations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
-import useBoardPullAnimation from "@/hooks/useBoardPullAnimation";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
 import { HighlightProps, PieceProps, Team } from "@/types/board";
+import { GameState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import React, { useEffect } from "react";
@@ -24,7 +24,8 @@ import Highlight from "./Highlight";
 const Piece = ({
   team,
   id = "X-0",
-  initialPosition,
+  translateX,
+  translateY,
   currentWellId,
 }: PieceProps) => {
   const { layout, settings, logic } = useGameContext();
@@ -41,8 +42,8 @@ const Piece = ({
     );
   };
 
-  const translateX = useSharedValue(initialPosition.x);
-  const translateY = useSharedValue(initialPosition.y);
+  translateX = useSharedValue(translateX);
+  translateY = useSharedValue(translateY);
   const currentWellDataSV = useSharedValue<Board.CellProps | null>(
     currentWellId ? getCurrentWellData(currentWellId) : null
   );
@@ -58,7 +59,6 @@ const Piece = ({
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
-    // console.log(layout.boardPieceLocations);
   }, [layout.boardPieceLocations]);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ const Piece = ({
   //
   const setBPLUI = (finalSpaceId: string) => {
     const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
-
+    console.log("setBPLUI", updated);
     layout.setBoardPieceLocations(updated);
     logic.checkGameFinished(updated);
   };
@@ -102,13 +102,7 @@ const Piece = ({
   }, []);
 
   const movePiece = Gesture.Pan()
-    .enabled(
-      // (onBoard
-      // && logic.gameover) ||
-      // logic.gameState !== GameState.Finished &&
-      !onBoard
-      // && myTurn
-    )
+    .enabled(logic.gameState !== GameState.Finished && !onBoard && myTurn)
     .onStart(() => {
       isHeld.value = true;
       runOnJS(deleteWPLUI)();
@@ -286,14 +280,6 @@ const Piece = ({
         }
       }
     });
-
-  useBoardPullAnimation({
-    pieceIdIn: id,
-    boardPieceLocations: layout.boardPieceLocations,
-    spaces: layout.spaces,
-    translateX,
-    translateY,
-  });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
