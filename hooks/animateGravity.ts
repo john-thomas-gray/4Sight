@@ -1,7 +1,6 @@
 import { Animations, GameElements } from "@/constants";
 import { Layout } from "@/context/GameContext";
-import { Easing } from "react-native";
-import { SharedValue, withTiming } from "react-native-reanimated";
+import { Easing, SharedValue, withTiming } from "react-native-reanimated";
 
 const animateGravity = ({
   pieceId,
@@ -19,7 +18,6 @@ const animateGravity = ({
     ([, value]) => value === pieceId
   );
   if (entry) {
-    console.log("gravity works");
     const [spaceId, pieceId] = entry;
     const piece = layout.pieces[pieceId];
 

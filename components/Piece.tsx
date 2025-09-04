@@ -6,7 +6,6 @@ import {
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import animateGravity from "@/hooks/animateGravity";
-import { useGravity } from "@/hooks/useGravity";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
 import { HighlightProps, PieceProps, Team } from "@/types/board";
@@ -59,11 +58,12 @@ const Piece = ({
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
 
-  useEffect(() => {
-    animateGravity({ pieceId: id, translateX, translateY, layout });
-  }, [useGravity]);
+  useEffect(() => {}, [layout.boardPieceLocations]);
 
   useEffect(() => {
+    if (onBoard) {
+      animateGravity({ pieceId: id, translateX, translateY, layout });
+    }
     boardPieceLocationsSV.value = layout.boardPieceLocations;
   }, [layout.boardPieceLocations]);
 

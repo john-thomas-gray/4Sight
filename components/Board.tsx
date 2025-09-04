@@ -55,7 +55,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .direction(Directions.LEFT)
     .onStart(() => {
       runOnJS(executePull)(Direction.Left);
-      console.log("cuint");
     });
 
   const pullRight = Gesture.Fling()

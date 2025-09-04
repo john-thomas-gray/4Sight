@@ -81,3 +81,5 @@ the looping win state.
 
 animateChangeToWinner()
 animateWinnerLoop()
+
+REMOVE GAME STATE LOGIC FROM PIECE

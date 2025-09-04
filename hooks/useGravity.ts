@@ -5,10 +5,20 @@ type GravityProps = {
   direction: Direction.Up | Direction.Down | Direction.Left | Direction.Right;
 };
 
+const moveConsole = ({
+  pieceId,
+  currentSpaceId,
+  targetSpaceId,
+}: {
+  pieceId: string;
+  currentSpaceId: string;
+  targetSpaceId: string;
+}) => {
+  console.log(`Moving ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`);
+};
+
 export const useGravity = () => {
   const { layout } = useGameContext();
-  // console.log("board piece locations!", layout.boardPieceLocations);
-  console.log("run useGravity");
   const applyGravity = (direction: GravityProps["direction"]) => {
     const updatedPieceLocations = { ...layout.boardPieceLocations };
 
@@ -29,9 +39,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
-              // console.log(
-              //   `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              // );
+              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -54,9 +62,7 @@ export const useGravity = () => {
             }
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
-              // console.log(
-              //   `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              // );
+              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -80,9 +86,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
-              // console.log(
-              //   `Moving piece ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              // );
+              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -106,11 +110,9 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
-              // console.log(
-              //   `Moving ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`
-              // );
-              // updatedPieceLocations[targetSpaceId] =
-              updatedPieceLocations[currentSpaceId];
+              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
+              updatedPieceLocations[targetSpaceId] =
+                updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
             }
           }
