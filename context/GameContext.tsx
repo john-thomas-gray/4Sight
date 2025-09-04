@@ -1,5 +1,4 @@
 import { Animations } from "@/constants";
-import { CLASSIC, ColorThemeType } from "@/constants/colorThemes";
 import {
   CellLayout,
   CellProps,
@@ -8,7 +7,6 @@ import {
   Team,
 } from "@/types/board";
 import findPieceRelationships from "@/utils/findPieceRelationships";
-import { loadAppState, saveAppState } from "@/utils/useAsyncStorage";
 import {
   createContext,
   ReactNode,
@@ -51,10 +49,6 @@ export type GameContextType = {
     winner: Team;
     setWinner: React.Dispatch<React.SetStateAction<Team>>;
   };
-  settings: {
-    colorTheme: ColorThemeType;
-    setColorTheme: React.Dispatch<React.SetStateAction<ColorThemeType>>;
-  };
 };
 export type Layout = GameContextType["layout"];
 
@@ -66,27 +60,6 @@ type TurnStrategy = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  // Async Cache
-  useEffect(() => {
-    const loadState = async () => {
-      const saved = await loadAppState();
-
-      if (saved.theme) {
-        setColorTheme(saved.theme);
-      }
-
-      // if (saved.boardPieceLocations) {
-      //   setBoardPieceLocations(saved.boardPieceLocations);
-      // }
-
-      // if (saved.wellPieceLocations) {
-      //   setWellPieceLocations(saved.wellPieceLocations);
-      // }
-    };
-
-    loadState();
-  }, []);
-
   // ** Layout ** //
 
   const [wells, setWells] = useState<Record<Team, Record<string, CellLayout>>>({
@@ -233,25 +206,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     gameCycle(turnCount + 1);
   }, [turnCount, gameMode]);
 
-  // ** Settings ** //
-
-  const [colorTheme, setColorTheme] = useState<ColorThemeType>(CLASSIC);
-
-  useEffect(() => {
-    saveAppState({ theme: colorTheme });
-  }, [colorTheme]);
-
-  // useEffect(() => {
-  //   console.log("turn changed");
-  //   saveAppState({ boardPieceLocations });
-  //   saveAppState({ wellPieceLocations });
-  // }, [turnCount]);
-
-  // useEffect(() => {
-  //   console.log(boardPieceLocations);
-  //   console.log("check X", checkXInARow(boardPieceLocations, 3));
-  // }, [boardPieceLocations]);
-
   return (
     <GameContext.Provider
       value={{
@@ -279,10 +233,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setWinner,
           gameState,
           setGameState,
-        },
-        settings: {
-          colorTheme,
-          setColorTheme,
         },
       }}
     >

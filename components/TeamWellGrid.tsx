@@ -1,5 +1,5 @@
 import { GameElements } from "@/constants";
-import { useGameContext } from "@/context/GameContext";
+import { useSettingsContext } from "@/context/SettingsContext";
 import { CellType, Team } from "@/types/board";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -13,7 +13,7 @@ const COLS = 3;
 const ROWS = 8;
 
 const TeamWellGrid = ({ team }: TeamWellGridProps) => {
-  const { settings } = useGameContext();
+  const { settings } = useSettingsContext();
   const borderColor =
     team === Team.TeamOne
       ? settings.colorTheme.TEAM_ONE_COLOR

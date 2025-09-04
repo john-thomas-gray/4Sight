@@ -1,10 +1,10 @@
 import { CLASSIC, SCHOOLHOUSE } from "@/constants/colorThemes";
-import { useGameContext } from "@/context/GameContext";
+import { useSettingsContext } from "@/context/SettingsContext";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
 const Settings = () => {
-  const { settings } = useGameContext();
+  const { settings } = useSettingsContext();
 
   return (
     <View>
