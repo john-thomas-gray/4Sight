@@ -4,6 +4,7 @@ import {
   animatePieceDrop,
   animateToSelectedCell,
 } from "@/animations/animations";
+import { animateWinner } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { usePieceState } from "@/hooks/usePieceState";
@@ -11,6 +12,7 @@ import { Board } from "@/types";
 import { PieceProps, PieceState, Team } from "@/types/board";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
+import { Button } from "@react-navigation/elements";
 import React, { useEffect, useState } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -21,13 +23,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Highlight from "./Highlight";
 
-const Piece = ({
-  team,
-  id = "X-0",
-  initialPosition,
-  currentWellId,
-  pieceState,
-}: PieceProps) => {
+const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
   const { layout, logic, settings } = useGameContext();
 
   const allCells = getCellArray({ layout, result: "all", team });
@@ -44,6 +40,19 @@ const Piece = ({
 
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
+  const scaleX = useSharedValue(1);
+  const scaleY = useSharedValue(1);
+
+  let currentWellId: string = "";
+  if (
+    Object.entries(layout.wellPieceLocations!).find(
+      ([, pieceId]) => pieceId === id
+    )?.[0]
+  ) {
+    currentWellId = Object.entries(layout.wellPieceLocations!).find(
+      ([, pieceId]) => pieceId === id
+    )?.[0]!;
+  }
 
   const currentWellDataSV = useSharedValue<Board.CellProps | null>(
     currentWellId ? getCurrentWellData(currentWellId) : null
@@ -53,8 +62,7 @@ const Piece = ({
     currentWellId,
     id
   );
-  const onBoardSV = useSharedValue(false);
-  const foundSpace = useSharedValue(false);
+
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
 
@@ -65,10 +73,11 @@ const Piece = ({
       animateGravity({ pieceId: id, translateX, translateY, layout, logic });
     }
     boardPieceLocationsSV.value = layout.boardPieceLocations;
+    // console.log(layout.wellPieceLocations);
   }, [layout.boardPieceLocations]);
 
   useEffect(() => {
-    if (currentWellId) {
+    if (pieceState === PieceState.inWell) {
       currentWellDataSV.value = getCurrentWellData(currentWellId);
     } else {
       currentWellDataSV.value = null;
@@ -137,7 +146,10 @@ const Piece = ({
       };
 
       for (const selectedCell of allCells) {
-        if (!selectedCell.layout) continue;
+        if (!selectedCell.layout) {
+          animateMisplacedPiece({ translateX, translateY, currentWellDataSV });
+          continue;
+        }
 
         const {
           pageX: selectedCellCoordX,
@@ -256,8 +268,6 @@ const Piece = ({
               (s) => s.id === dropSlotData.dropSlot.id
             );
             if (slotData) {
-              foundSpace.value = true;
-
               animatePieceDrop({
                 translateX,
                 translateY,
@@ -290,23 +300,25 @@ const Piece = ({
           runOnJS(setWPLUI)(selectedCell.id);
           animateToSelectedCell({ translateX, translateY, selectedCell });
         }
-        // Piece placed on board successfully
-        if (isSlot || (isSpace && foundSpace.value)) {
-          onBoardSV.value = true;
-          runOnJS(setOnBoard)(true);
-        }
+        console.log(isWell, isSlot, isSpace);
       }
     });
 
-  const animatedStyles = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value },
-      ],
-      // Scale, translateZ
-    };
-  });
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scaleX: scaleX.value },
+      { scaleY: scaleY.value },
+      // { skewX: skewX.value },
+      // { skewY: skewY.value },
+    ],
+    // shadows: [
+    //   { shadowOpacity: shadowOpacity.value },
+    //   { shadowRadius: shadowRadius },
+    //   { shadowOffset: shadowOffset },
+    // ],
+  }));
 
   const baseStyle: ViewStyle = {
     height: GameElements.PIECE_SIZE,
@@ -333,6 +345,13 @@ const Piece = ({
           <Highlight props={highlightProps} />
         </Animated.View>
       </GestureDetector>
+      <Button
+        title="Test Animation"
+        style={{ position: "absolute" }}
+        onPress={() => {
+          animateWinner({ translateX, translateY, scaleX, scaleY });
+        }}
+      />
     </>
   );
 };

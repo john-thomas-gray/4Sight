@@ -39,49 +39,66 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
 
-  const { wells, layoutReady } = useLayoutContext();
+  const { wells, layoutReady, setWellPieceLocations } = useLayoutContext();
+
+  const generateWellIds = (): string[] => {
+    const wells: string[] = [];
+    for (let row = 9; row <= 47; row++) {
+      for (let col = 9; col <= 11; col++) {
+        wells.push(`${row}-${col}`);
+      }
+    }
+    return wells;
+  };
 
   const toPieces = (
-    entries: [
+    team: Team,
+    startIdx: number,
+    layout: Record<
       string,
       { pageX: number; pageY: number; width: number; height: number }
-    ][],
-    team: Team,
-    startIdx: number
-  ): Record<string, PieceProps> =>
-    Object.fromEntries(
-      entries.map(([wellId, l], idx) => {
-        const id = `${startIdx + idx}`; // global id
-        const initialPosition = {
-          x: l.pageX + l.width / 2 - 16,
-          y: l.pageY + l.height / 2 - 16,
-        };
-        return [
-          id,
-          {
-            id,
-            team,
-            currentWellId: wellId,
-            initialPosition,
-            pieceState: PieceState.inWell,
-          },
-        ];
-      })
-    );
+    >,
+    setWellPieceLocations: React.Dispatch<
+      React.SetStateAction<Record<string, string>>
+    >
+  ): Record<string, PieceProps> => {
+    const pieces: Record<string, PieceProps> = {};
+
+    Object.entries(layout).forEach(([wellId, l], idx) => {
+      const id = `${startIdx + idx}`;
+
+      const initialPosition = {
+        x: l.pageX + l.width / 2 - 16,
+        y: l.pageY + l.height / 2 - 16,
+      };
+
+      pieces[id] = {
+        id,
+        team,
+        initialPosition,
+        pieceState: PieceState.inWell,
+      };
+
+      setWellPieceLocations((prev) => ({
+        ...prev,
+        [wellId]: id,
+      }));
+    });
+
+    return pieces;
+  };
 
   React.useEffect(() => {
     if (!layoutReady) return;
 
-    const teamOneWells = Object.entries(wells[Team.TeamOne]);
-    const teamTwoWells = Object.entries(wells[Team.TeamTwo]);
-
     const built = {
-      ...toPieces(teamOneWells, Team.TeamOne, 0),
-      ...toPieces(teamTwoWells, Team.TeamTwo, 24),
+      ...toPieces(Team.TeamOne, 0, wells[Team.TeamOne], setWellPieceLocations),
+      ...toPieces(Team.TeamTwo, 24, wells[Team.TeamTwo], setWellPieceLocations),
     };
 
     setPieces(built);
   }, [layoutReady, wells]);
+
   const logicalStrategies: Record<
     string,
     {

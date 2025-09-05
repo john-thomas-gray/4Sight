@@ -1,8 +1,8 @@
 export type CellProps = {
   id: string;
   type: CellType;
-  team?: Team;
-  layout?: CellLayout;
+  team: Team;
+  layout: CellLayout;
 };
 
 export type CellLayout = {
@@ -46,6 +46,5 @@ export type PieceProps = {
   team: Team;
   id: string;
   initialPosition: { x: number; y: number };
-  currentWellId?: string;
   pieceState: PieceState;
 };

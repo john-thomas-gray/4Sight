@@ -1,4 +1,3 @@
-// utils/animations.ts
 import { Animations, GameElements } from "@/constants";
 import { Board } from "@/types";
 import {
@@ -11,7 +10,7 @@ import {
 type animateMisplacedPieceProps = {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
-  currentWellDataSV: SharedValue<Board.CellProps | null>;
+  currentWellDataSV: SharedValue<Board.CellLayout>;
 };
 
 export const animateMisplacedPiece = ({
@@ -20,18 +19,19 @@ export const animateMisplacedPiece = ({
   currentWellDataSV,
 }: animateMisplacedPieceProps) => {
   "worklet";
-
-  const well = currentWellDataSV.value;
-  if (!well || !well.layout) return;
+  const well = currentWellDataSV;
+  console.log(well);
+  if (!well || !well) return;
+  console.log("working");
   translateX.value = withTiming(
-    well.layout.pageX + well.layout.width / 2 - GameElements.PIECE_RADIUS,
+    well.value.pageX + well.value.width / 2 - GameElements.PIECE_RADIUS,
     {
       duration: Animations.WELL_RETURN_DURATION,
       easing: Easing.inOut(Easing.quad),
     }
   );
   translateY.value = withTiming(
-    well.layout.pageY + well.layout.height / 2 - GameElements.PIECE_RADIUS,
+    well.value.pageY + well.value.height / 2 - GameElements.PIECE_RADIUS,
     {
       duration: Animations.WELL_RETURN_DURATION,
       easing: Easing.inOut(Easing.quad),
@@ -42,7 +42,7 @@ export const animateMisplacedPiece = ({
 type AnimateToSelectedCell = {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
-  selectedCell: Board.CellProps;
+  selectedCell: SharedValue<Board.CellLayout>;
 };
 
 export const animateToSelectedCell = ({
@@ -52,8 +52,8 @@ export const animateToSelectedCell = ({
 }: AnimateToSelectedCell) => {
   "worklet";
   translateX.value = withTiming(
-    selectedCell.layout!.pageX +
-      selectedCell.layout!.height / 2 -
+    selectedCell.value!.pageX +
+      selectedCell.value!.height / 2 -
       GameElements.PIECE_RADIUS,
     {
       duration: Animations.WELL_RETURN_DURATION,
@@ -61,8 +61,8 @@ export const animateToSelectedCell = ({
     }
   );
   translateY.value = withTiming(
-    selectedCell.layout!.pageY +
-      selectedCell.layout!.height / 2 -
+    selectedCell.value!.pageY +
+      selectedCell.value!.height / 2 -
       GameElements.PIECE_RADIUS,
     {
       duration: Animations.WELL_RETURN_DURATION,
