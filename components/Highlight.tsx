@@ -1,9 +1,17 @@
-import { HighlightProps } from "@/types/board";
-import React from "react";
+import { PieceState } from "@/types/board";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-const Highlight = ({ status }: { status: HighlightProps }) => {
-  return <View style={styles.off} />;
+const Highlight = ({ props }: { props: PieceState }) => {
+  const [style, setStyle] = useState(styles.off);
+
+  useEffect(() => {
+    if (props === PieceState.winner) {
+      setStyle(styles.winner);
+    }
+  }, [props]);
+
+  return <View style={style} />;
 };
 
 export default Highlight;

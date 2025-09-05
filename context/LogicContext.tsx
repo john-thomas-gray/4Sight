@@ -1,6 +1,7 @@
 import { Animations } from "@/constants";
 import { PieceProps, Team } from "@/types/board";
 import findPieceRelationships from "@/utils/findPieceRelationships";
+import setWinningPieces from "@/utils/setWinningPieces";
 import React, {
   createContext,
   ReactNode,
@@ -81,6 +82,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       boardPieceLocations: updatedBoardPieceLocations,
       winLen: 4,
       allPieces: pieces,
+    });
+    setWinningPieces({
+      partials: pieceRelationships.partials,
+      winners: pieceRelationships.winners,
+      winNextTurns: pieceRelationships.winNextTurns,
+      setPieces,
     });
     const teamOneWins =
       Object.keys(pieceRelationships.winners.teamOne).length > 0;

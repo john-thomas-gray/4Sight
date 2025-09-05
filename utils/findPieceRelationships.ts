@@ -8,11 +8,11 @@ interface FindPieceRelationships {
 }
 
 type AllPieces = Record<string, PieceProps>;
-type BoardPiece = {
+export type BoardPiece = {
   spaceId: string;
   pieceId: string;
 };
-type Consecutives = BoardPiece[];
+export type Consecutives = BoardPiece[];
 type Winners = Pick<Record<Team, Consecutives[]>, Team.TeamOne | Team.TeamTwo>;
 type Partials = Pick<Record<Team, Consecutives[]>, Team.TeamOne | Team.TeamTwo>;
 type WinNextTurns = Pick<Record<Team, string[]>, Team.TeamOne | Team.TeamTwo>;
@@ -80,7 +80,6 @@ const findPieceRelationships = ({
         continue;
       }
       const piece = allPieces[pieceId];
-      console.log(pieceId);
 
       if (piece.team === lastTeam) {
         run.push({ spaceId, pieceId: piece.id });

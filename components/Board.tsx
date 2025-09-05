@@ -7,7 +7,7 @@ import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction } from "@/types/board";
 import { GameState } from "@/types/logic";
-import React, { useEffect } from "react";
+import React from "react";
 import { StyleSheet, View } from "react-native";
 import {
   Directions,
@@ -47,7 +47,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const pullPieces = useGravity();
   const executePull = (direction: Direction) => {
     if (logic.gameState === GameState.Finished) return;
-    console.log("executePull");
     pullPieces(direction);
   };
 
@@ -74,10 +73,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onStart(() => {
       runOnJS(executePull)(Direction.Down);
     });
-
-  useEffect(() => {
-    layout.boardPieceLocations;
-  }, [layout.boardPieceLocations]);
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);
 

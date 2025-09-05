@@ -23,6 +23,7 @@ Bugs:
 - Can pull when you pull
 - Retrict pull to space grid
 - Placed pieces bounce when you return to the page
+- You can set pieces on a square if it's occupied
 
 Win State
 

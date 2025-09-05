@@ -3,7 +3,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import { useGameContext } from "@/context/GameContext";
-import { PieceProps, Team } from "@/types/board";
+import { PieceProps, PieceState, Team } from "@/types/board";
 import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -38,7 +38,11 @@ const GamePlay = () => {
           x: l.pageX + l.width / 2 - 16,
           y: l.pageY + l.height / 2 - 16,
         };
-        return [id, { id, team, currentWellId: wellId, initialPosition }];
+        const pieceState = PieceState.inWell;
+        return [
+          id,
+          { id, team, currentWellId: wellId, initialPosition, pieceState },
+        ];
       })
     );
 
@@ -61,6 +65,7 @@ const GamePlay = () => {
         team={p.team}
         currentWellId={p.currentWellId}
         initialPosition={p.initialPosition}
+        pieceState={p.pieceState}
       />
     ));
 

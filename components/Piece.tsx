@@ -8,11 +8,11 @@ import { useGameContext } from "@/context/GameContext";
 import animateGravity from "@/hooks/animateGravity";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
-import { HighlightProps, PieceProps, Team } from "@/types/board";
+import { PieceProps, PieceState, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -27,6 +27,7 @@ const Piece = ({
   id = "X-0",
   initialPosition,
   currentWellId,
+  pieceState,
 }: PieceProps) => {
   const { layout, logic } = useGameContext();
   const { settings } = useGameContext();
@@ -75,21 +76,20 @@ const Piece = ({
       currentWellDataSV.value = null;
     }
   }, [currentWellId]);
-  //
+
   const setBPLUI = (finalSpaceId: string) => {
     const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
-    console.log("setBPLUI", updated);
     layout.setBoardPieceLocations(updated);
     logic.checkGameFinished(updated);
   };
-  //
+
   const setWPLUI = (wellId: string) => {
     layout.setWellPieceLocations((prev) => ({
       ...prev,
       [wellId]: id,
     }));
   };
-  //
+
   const deleteWPLUI = () => {
     if (currentWellId) {
       layout.setWellPieceLocations((prev) => {
@@ -107,6 +107,16 @@ const Piece = ({
       }));
     }
   }, []);
+
+  useEffect(() => {
+    setHighlightProps(pieceState);
+    if (pieceState === PieceState.winner) {
+      // Run winner transition and then
+      // loop winner animation
+    }
+  }, [pieceState]);
+
+  const [highlightProps, setHighlightProps] = useState(PieceState.inWell);
 
   const movePiece = Gesture.Pan()
     .enabled(logic.gameState !== GameState.Finished && !onBoard && myTurn)
@@ -320,7 +330,7 @@ const Piece = ({
     <>
       <GestureDetector gesture={movePiece}>
         <Animated.View style={[baseStyle, animatedStyles]}>
-          <Highlight status={HighlightProps.Off} />
+          <Highlight props={highlightProps} />
         </Animated.View>
       </GestureDetector>
     </>

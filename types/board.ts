@@ -34,15 +34,18 @@ export enum Team {
   Unassigned = "unassigned",
 }
 
+export enum PieceState {
+  inWell = "inWell",
+  onBoard = "onBoard",
+  isHeld = "isHeld",
+  partial = "partial",
+  winner = "winner",
+}
+
 export type PieceProps = {
   team: Team;
   id: string;
   initialPosition: { x: number; y: number };
   currentWellId?: string;
+  pieceState: PieceState;
 };
-
-export enum HighlightProps {
-  Off = "off",
-  Almost = "almost",
-  Winner = "winner",
-}

@@ -20,7 +20,7 @@ export const animateMisplacedPiece = ({
   currentWellDataSV,
 }: animateMisplacedPieceProps) => {
   "worklet";
-  console.log("columbus");
+
   const well = currentWellDataSV.value;
   if (!well || !well.layout) return;
   translateX.value = withTiming(
