@@ -12,9 +12,9 @@ export type BoardPiece = {
   spaceId: string;
   pieceId: string;
 };
-export type Consecutives = BoardPiece[];
-type Winners = Pick<Record<Team, Consecutives[]>, Team.TeamOne | Team.TeamTwo>;
-type Partials = Pick<Record<Team, Consecutives[]>, Team.TeamOne | Team.TeamTwo>;
+export type BoardPieces = BoardPiece[];
+type Winners = Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
+type Partials = Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
 type WinNextTurns = Pick<Record<Team, string[]>, Team.TeamOne | Team.TeamTwo>;
 
 interface PieceRelationships {

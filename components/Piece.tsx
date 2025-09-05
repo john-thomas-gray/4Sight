@@ -9,7 +9,6 @@ import { useGameContext } from "@/context/GameContext";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
 import { PieceProps, PieceState, Team } from "@/types/board";
-import { GameState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import React, { useEffect, useState } from "react";
@@ -114,12 +113,14 @@ const Piece = ({
       // Run winner transition and then
       // loop winner animation
     }
+    if (isHeld) {
+    }
   }, [pieceState]);
 
   const [highlightProps, setHighlightProps] = useState(PieceState.inWell);
 
   const movePiece = Gesture.Pan()
-    .enabled(logic.gameState !== GameState.Finished && !onBoard && myTurn)
+    // .enabled(logic.gameState !== GameState.Finished && !onBoard && myTurn)
     .onStart(() => {
       isHeld.value = true;
       runOnJS(deleteWPLUI)();

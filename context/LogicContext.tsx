@@ -1,4 +1,5 @@
 import { Animations } from "@/constants";
+import { useGameContext } from "@/context/GameContext";
 import { PieceProps, Team } from "@/types/board";
 import findPieceRelationships from "@/utils/findPieceRelationships";
 import setWinningPieces from "@/utils/setWinningPieces";
@@ -37,6 +38,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
+
+  const { layout } = useGameContext();
 
   const logicalStrategies: Record<
     string,
@@ -86,7 +89,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     setWinningPieces({
       partials: pieceRelationships.partials,
       winners: pieceRelationships.winners,
-      winNextTurns: pieceRelationships.winNextTurns,
       setPieces,
     });
     const teamOneWins =

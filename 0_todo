@@ -84,3 +84,12 @@ animateChangeToWinner()
 animateWinnerLoop()
 
 REMOVE GAME STATE LOGIC FROM PIECE
+
+win transition:
+wait until slotDropAnim completes.
+set delay that compounds for each piece.
+at the end of delay, play transition anim:
+Pieces leep in the air, wobble, color change and highlight appears (scale, drop shadow, offset, tX, tY)
+loop winner anim in sync(?)
+Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
+slight pulsing. Highlight undulates and shimmers.

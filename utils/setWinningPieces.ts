@@ -1,46 +1,44 @@
+import { WINNER_STATE_DELAY } from "@/constants/animations";
 import { PieceProps, PieceState, Team } from "@/types/board";
-import { Consecutives } from "./findPieceRelationships";
+import { BoardPiece, BoardPieces } from "./findPieceRelationships";
 import setPieceState from "./setPieceState";
-// type UpdatePieceState = () => {
-//   groups: Pick<Record<Team, Consecutives[]>, Team.TeamOne | Team.TeamTwo>;
-// };
-
-// const updatePieceState = (group: UpdatePieceState) => {
-//   group[Team.TeamOne]forEach((consecutive: Consecutives) => {
-//     consecutive.forEach((boardPiece) => {
-//       setPieceState({
-//         id: boardPiece.id,
-//         setPieces,
-//         pieceState: PieceState.winner,
-//       });
-//     });
-//   });
-// };
 
 type SetWinningPieces = {
-  partials: Pick<Record<Team, Consecutives[]>, Team.TeamOne | Team.TeamTwo>;
-  winners: Pick<Record<Team, Consecutives[]>, Team.TeamOne | Team.TeamTwo>;
-  winNextTurns: Pick<Record<Team, string[]>, Team.TeamOne | Team.TeamTwo>;
+  partials: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
+  winners: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
   setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
 };
+
 export default function setWinningPieces({
   partials,
   winners,
-  winNextTurns,
   setPieces,
 }: SetWinningPieces) {
+  const updatePieceState = (groups: BoardPieces[], pieceState: PieceState) => {
+    let delay = WINNER_STATE_DELAY;
+    groups.forEach((group) => {
+      group.forEach((boardPiece: BoardPiece) => {
+        setTimeout(
+          () =>
+            setPieceState({
+              id: boardPiece.pieceId,
+              setPieces: setPieces,
+              pieceState: pieceState,
+            }),
+          delay
+        );
+        delay += WINNER_STATE_DELAY;
+      });
+    });
+  };
+
   const winnersOne = winners.teamOne;
   const winnersTwo = winners.teamTwo;
   const partialsOne = partials.teamOne;
   const partialsTwo = partials.teamTwo;
 
-  winnersOne.forEach((group) => {
-    group.forEach((boardPiece) => {
-      setPieceState({
-        id: boardPiece.pieceId,
-        setPieces: setPieces,
-        pieceState: PieceState.winner,
-      });
-    });
-  });
+  updatePieceState(winnersOne, PieceState.winner);
+  updatePieceState(winnersTwo, PieceState.winner);
+  updatePieceState(partialsOne, PieceState.partial);
+  updatePieceState(partialsTwo, PieceState.partial);
 }
