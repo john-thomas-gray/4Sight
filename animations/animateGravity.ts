@@ -39,7 +39,6 @@ const animateGravity = ({
       }
     );
   } else {
-    console.log("gravity sucks");
     return;
   }
 };

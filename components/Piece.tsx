@@ -1,3 +1,4 @@
+import animateGravity from "@/animations/animateGravity";
 import {
   animateMisplacedPiece,
   animatePieceDrop,
@@ -5,7 +6,6 @@ import {
 } from "@/animations/animations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
-import animateGravity from "@/hooks/animateGravity";
 import { usePieceState } from "@/hooks/usePieceState";
 import { Board } from "@/types";
 import { PieceProps, PieceState, Team } from "@/types/board";
