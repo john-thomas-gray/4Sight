@@ -1,6 +1,5 @@
 import { Animations } from "@/constants";
-import { useGameContext } from "@/context/GameContext";
-import { PieceProps, Team } from "@/types/board";
+import { PieceProps, PieceState, Team } from "@/types/board";
 import findPieceRelationships from "@/utils/findPieceRelationships";
 import setWinningPieces from "@/utils/setWinningPieces";
 import React, {
@@ -11,6 +10,7 @@ import React, {
   useState,
 } from "react";
 import { GameMode, GameState, Turn } from "../types/logic";
+import { useLayoutContext } from "./LayoutContext";
 
 export type LogicContextType = {
   gameMode: GameMode;
@@ -39,8 +39,49 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
 
-  const { layout } = useGameContext();
+  const { wells, layoutReady } = useLayoutContext();
 
+  const toPieces = (
+    entries: [
+      string,
+      { pageX: number; pageY: number; width: number; height: number }
+    ][],
+    team: Team,
+    startIdx: number
+  ): Record<string, PieceProps> =>
+    Object.fromEntries(
+      entries.map(([wellId, l], idx) => {
+        const id = `${startIdx + idx}`; // global id
+        const initialPosition = {
+          x: l.pageX + l.width / 2 - 16,
+          y: l.pageY + l.height / 2 - 16,
+        };
+        return [
+          id,
+          {
+            id,
+            team,
+            currentWellId: wellId,
+            initialPosition,
+            pieceState: PieceState.inWell,
+          },
+        ];
+      })
+    );
+
+  React.useEffect(() => {
+    if (!layoutReady) return;
+
+    const teamOneWells = Object.entries(wells[Team.TeamOne]);
+    const teamTwoWells = Object.entries(wells[Team.TeamTwo]);
+
+    const built = {
+      ...toPieces(teamOneWells, Team.TeamOne, 0),
+      ...toPieces(teamTwoWells, Team.TeamTwo, 24),
+    };
+
+    setPieces(built);
+  }, [layoutReady, wells]);
   const logicalStrategies: Record<
     string,
     {

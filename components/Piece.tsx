@@ -28,8 +28,7 @@ const Piece = ({
   currentWellId,
   pieceState,
 }: PieceProps) => {
-  const { layout, logic } = useGameContext();
-  const { settings } = useGameContext();
+  const { layout, logic, settings } = useGameContext();
 
   const allCells = getCellArray({ layout, result: "all", team });
 
