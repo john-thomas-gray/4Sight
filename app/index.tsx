@@ -14,7 +14,10 @@ export default function Index() {
 function InnerIndexLayout() {
   return (
     <SafeAreaView className="flex-1 border-2 border-red-50 items-center justify-evenly bg-white">
-      <Text className="text-black font-bold text-8xl">FourSight</Text>
+      <View className="flex-row items-end items-center">
+        <Text className="text-black font-bold text-[128px] mb-4">4</Text>
+        <Text className="text-black font-bold text-8xl ml-2">Sight</Text>
+      </View>
       <View className="flex-col items-center space-y-4">
         <Link href="/gamePlay" className="text-lg">
           Two Player
@@ -28,7 +31,7 @@ function InnerIndexLayout() {
         <Link href="/howToPlay" className="text-lg">
           How to Play
         </Link>
-        <Link href="/test" className="text-lg">
+        <Link href="/testGround" className="text-lg">
           Test
         </Link>
       </View>

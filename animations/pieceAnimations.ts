@@ -11,8 +11,9 @@ type AnimateWinner = {
   translateY: SharedValue<number>;
   scaleX: SharedValue<number>;
   scaleY: SharedValue<number>;
-  skewX?: SharedValue<string>;
-  skewY?: SharedValue<string>;
+  skewX: SharedValue<string>;
+  skewY: SharedValue<string>;
+  rotation: SharedValue<number>;
   shadowOpacity?: SharedValue<number>;
   shadowRadius?: SharedValue<number>;
   shadowOffset?: SharedValue<number>;
@@ -23,9 +24,10 @@ export function animateWinner({
   translateY,
   scaleX,
   scaleY,
-}: // skewX,
-// skewY,
-// shadowOpacity,
+  skewX,
+  skewY,
+  rotation,
+}: // shadowOpacity,
 // shadowRadius,
 // shadowOffset,
 AnimateWinner) {
@@ -37,6 +39,14 @@ AnimateWinner) {
   const scale = {
     0: { x: scaleX.value, y: scaleY.value },
     1: { x: scaleX.value * 1.3, y: scaleY.value * 1.3 },
+  };
+  const skew = {
+    0: { x: skewX.value, y: skewY.value },
+    1: { x: "5deg", y: "15deg" },
+  };
+  const rot = {
+    0: { x: rotation.value, y: "0" },
+    1: { x: "deg", y: "0" },
   };
   type Point = { x: number; y: number };
   type Animation = {
@@ -67,7 +77,43 @@ AnimateWinner) {
       }),
       withDelay(
         300,
+        withTiming(v0.y, {
+          duration: 500,
+          easing: Easing.bounce,
+        })
+      )
+    );
+  };
+  type PointSkew = { x: string; y: string };
+  type AnimationSkew = {
+    svx: SharedValue<string>;
+    svy: SharedValue<string>;
+    v0: PointSkew;
+    v1: PointSkew;
+  };
+
+  const animationSkew = ({ svx, svy, v0, v1 }: AnimationSkew) => {
+    svx.value = withSequence(
+      withTiming(v1.x, {
+        duration: 1000,
+        easing: Easing.inOut(Easing.exp),
+      }),
+      withDelay(
+        300,
         withTiming(v0.x, {
+          duration: 500,
+          easing: Easing.bounce,
+        })
+      )
+    );
+    svy.value = withSequence(
+      withTiming(v1.y, {
+        duration: 1000,
+        easing: Easing.inOut(Easing.exp),
+      }),
+      withDelay(
+        300,
+        withTiming(v0.y, {
           duration: 500,
           easing: Easing.bounce,
         })
@@ -77,4 +123,5 @@ AnimateWinner) {
 
   animation({ svx: translateX, svy: translateY, v0: trans[0], v1: trans[1] });
   animation({ svx: scaleX, svy: scaleY, v0: scale[0], v1: scale[1] });
+  animationSkew({ svx: skewX, svy: skewY, v0: skew[0], v1: skew[1] });
 }

@@ -8,13 +8,11 @@ import { animateWinner } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { usePieceState } from "@/hooks/usePieceState";
-import { Board } from "@/types";
 import { PieceProps, PieceState, Team } from "@/types/board";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
-import { Button } from "@react-navigation/elements";
 import React, { useEffect, useState } from "react";
-import { ViewStyle } from "react-native";
+import { Button, View, ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -30,18 +28,13 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
 
   const slots = getCellArray({ layout, result: "slots", team });
 
-  const getCurrentWellData = (id: string) => {
-    return (
-      getCellArray({ layout, result: "wells", team }).find(
-        (well) => well.id === id
-      ) || null
-    );
-  };
-
   const translateX = useSharedValue(initialPosition.x);
   const translateY = useSharedValue(initialPosition.y);
   const scaleX = useSharedValue(1);
   const scaleY = useSharedValue(1);
+  const skewX = useSharedValue("0deg");
+  const skewY = useSharedValue("0deg");
+  const rotation = useSharedValue(0);
 
   let currentWellId: string = "";
   if (
@@ -54,19 +47,15 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
     )?.[0]!;
   }
 
-  const currentWellDataSV = useSharedValue<Board.CellProps | null>(
-    currentWellId ? getCurrentWellData(currentWellId) : null
+  const currentWellDataSV = useSharedValue(
+    Object.entries(layout.wells).find(
+      ([wellId]) => wellId === currentWellId
+    )?.[1] ?? null
   );
-  const { onBoard, setOnBoard, myTurn } = usePieceState(
-    team,
-    currentWellId,
-    id
-  );
+  const { onBoard, setOnBoard, myTurn } = usePieceState(team, currentWellId);
 
   const isHeld = useSharedValue(false);
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
-
-  useEffect(() => {}, [layout.boardPieceLocations]);
 
   useEffect(() => {
     if (onBoard) {
@@ -78,7 +67,10 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
 
   useEffect(() => {
     if (pieceState === PieceState.inWell) {
-      currentWellDataSV.value = getCurrentWellData(currentWellId);
+      currentWellDataSV.value =
+        Object.entries(layout.wells).find(
+          ([wellId]) => wellId === currentWellId
+        )?.[1] ?? null;
     } else {
       currentWellDataSV.value = null;
     }
@@ -310,8 +302,9 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
       { translateY: translateY.value },
       { scaleX: scaleX.value },
       { scaleY: scaleY.value },
-      // { skewX: skewX.value },
-      // { skewY: skewY.value },
+      { skewX: skewX.value },
+      { skewY: skewY.value },
+      { rotate: `${rotation.value}deg` },
     ],
     // shadows: [
     //   { shadowOpacity: shadowOpacity.value },
@@ -345,13 +338,22 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
           <Highlight props={highlightProps} />
         </Animated.View>
       </GestureDetector>
-      <Button
-        title="Test Animation"
-        style={{ position: "absolute" }}
-        onPress={() => {
-          animateWinner({ translateX, translateY, scaleX, scaleY });
-        }}
-      />
+      <View style={{ position: "absolute", top: 10, left: 10 }}>
+        <Button
+          title="Test Animation"
+          onPress={() => {
+            animateWinner({
+              translateX,
+              translateY,
+              scaleX,
+              scaleY,
+              skewX,
+              skewY,
+              rotation,
+            });
+          }}
+        />
+      </View>
     </>
   );
 };

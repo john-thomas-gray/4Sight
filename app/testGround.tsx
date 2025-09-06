@@ -1,23 +1,48 @@
-import { Button, View } from "react-native";
-import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
-const TestGround = () => {
-  const width = useSharedValue(100);
+import React from "react";
+import { Button, StyleSheet, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
-  const handlePress = () => {
-    width.value = withSpring(width.value + 50);
+export default function TestGround() {
+  // Shared value for rotation
+  const rotation = useSharedValue(0);
+
+  // Animated style
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { rotate: `${rotation.value}deg` }, // rotation in degrees
+      ],
+    };
+  });
+
+  const rotateBox = () => {
+    // Rotate 180 degrees if at 0, else rotate back to 0
+    rotation.value = withTiming(rotation.value === 0 ? 180 : 0, {
+      duration: 500, // animation duration in ms
+    });
   };
+
   return (
-    <View style={{ flex: 1, alignItems: "center" }}>
-      <Animated.View
-        style={{
-          width,
-          height: 100,
-          backgroundColor: "violet",
-        }}
-      />
-      <Button onPress={handlePress} title="Click me" />
+    <View style={styles.container}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+      <Button title="Rotate" onPress={rotateBox} />
     </View>
   );
-};
+}
 
-export default TestGround;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  box: {
+    width: 100,
+    height: 100,
+    backgroundColor: "tomato",
+  },
+});

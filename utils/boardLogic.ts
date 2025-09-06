@@ -8,32 +8,32 @@ type GetCellListProps = {
 };
 
 export const getCellArray = ({ layout, result, team }: GetCellListProps) => {
-  const wellArray = Object.entries(layout.wells[team]).map(([id, layout]) => ({
+  const wellArray = Object.entries(layout.wells[team]).map(([id, cell]) => ({
     id,
-    layout,
+    ...cell,
     type: Board.CellType.Well as const,
     team,
   }));
 
   if (result === "wells") return wellArray;
 
-  const slotArray = Object.entries(layout.slots).map(([id, layout]) => ({
+  const slotArray = Object.entries(layout.slots).map(([id, cell]) => ({
     id,
-    layout,
+    ...cell,
     type: Board.CellType.Slot as const,
   }));
 
   if (result === "slots") return slotArray;
 
-  const spaceArray = Object.entries(layout.spaces).map(([id, layout]) => ({
+  const spaceArray = Object.entries(layout.spaces).map(([id, cell]) => ({
     id,
-    layout,
+    ...cell,
     type: Board.CellType.Space as const,
   }));
 
   if (result === "spaces") return spaceArray;
 
-  const allCells: Board.CellProps[] = [
+  const allCells: Board.CellLayout[] = [
     ...wellArray,
     ...slotArray,
     ...spaceArray,
