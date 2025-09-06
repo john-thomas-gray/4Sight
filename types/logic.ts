@@ -1,3 +1,5 @@
+import { Team } from "./board";
+
 export enum Turn {
   One = 1,
   Two = 2,
@@ -15,3 +17,17 @@ export enum GameState {
   Playing = "playing",
   Finished = "finished",
 }
+
+export enum PieceState {
+  inWell = "inWell",
+  onBoard = "onBoard",
+  isHeld = "isHeld",
+  partial = "partial",
+  winner = "winner",
+}
+
+export type PieceProps = {
+  team: Team;
+  id: string;
+  state: PieceState;
+};

@@ -58,12 +58,10 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
 };
 
 // Hook for consuming the context
-export const useSettingsContext = () => {
+export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (!context) {
-    throw new Error(
-      "useSettingsContext must be used within a SettingsProvider"
-    );
+    throw new Error("useSettings must be used within a SettingsProvider");
   }
   return context;
 };

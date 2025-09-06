@@ -5,7 +5,7 @@ type GravityProps = {
   direction: Direction.Up | Direction.Down | Direction.Left | Direction.Right;
 };
 
-const moveConsole = ({
+const moveLog = ({
   pieceId,
   currentSpaceId,
   targetSpaceId,
@@ -39,7 +39,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
-              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
+              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -62,7 +62,7 @@ export const useGravity = () => {
             }
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
-              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
+              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -86,7 +86,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
-              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
+              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -110,7 +110,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
-              // moveConsole({ currentSpaceId, targetSpaceId, pieceId });
+              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];

@@ -1,5 +1,6 @@
 import { WINNER_STATE_DELAY } from "@/constants/animations";
-import { PieceProps, PieceState, Team } from "@/types/board";
+import { Team } from "@/types/board";
+import { PieceProps, PieceState } from "@/types/logic";
 import { BoardPiece, BoardPieces } from "./findPieceRelationships";
 import setPieceState from "./setPieceState";
 

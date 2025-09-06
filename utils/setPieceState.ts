@@ -1,4 +1,4 @@
-import { PieceProps, PieceState } from "@/types/board";
+import { PieceProps, PieceState } from "@/types/logic";
 
 const setPieceState = ({
   id,

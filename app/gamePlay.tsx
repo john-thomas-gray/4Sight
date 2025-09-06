@@ -23,13 +23,7 @@ const GamePlay = () => {
 
       {layout.layoutReady &&
         Object.entries(logic.pieces).map(([id, p]) => (
-          <Piece
-            key={id}
-            id={id}
-            team={p.team}
-            initialPosition={p.initialPosition}
-            pieceState={p.pieceState}
-          />
+          <Piece key={id} id={id} team={p.team} state={p.state} />
         ))}
 
       {!layout.layoutReady && <LoadingScreen />}

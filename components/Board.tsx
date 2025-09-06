@@ -1,3 +1,4 @@
+import animateGravity from "@/animations/animateGravity";
 import {
   BASE_CELL_SIZE,
   BOARD_SIZE,
@@ -7,7 +8,7 @@ import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction } from "@/types/board";
 import { GameState } from "@/types/logic";
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   Directions,
@@ -21,11 +22,14 @@ import Space from "./Space";
 
 type BoardProps = {
   className?: string;
-  onRotate?: (direction: "clockwise" | "counterclockwise") => void;
+  onRotate?: (
+    direction: "clockwise" | "gravityAnimationTriggererclockwise"
+  ) => void;
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { logic, layout } = useGameContext();
+  const { logic, layout, animation } = useGameContext();
+
   const isSlotPosition = (row: number, col: number) => {
     return (
       (row === 0 && col > 0 && col < BOARD_SIZE_ZERO_IDX) || // Top
@@ -45,8 +49,27 @@ const Board = ({ className, onRotate }: BoardProps) => {
   };
 
   const pullPieces = useGravity();
+
+  useLayoutEffect(() => {
+    Object.keys(logic.pieces).forEach((pieceId) => {
+      const entry = Object.entries(layout.boardPieceLocations).find(
+        ([, value]) => value === pieceId
+      );
+      if (entry) {
+        const [spaceId] = entry;
+        const animate = animation.pieces[pieceId];
+        animateGravity({
+          translateX: animate.translateX,
+          translateY: animate.translateY,
+          spaceLayout: layout.spaces[spaceId],
+        });
+      }
+    });
+  }, [layout.boardPieceLocations]);
+
   const executePull = (direction: Direction) => {
     if (logic.gameState === GameState.Finished) return;
+
     pullPieces(direction);
   };
 
@@ -75,8 +98,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);
-
   const boardGestures = Gesture.Exclusive(pullGestures);
+
   return (
     <GestureDetector gesture={boardGestures}>
       <Animated.View className={className}>

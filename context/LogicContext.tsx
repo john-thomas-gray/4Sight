@@ -1,5 +1,12 @@
 import { Animations } from "@/constants";
-import { PieceProps, PieceState, Team } from "@/types/board";
+import { Team } from "@/types/board";
+import {
+  GameMode,
+  GameState,
+  PieceProps,
+  PieceState,
+  Turn,
+} from "@/types/logic";
 import findPieceRelationships from "@/utils/findPieceRelationships";
 import setWinningPieces from "@/utils/setWinningPieces";
 import React, {
@@ -9,8 +16,7 @@ import React, {
   useContext,
   useState,
 } from "react";
-import { GameMode, GameState, Turn } from "../types/logic";
-import { useLayoutContext } from "./LayoutContext";
+import { useLayout } from "./LayoutContext";
 
 export type LogicContextType = {
   gameMode: GameMode;
@@ -39,7 +45,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
 
-  const { wells, layoutReady, setWellPieceLocations } = useLayoutContext();
+  const { wells, layoutReady, setWellPieceLocations } = useLayout();
 
   const generateWellIds = (): string[] => {
     const wells: string[] = [];
@@ -75,8 +81,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieces[id] = {
         id,
         team,
-        initialPosition,
-        pieceState: PieceState.inWell,
+        state: PieceState.inWell,
       };
 
       setWellPieceLocations((prev) => ({
@@ -198,9 +203,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-export const useLogicContext = () => {
+export const useLogic = () => {
   const context = useContext(LogicContext);
-  if (!context)
-    throw new Error("useLogicContext must be used within LogicProvider");
+  if (!context) throw new Error("useLogic must be used within LogicProvider");
   return context;
 };

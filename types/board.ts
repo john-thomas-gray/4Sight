@@ -33,18 +33,3 @@ export enum Team {
   Both = "both",
   Unassigned = "unassigned",
 }
-
-export enum PieceState {
-  inWell = "inWell",
-  onBoard = "onBoard",
-  isHeld = "isHeld",
-  partial = "partial",
-  winner = "winner",
-}
-
-export type PieceProps = {
-  team: Team;
-  id: string;
-  initialPosition: { x: number; y: number };
-  pieceState: PieceState;
-};

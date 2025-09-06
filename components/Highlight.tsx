@@ -1,4 +1,4 @@
-import { PieceState } from "@/types/board";
+import { PieceState } from "@/types/logic";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
