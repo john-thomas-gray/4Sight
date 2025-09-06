@@ -1,12 +1,10 @@
 import animateGravity from "@/animations/animateGravity";
-import {
-  animatePieceDrop,
-  animateToSelectedCell,
-} from "@/animations/animations";
+import { animatePieceDrop } from "@/animations/animations";
 import { animateWinner } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { usePieceState } from "@/hooks/usePieceState";
+import { Board } from "@/types";
 import { PieceProps, PieceState, Team } from "@/types/board";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
@@ -35,6 +33,14 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
   const skewY = useSharedValue("0deg");
   const rotation = useSharedValue(0);
 
+  const getCurrentWellData = (id: string) => {
+    return (
+      getCellArray({ layout, result: "wells", team }).find(
+        (well) => well.id === id
+      ) || null
+    );
+  };
+
   let currentWellId: string = "";
   if (
     Object.entries(layout.wellPieceLocations!).find(
@@ -46,10 +52,8 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
     )?.[0]!;
   }
 
-  const currentWellDataSV = useSharedValue(
-    Object.entries(layout.wells[team]).find(
-      ([wellId]) => wellId === currentWellId
-    )?.[1] ?? null
+  const currentWellDataSV = useSharedValue<Board.CellProps | null>(
+    currentWellId ? getCurrentWellData(currentWellId) : null
   );
   const { onBoard, setOnBoard, myTurn } = usePieceState(team, currentWellId);
 
@@ -66,10 +70,7 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
 
   useEffect(() => {
     if (pieceState === PieceState.inWell) {
-      currentWellDataSV.value =
-        Object.entries(layout.wells[team]).find(
-          ([wellId]) => wellId === currentWellId
-        )?.[1] ?? null;
+      getCurrentWellData(id);
     } else {
       currentWellDataSV.value = null;
     }
@@ -289,7 +290,7 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
           }
         } else if (isWell) {
           runOnJS(setWPLUI)(selectedCell.id);
-          animateToSelectedCell({ translateX, translateY, selectedCell });
+          // animateToSelectedCell({ translateX, translateY, selectedCell });
         }
         console.log(isWell, isSlot, isSpace);
       }
