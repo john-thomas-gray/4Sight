@@ -27,7 +27,6 @@ const GamePlay = () => {
             key={id}
             id={id}
             team={p.team}
-            currentWellId={p.currentWellId}
             initialPosition={p.initialPosition}
             pieceState={p.pieceState}
           />

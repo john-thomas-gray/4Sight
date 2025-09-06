@@ -1,6 +1,5 @@
 import animateGravity from "@/animations/animateGravity";
 import {
-  animateMisplacedPiece,
   animatePieceDrop,
   animateToSelectedCell,
 } from "@/animations/animations";
@@ -48,7 +47,7 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
   }
 
   const currentWellDataSV = useSharedValue(
-    Object.entries(layout.wells).find(
+    Object.entries(layout.wells[team]).find(
       ([wellId]) => wellId === currentWellId
     )?.[1] ?? null
   );
@@ -68,7 +67,7 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
   useEffect(() => {
     if (pieceState === PieceState.inWell) {
       currentWellDataSV.value =
-        Object.entries(layout.wells).find(
+        Object.entries(layout.wells[team]).find(
           ([wellId]) => wellId === currentWellId
         )?.[1] ?? null;
     } else {
@@ -139,7 +138,7 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
 
       for (const selectedCell of allCells) {
         if (!selectedCell.layout) {
-          animateMisplacedPiece({ translateX, translateY, currentWellDataSV });
+          // animateMisplacedPiece({ translateX, translateY, currentWellDataSV });
           continue;
         }
 
@@ -222,11 +221,11 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
             ) {
               runOnJS(setWPLUI)(currentWellDataSV.value.id);
 
-              animateMisplacedPiece({
-                translateX,
-                translateY,
-                currentWellDataSV,
-              });
+              // animateMisplacedPiece({
+              //   translateX,
+              //   translateY,
+              //   currentWellDataSV,
+              // });
             }
             return;
           }
@@ -280,11 +279,11 @@ const Piece = ({ team, id, initialPosition, pieceState }: PieceProps) => {
                 currentWellDataSV.value?.id
               ) {
                 runOnJS(setWPLUI)(currentWellDataSV.value.id);
-                animateMisplacedPiece({
-                  translateX,
-                  translateY,
-                  currentWellDataSV,
-                });
+                // animateMisplacedPiece({
+                //   translateX,
+                //   translateY,
+                //   currentWellDataSV,
+                // });
               }
             }
           }

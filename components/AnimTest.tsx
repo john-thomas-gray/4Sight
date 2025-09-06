@@ -16,12 +16,6 @@ const AnimTest = ({ team }: { team: Team }) => {
   const { settings } = useGameContext();
   const translateX = useSharedValue(25);
   const translateY = useSharedValue(25);
-  const mockWellData = useSharedValue({
-    id: "20-12",
-    layout: { height: 40, pageX: 100, pageY: 200, width: 40 },
-    team: "teamTwo",
-    type: "well",
-  });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

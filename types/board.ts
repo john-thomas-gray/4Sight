@@ -1,8 +1,8 @@
 export type CellProps = {
   id: string;
   type: CellType;
-  team: Team;
-  layout: CellLayout;
+  team?: Team;
+  layout?: CellLayout;
 };
 
 export type CellLayout = {
