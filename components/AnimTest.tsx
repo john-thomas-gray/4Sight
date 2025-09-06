@@ -1,7 +1,7 @@
 import animateTest from "@/animations/animateTest";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
-import { HighlightProps, Team } from "@/types/board";
+import { Team } from "@/types/board";
 import React from "react";
 import { Pressable, ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -10,7 +10,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-import Highlight from "./Highlight";
 
 const AnimTest = ({ team }: { team: Team }) => {
   const { settings } = useGameContext();
@@ -65,9 +64,7 @@ const AnimTest = ({ team }: { team: Team }) => {
         style={{ height: 40, width: 40, backgroundColor: "red" }}
       />
       <GestureDetector gesture={move}>
-        <Animated.View style={[baseStyle, animatedStyles]}>
-          <Highlight status={HighlightProps.Off} />
-        </Animated.View>
+        <Animated.View style={[baseStyle, animatedStyles]}></Animated.View>
       </GestureDetector>
     </>
   );
