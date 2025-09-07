@@ -20,19 +20,22 @@ export default function setWinningPieces({
   animations,
 }: SetWinningPieces) {
   const updatePieceState = (groups: BoardPieces[], pieceState: PieceState) => {
-    let delay = WINNER_STATE_DELAY;
+    let startDelay = WINNER_STATE_DELAY;
     const pieceAnims = animations;
     groups.forEach((group) => {
       group.forEach((boardPiece: BoardPiece) => {
-        setTimeout(() => {
-          setPieceState({
-            id: boardPiece.pieceId,
-            setPieces: setPieces,
-            pieceState: pieceState,
-          });
-          animateWinner(pieceAnims[boardPiece.pieceId]);
-        }, delay);
-        delay += WINNER_STATE_DELAY;
+        console.log(group);
+        setPieceState({
+          id: boardPiece.pieceId,
+          setPieces: setPieces,
+          pieceState: pieceState,
+        });
+        animateWinner({
+          ...pieceAnims[boardPiece.pieceId],
+          startDelay,
+        });
+
+        startDelay += 300;
       });
     });
   };

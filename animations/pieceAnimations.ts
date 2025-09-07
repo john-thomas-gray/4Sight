@@ -17,6 +17,7 @@ type AnimateWinner = {
   shadowOpacity?: SharedValue<number>;
   shadowRadius?: SharedValue<number>;
   shadowOffset?: SharedValue<number>;
+  startDelay: number;
 };
 
 export function animateWinner({
@@ -27,6 +28,7 @@ export function animateWinner({
   skewX,
   skewY,
   rotation,
+  startDelay,
 }: // shadowOpacity,
 // shadowRadius,
 // shadowOffset,
@@ -59,10 +61,13 @@ AnimateWinner) {
 
   const animation = ({ svx, svy, v0, v1 }: Animation) => {
     svx.value = withSequence(
-      withTiming(v1.x, {
-        duration: 1000,
-        easing: Easing.inOut(Easing.exp),
-      }),
+      withDelay(
+        startDelay,
+        withTiming(v1.x, {
+          duration: 1000,
+          easing: Easing.inOut(Easing.exp),
+        })
+      ),
       withDelay(
         300,
         withTiming(v0.x, {
@@ -72,10 +77,13 @@ AnimateWinner) {
       )
     );
     svy.value = withSequence(
-      withTiming(v1.y, {
-        duration: 1000,
-        easing: Easing.inOut(Easing.exp),
-      }),
+      withDelay(
+        startDelay,
+        withTiming(v1.y, {
+          duration: 1000,
+          easing: Easing.inOut(Easing.exp),
+        })
+      ),
       withDelay(
         300,
         withTiming(v0.y, {
@@ -95,10 +103,13 @@ AnimateWinner) {
 
   const animationSkew = ({ svx, svy, v0, v1 }: AnimationSkew) => {
     svx.value = withSequence(
-      withTiming(v1.x, {
-        duration: 1000,
-        easing: Easing.inOut(Easing.exp),
-      }),
+      withDelay(
+        startDelay,
+        withTiming(v1.x, {
+          duration: 1000,
+          easing: Easing.inOut(Easing.exp),
+        })
+      ),
       withDelay(
         300,
         withTiming(v0.x, {
@@ -108,10 +119,13 @@ AnimateWinner) {
       )
     );
     svy.value = withSequence(
-      withTiming(v1.y, {
-        duration: 1000,
-        easing: Easing.inOut(Easing.exp),
-      }),
+      withDelay(
+        startDelay,
+        withTiming(v1.y, {
+          duration: 1000,
+          easing: Easing.inOut(Easing.exp),
+        })
+      ),
       withDelay(
         300,
         withTiming(v0.y, {
