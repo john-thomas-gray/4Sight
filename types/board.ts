@@ -1,3 +1,5 @@
+import { Board } from ".";
+
 //!@# get rid of question marks
 export type CellProps = {
   id: string;
@@ -34,3 +36,16 @@ export enum Team {
   Both = "both",
   Unassigned = "unassigned",
 }
+
+export type EachCellType =
+  | {
+      id: string;
+      layout: Board.CellLayout;
+      type: Board.CellType.Slot;
+    }
+  | {
+      id: string;
+      layout: Board.CellLayout;
+      type: Board.CellType.Space;
+    }
+  | Board.CellProps;

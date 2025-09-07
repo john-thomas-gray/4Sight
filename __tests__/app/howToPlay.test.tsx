@@ -1,7 +1,6 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import React from "react";
 
-import HowToPlay from "@/app/howToPlay";
 
 jest.mock("@/components/BackButton", () => {
   const MockBackButton = () => <></>;
@@ -11,7 +10,7 @@ jest.mock("@/components/BackButton", () => {
 
 describe("HowToPlay", () => {
   it("renders Two Player instructions by default", () => {
-    const { getByText } = render(<HowToPlay />);
+    const { getByText } = render(<bingus />);
     expect(getByText("How to Play")).toBeTruthy();
     expect(
       expect(
@@ -22,7 +21,7 @@ describe("HowToPlay", () => {
     // expect(getByText("Four Player")).toHaveStyle({ color: "gray" });
   });
   it("given two player instructions are displayed, when button is pressed, then the page displays four player instructions", () => {
-    const { getByText } = render(<HowToPlay />);
+    const { getByText } = render(<bingus />);
     fireEvent.press(getByText("Four Player"));
 
     expect(getByText(/Players are on teams/i)).toBeTruthy();
@@ -31,7 +30,7 @@ describe("HowToPlay", () => {
   });
 
   it("given four player instructions are displayed, when button is pressed, then the page displays two player instructions", () => {
-    const { getByText } = render(<HowToPlay />);
+    const { getByText } = render(<bingus />);
     fireEvent.press(getByText("Four Player"));
     fireEvent.press(getByText("Two Player"));
 

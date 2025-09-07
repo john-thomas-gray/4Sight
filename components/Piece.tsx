@@ -1,4 +1,4 @@
-import { animatePieceDrop } from "@/animations/animations";
+import { animateMisplacedPiece, animatePieceDrop, animateToSelectedCell } from "@/animations/animations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { Board } from "@/types";
@@ -6,7 +6,6 @@ import { Team } from "@/types/board";
 import { PieceProps, PieceState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
-import { hasLayout } from "@/utils/typeGuards";
 import React, { useEffect, useState } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -58,7 +57,6 @@ const Piece = ({ team, id, state }: PieceProps) => {
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
-    // console.log(layout.wellPieceLocations);
   }, [layout.boardPieceLocations]);
 
   useEffect(() => {
@@ -144,7 +142,8 @@ const Piece = ({ team, id, state }: PieceProps) => {
           pieceCenter.x <= selectedCellCoordX + selectedCellWidth &&
           pieceCenter.y >= selectedCellCoordY &&
           pieceCenter.y <= selectedCellCoordY + selectedCellHeight;
-        if (!cellFound) continue;
+
+          if (!cellFound) continue
 
         const id = selectedCell.id;
         const isSlot = selectedCell.id in layout.slots;
@@ -157,7 +156,9 @@ const Piece = ({ team, id, state }: PieceProps) => {
         ];
         let prevRow: number | null = null;
         let prevCol: number | null = null;
+
         if (isSlot) {
+          console.log("isSlot")
           const slotDirection =
             nextRow === 8
               ? "N"
@@ -204,18 +205,18 @@ const Piece = ({ team, id, state }: PieceProps) => {
           }
 
           if (prevRow === null || prevCol === null) {
-            console.warn("No free board space near slot:", selectedCell.id);
+            console.warn("No free board space near slot. Slot blocked!:", selectedCell.id);
             if (
               currentWellDataSV.value?.layout &&
               currentWellDataSV.value?.id
             ) {
               runOnJS(setWPLUI)(currentWellDataSV.value.id);
 
-              // animateMisplacedPiece({
-              //   animate.translateX,
-              //   animate.translateY,
-              //   currentWellDataSV,
-              // });
+              animateMisplacedPiece({
+                translateX: animate.translateX,
+                translateY: animate.translateY,
+                currentWellLayout: currentWellDataSV.value.layout,
+              });
             }
             return;
           }
@@ -224,39 +225,54 @@ const Piece = ({ team, id, state }: PieceProps) => {
           const finalSpaceLayout = layout.spaces[finalSpaceId];
 
           if (!finalSpaceLayout) {
-            console.warn("No layout for final board space", finalSpaceId);
             return;
           }
 
-          // animatePieceDrop({
-          //   translateX: animate.translateX,
-          //   translateY: animate.translateY,
-          //   slotX: selectedCellCoordX,
-          //   slotY: selectedCellCoordY,
-          //   slotWidth: selectedCellWidth,
-          //   slotHeight: selectedCellHeight,
-          //   spaceX: finalSpaceLayout.pageX,
-          //   spaceY: finalSpaceLayout.pageY,
-          //   spaceWidth: finalSpaceLayout.width,
-          //   spaceHeight: finalSpaceLayout.height,
-          // });
-
-          runOnJS(setBPLUI)(finalSpaceId);
-        } else if (isSpace) {
-          const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
-          const slotData = slots.find((s) => s.id === dropSlotData.dropSlot.id);
-          if (!hasLayout(slotData)) continue;
           animatePieceDrop({
             translateX: animate.translateX,
             translateY: animate.translateY,
-            slotLayout: slotData.layout,
-            // !@#
+            slotLayout: selectedCell.layout!,
+            spaceLayout: finalSpaceLayout,
+          });
+
+          runOnJS(setBPLUI)(finalSpaceId);
+          return;
+        }
+        else if (isSpace) {
+          console.log("isSpace")
+          const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
+          const slotData = slots.find((s) => s.id === dropSlotData.dropSlot.id);
+          if(!slotData){
+
+            animateMisplacedPiece({
+              translateX: animate.translateX,
+              translateY: animate.translateY,
+              currentWellLayout: currentWellDataSV!.value!.layout!,
+            });
+            continue
+          }
+          animatePieceDrop({
+            translateX: animate.translateX,
+            translateY: animate.translateY,
+            slotLayout: slotData!.layout!,
             spaceLayout: selectedCell.layout!,
           });
 
           runOnJS(setBPLUI)(id);
+          return
+        } else if (isWell) {
+          console.log("isWell")
+          animateToSelectedCell({translateX: animate.translateX, translateY: animate.translateY, selectedCell})
+          return;
         }
       }
+
+      animateMisplacedPiece({
+        translateX: animate.translateX,
+        translateY: animate.translateY,
+        currentWellLayout: currentWellDataSV!.value!.layout!,
+      });
+      return
     });
 
   const animatedStyles = useAnimatedStyle(() => ({
@@ -301,22 +317,6 @@ const Piece = ({ team, id, state }: PieceProps) => {
           <Highlight props={highlightProps} />
         </Animated.View>
       </GestureDetector>
-      {/* <View style={{ position: "absolute", top: 10, left: 10 }}>
-        <Button
-          title="Test Animation"
-          onPress={() => {
-            animateWinner({
-              translateX: animate.translateX,
-              translateY: animate.translateY,
-              scaleX: animate.scaleX,
-              scaleY: animate.scaleY,
-              skewX: animate.skewX,
-              skewY: animate.skewY,
-              rotation: animate.rotation,
-            });
-          }}
-        />
-      </View> */}
     </>
   );
 };

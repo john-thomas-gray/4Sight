@@ -31,27 +31,29 @@ slight pulsing. Highlight undulates and shimmers.
 
 ALPHA BUILD
 
-Menu Tab
+Menu Tab\*
 
-- On the play screen, pulling brings the homepage back
+- On the play screen, pulling brings the homepage back\*
 - Reacts to device orientation so that it is never on the blocked side
+- Makes itself know at the beginning of the game then retracts
+- Its color shares a color that is the border of the menu screen
 
 Tutorial
 
 - Interactive introduction that runs the first time you play
 
-Async storage saves board state.
+Async storage saves board state.\*
 
 Gestures that affect game state:
 
-- Swipe back and forth three times to forfeit
-- Swipe to clear the board and restart the game
+- Swipe back and forth three times to forfeit\*
+- Swipe to clear the board and restart the game\*
 - Shaking forfeits
 
-Win State
+\*Win State
 
-- Animation? Pieces fill in gold jump and jiggle in a cascade
-- Message. Appears and disappears.
+- Animation? Pieces fill in gold jump and jiggle in a cascade\*
+- Message. Appears and disappears.\*
 - Disable movements
   - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
   - Shake phone knocks all the pieces off and they go back to their wells
@@ -69,13 +71,6 @@ Feedforward:
   Signifiers
   - Available/unavailable slot visualizations
 
-Bugs:
-
-- animate to slot, to space doesn't work. The to slot part doesn't animate.
-- Can drop pieces while pull is animating
-- Can pull when you pull
-- Placing outside a viable space crashes the game
-
 Feedback:
 
 - Piece dropped on inaccessible space bounces off glass.
@@ -89,3 +84,27 @@ Refactoring:
 Tests:
 
 - For everything
+
+Sunday:
+Fix animations
+
+- Placing outside a viable space crashes the game
+- animate to slot, to space doesn't work. The to slot part doesn't animate.
+- Winner animation starts immediately and interupts well to slot animation
+
+Monday:
+
+- Win message
+- Set available gestures
+- Swipe pieces off to restart
+
+Tuesday:
+
+- Menu tab to indicate how to get back to the main menu (nothing fancy)
+- Swipe back and forth to forfeit
+- Can drop pieces while pull is animating
+- Can pull when you pull
+
+Wednesday:
+
+- Async storage saves board state.

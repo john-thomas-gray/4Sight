@@ -1,5 +1,5 @@
 import { animateWinner } from "@/animations/pieceAnimations";
-import { WINNER_V0_DELAY } from "@/constants/animations";
+import { WINNER_V1_DELAY } from "@/constants/animations";
 import { PieceAnimation } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import { PieceProps, PieceState } from "@/types/logic";
@@ -20,11 +20,11 @@ export default function setWinningPieces({
   animations,
 }: SetWinningPieces) {
   const updatePieceState = (groups: BoardPieces[], pieceState: PieceState) => {
-    let startDelay = WINNER_V0_DELAY;
+    let v1Delay = WINNER_V1_DELAY;
     const pieceAnims = animations;
     groups.forEach((group) => {
       group.forEach((boardPiece: BoardPiece) => {
-        console.log(group);
+        // console.log(group);
         setPieceState({
           id: boardPiece.pieceId,
           setPieces: setPieces,
@@ -32,10 +32,10 @@ export default function setWinningPieces({
         });
         animateWinner({
           ...pieceAnims[boardPiece.pieceId],
-          startDelay,
+          v1Delay,
         });
 
-        startDelay += 100;
+        v1Delay += 100;
       });
     });
   };
