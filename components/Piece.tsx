@@ -1,5 +1,4 @@
 import { animatePieceDrop } from "@/animations/animations";
-import { animateWinner } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { Board } from "@/types";
@@ -9,7 +8,7 @@ import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { hasLayout } from "@/utils/typeGuards";
 import React, { useEffect, useState } from "react";
-import { Button, View, ViewStyle } from "react-native";
+import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -302,7 +301,7 @@ const Piece = ({ team, id, state }: PieceProps) => {
           <Highlight props={highlightProps} />
         </Animated.View>
       </GestureDetector>
-      <View style={{ position: "absolute", top: 10, left: 10 }}>
+      {/* <View style={{ position: "absolute", top: 10, left: 10 }}>
         <Button
           title="Test Animation"
           onPress={() => {
@@ -317,7 +316,7 @@ const Piece = ({ team, id, state }: PieceProps) => {
             });
           }}
         />
-      </View>
+      </View> */}
     </>
   );
 };

@@ -3,4 +3,8 @@ export const SLOT_INSERT_DURATION_ALT = 200;
 export const SLOT_TO_SPACE_DURATION = 700;
 export const WELL_RETURN_DURATION = 300;
 export const BOARD_COLOR_CHANGE_DURATION = SLOT_TO_SPACE_DURATION + 100;
-export const WINNER_STATE_DELAY = 200;
+
+export const WINNER_V1_DELAY = 1000;
+export const WINNER_V1 = 700;
+export const WINNER_V0_DELAY = 100;
+export const WINNER_V0 = 700;

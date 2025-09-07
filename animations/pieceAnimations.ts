@@ -1,4 +1,10 @@
 import {
+  WINNER_V0,
+  WINNER_V0_DELAY,
+  WINNER_V1,
+  WINNER_V1_DELAY,
+} from "@/constants/animations";
+import {
   Easing,
   SharedValue,
   withDelay,
@@ -17,7 +23,7 @@ type AnimateWinner = {
   shadowOpacity?: SharedValue<number>;
   shadowRadius?: SharedValue<number>;
   shadowOffset?: SharedValue<number>;
-  startDelay: number;
+  v1Delay: number;
 };
 
 export function animateWinner({
@@ -28,7 +34,7 @@ export function animateWinner({
   skewX,
   skewY,
   rotation,
-  startDelay,
+  v1Delay,
 }: // shadowOpacity,
 // shadowRadius,
 // shadowOffset,
@@ -62,32 +68,32 @@ AnimateWinner) {
   const animation = ({ svx, svy, v0, v1 }: Animation) => {
     svx.value = withSequence(
       withDelay(
-        startDelay,
+        v1Delay,
         withTiming(v1.x, {
-          duration: 1000,
+          duration: WINNER_V1,
           easing: Easing.inOut(Easing.exp),
         })
       ),
       withDelay(
-        300,
+        WINNER_V1_DELAY,
         withTiming(v0.x, {
-          duration: 500,
+          duration: WINNER_V0,
           easing: Easing.bounce,
         })
       )
     );
     svy.value = withSequence(
       withDelay(
-        startDelay,
+        v1Delay,
         withTiming(v1.y, {
-          duration: 1000,
+          duration: WINNER_V1,
           easing: Easing.inOut(Easing.exp),
         })
       ),
       withDelay(
-        300,
+        WINNER_V0_DELAY,
         withTiming(v0.y, {
-          duration: 500,
+          duration: WINNER_V0,
           easing: Easing.bounce,
         })
       )
@@ -104,32 +110,32 @@ AnimateWinner) {
   const animationSkew = ({ svx, svy, v0, v1 }: AnimationSkew) => {
     svx.value = withSequence(
       withDelay(
-        startDelay,
+        v1Delay,
         withTiming(v1.x, {
-          duration: 1000,
+          duration: WINNER_V1,
           easing: Easing.inOut(Easing.exp),
         })
       ),
       withDelay(
-        300,
+        WINNER_V0_DELAY,
         withTiming(v0.x, {
-          duration: 500,
+          duration: WINNER_V0,
           easing: Easing.bounce,
         })
       )
     );
     svy.value = withSequence(
       withDelay(
-        startDelay,
+        v1Delay,
         withTiming(v1.y, {
-          duration: 1000,
+          duration: WINNER_V1,
           easing: Easing.inOut(Easing.exp),
         })
       ),
       withDelay(
-        300,
+        WINNER_V0_DELAY,
         withTiming(v0.y, {
-          duration: 500,
+          duration: WINNER_V0,
           easing: Easing.bounce,
         })
       )

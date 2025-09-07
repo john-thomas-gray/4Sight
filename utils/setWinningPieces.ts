@@ -1,5 +1,5 @@
 import { animateWinner } from "@/animations/pieceAnimations";
-import { WINNER_STATE_DELAY } from "@/constants/animations";
+import { WINNER_V0_DELAY } from "@/constants/animations";
 import { PieceAnimation } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import { PieceProps, PieceState } from "@/types/logic";
@@ -20,7 +20,7 @@ export default function setWinningPieces({
   animations,
 }: SetWinningPieces) {
   const updatePieceState = (groups: BoardPieces[], pieceState: PieceState) => {
-    let startDelay = WINNER_STATE_DELAY;
+    let startDelay = WINNER_V0_DELAY;
     const pieceAnims = animations;
     groups.forEach((group) => {
       group.forEach((boardPiece: BoardPiece) => {
@@ -35,7 +35,7 @@ export default function setWinningPieces({
           startDelay,
         });
 
-        startDelay += 300;
+        startDelay += 100;
       });
     });
   };

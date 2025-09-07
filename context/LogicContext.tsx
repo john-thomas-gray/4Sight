@@ -1,4 +1,4 @@
-import { Animations } from "@/constants";
+import { Animations, Logic } from "@/constants";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import {
@@ -121,7 +121,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   ) => {
     const pieceRelationships = findPieceRelationships({
       boardPieceLocations: updatedBoardPieceLocations,
-      winLen: 4,
+      winLen: Logic.WIN_LENGTH,
       allPieces: pieces,
     });
 
