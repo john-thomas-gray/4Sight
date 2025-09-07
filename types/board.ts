@@ -1,3 +1,4 @@
+//!@# get rid of question marks
 export type CellProps = {
   id: string;
   type: CellType;

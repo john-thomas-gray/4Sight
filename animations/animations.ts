@@ -1,5 +1,6 @@
 import { Animations, GameElements } from "@/constants";
 import { Board } from "@/types";
+import { CellLayout } from "@/types/board";
 import {
   Easing,
   SharedValue,
@@ -130,61 +131,72 @@ export const animateSlotToSpace = ({
   );
 };
 
+// translateX: SharedValue<number>;
+// translateY: SharedValue<number>;
+// slotX: number;
+// slotY: number;
+// slotWidth: number;
+// slotHeight: number;
+// spaceX: number;
+// spaceY: number;
+// spaceWidth: number;
+// spaceHeight: number;
+
 export const animatePieceDrop = ({
   translateX,
   translateY,
-  slotX,
-  slotY,
-  slotWidth,
-  slotHeight,
-  spaceX,
-  spaceY,
-  spaceWidth,
-  spaceHeight,
+  slotLayout,
+  spaceLayout,
 }: {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
-  slotX: number;
-  slotY: number;
-  slotWidth: number;
-  slotHeight: number;
-  spaceX: number;
-  spaceY: number;
-  spaceWidth: number;
-  spaceHeight: number;
+  slotLayout: CellLayout;
+  spaceLayout: CellLayout;
 }) => {
   "worklet";
   translateX.value = withSequence(
-    withTiming(slotX + slotWidth / 2 - GameElements.PIECE_RADIUS, {
-      duration: Animations.SLOT_INSERT_DURATION,
-      easing: Easing.inOut(Easing.quad),
-    }),
-    withTiming(spaceX + spaceWidth / 2 - GameElements.PIECE_RADIUS, {
-      duration: Animations.SLOT_TO_SPACE_DURATION,
-      easing: Easing.bounce,
-    })
+    withTiming(
+      slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_INSERT_DURATION,
+        easing: Easing.inOut(Easing.quad),
+      }
+    ),
+    withTiming(
+      spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_TO_SPACE_DURATION,
+        easing: Easing.bounce,
+      }
+    )
   );
 
   translateY.value = withSequence(
-    withTiming(slotY + slotHeight / 2 - GameElements.PIECE_RADIUS, {
-      duration: Animations.SLOT_INSERT_DURATION,
-      easing: Easing.inOut(Easing.quad),
-    }),
-    withTiming(spaceY + spaceHeight / 2 - GameElements.PIECE_RADIUS, {
-      duration: Animations.SLOT_TO_SPACE_DURATION,
-      easing: Easing.bounce,
-    })
+    withTiming(
+      slotLayout.pageY + slotLayout.height / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_INSERT_DURATION,
+        easing: Easing.inOut(Easing.quad),
+      }
+    ),
+    withTiming(
+      spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_TO_SPACE_DURATION,
+        easing: Easing.bounce,
+      }
+    )
   );
 };
 
 // animatePieceDrop({
 //   translateX,
 //   translateY,
-//   slotX: scX,
-//   slotY: scY,
-//   slotWidth: scWidth,
-//   slotHeight: scHeight,
-//   spaceX: finalSpaceLayout.pageY,
+//   slotLayout.pageX: scX,
+//   slotLayout.slotY: scY,
+//   slotLayout.slotWidth: scWidth,
+//   slotLayout.slotHeight: scHeight,
+//   spaceLayout.pageX: finalSpaceLayout.pageY,
 //   spaceY: finalSpaceLayout.pageX,
 //   spaceWidth: finalSpaceLayout.width,
 //   spaceHeight: finalSpaceLayout.height,

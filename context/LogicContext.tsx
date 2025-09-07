@@ -1,4 +1,5 @@
 import { Animations } from "@/constants";
+import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import {
   GameMode,
@@ -9,13 +10,7 @@ import {
 } from "@/types/logic";
 import findPieceRelationships from "@/utils/findPieceRelationships";
 import setWinningPieces from "@/utils/setWinningPieces";
-import React, {
-  createContext,
-  ReactNode,
-  SetStateAction,
-  useContext,
-  useState,
-} from "react";
+import React, { createContext, ReactNode, useContext, useState } from "react";
 import { useLayout } from "./LayoutContext";
 
 export type LogicContextType = {
@@ -26,11 +21,12 @@ export type LogicContextType = {
   nextTurn: () => void;
   checkGameFinished: (updatedBoard: Record<string, string>) => void;
   gameState: GameState;
-  setGameState: React.Dispatch<SetStateAction<GameState>>;
+  setGameState: React.Dispatch<React.SetStateAction<GameState>>;
   winner: Team;
   setWinner: React.Dispatch<React.SetStateAction<Team>>;
   pieces: Record<string, PieceProps>;
   setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
+  pieceAnimations: Record<string, PieceAnimation>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -46,16 +42,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
 
   const { wells, layoutReady, setWellPieceLocations } = useLayout();
-
-  const generateWellIds = (): string[] => {
-    const wells: string[] = [];
-    for (let row = 9; row <= 47; row++) {
-      for (let col = 9; col <= 11; col++) {
-        wells.push(`${row}-${col}`);
-      }
-    }
-    return wells;
-  };
+  const pieceAnimations = usePieceAnimations(); // now part of LogicContext
 
   const toPieces = (
     team: Team,
@@ -63,20 +50,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     layout: Record<
       string,
       { pageX: number; pageY: number; width: number; height: number }
-    >,
-    setWellPieceLocations: React.Dispatch<
-      React.SetStateAction<Record<string, string>>
     >
   ): Record<string, PieceProps> => {
     const pieces: Record<string, PieceProps> = {};
 
-    Object.entries(layout).forEach(([wellId, l], idx) => {
+    Object.entries(layout).forEach(([wellId], idx) => {
       const id = `${startIdx + idx}`;
-
-      const initialPosition = {
-        x: l.pageX + l.width / 2 - 16,
-        y: l.pageY + l.height / 2 - 16,
-      };
 
       pieces[id] = {
         id,
@@ -97,8 +76,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     if (!layoutReady) return;
 
     const built = {
-      ...toPieces(Team.TeamOne, 0, wells[Team.TeamOne], setWellPieceLocations),
-      ...toPieces(Team.TeamTwo, 24, wells[Team.TeamTwo], setWellPieceLocations),
+      ...toPieces(Team.TeamOne, 0, wells[Team.TeamOne]),
+      ...toPieces(Team.TeamTwo, 24, wells[Team.TeamTwo]),
     };
 
     setPieces(built);
@@ -132,13 +111,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const gameCycle = (turn: number) => {
     if (gameState !== GameState.Playing && gameState !== GameState.Finished) {
-      if (turn === 0) {
-        setGameState(GameState.Ready);
-      } else if (turn > 0) {
-        setGameState(GameState.Playing);
-      }
+      if (turn === 0) setGameState(GameState.Ready);
+      else if (turn > 0) setGameState(GameState.Playing);
     }
-    return gameState;
   };
 
   const checkGameFinished = (
@@ -149,11 +124,14 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       winLen: 4,
       allPieces: pieces,
     });
+
     setWinningPieces({
       partials: pieceRelationships.partials,
       winners: pieceRelationships.winners,
       setPieces,
+      animations: pieceAnimations,
     });
+
     const teamOneWins =
       Object.keys(pieceRelationships.winners.teamOne).length > 0;
     const teamTwoWins =
@@ -176,10 +154,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Run game cycle whenever turnCount or gameMode changes
-  React.useEffect(() => {
-    gameCycle(turnCount + 1);
-  }, [turnCount]);
+  React.useEffect(() => gameCycle(turnCount + 1), [turnCount]);
 
   return (
     <LogicContext.Provider
@@ -196,6 +171,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         setWinner,
         pieces,
         setPieces,
+        pieceAnimations, // exposed here
       }}
     >
       {children}

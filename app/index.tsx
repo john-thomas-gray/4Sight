@@ -19,17 +19,14 @@ function InnerIndexLayout() {
         <Text className="text-black font-bold text-8xl ml-2">Sight</Text>
       </View>
       <View className="flex-col items-center space-y-4">
-        <Link href="/gamePlay" className="text-lg">
-          Two Player
-        </Link>
-        <Link href="/fourPlayer" className="text-lg">
-          Four Player
+        <Link href="/gamePlay" className="text-3xl">
+          Play
         </Link>
         <Link href="/settings" className="text-lg">
           Settings
         </Link>
         <Link href="/howToPlay" className="text-lg">
-          How to Play
+          Instructions
         </Link>
         <Link href="/testGround" className="text-lg">
           Test

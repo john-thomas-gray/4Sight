@@ -1,4 +1,6 @@
+import { animateWinner } from "@/animations/pieceAnimations";
 import { WINNER_STATE_DELAY } from "@/constants/animations";
+import { PieceAnimation } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import { PieceProps, PieceState } from "@/types/logic";
 import { BoardPiece, BoardPieces } from "./findPieceRelationships";
@@ -8,26 +10,28 @@ type SetWinningPieces = {
   partials: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
   winners: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
   setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
+  animations: Record<string, PieceAnimation>;
 };
 
 export default function setWinningPieces({
   partials,
   winners,
   setPieces,
+  animations,
 }: SetWinningPieces) {
   const updatePieceState = (groups: BoardPieces[], pieceState: PieceState) => {
     let delay = WINNER_STATE_DELAY;
+    const pieceAnims = animations;
     groups.forEach((group) => {
       group.forEach((boardPiece: BoardPiece) => {
-        setTimeout(
-          () =>
-            setPieceState({
-              id: boardPiece.pieceId,
-              setPieces: setPieces,
-              pieceState: pieceState,
-            }),
-          delay
-        );
+        setTimeout(() => {
+          setPieceState({
+            id: boardPiece.pieceId,
+            setPieces: setPieces,
+            pieceState: pieceState,
+          });
+          animateWinner(pieceAnims[boardPiece.pieceId]);
+        }, delay);
         delay += WINNER_STATE_DELAY;
       });
     });

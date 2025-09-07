@@ -7,6 +7,7 @@ import { Team } from "@/types/board";
 import { PieceProps, PieceState } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
+import { hasLayout } from "@/utils/typeGuards";
 import React, { useEffect, useState } from "react";
 import { Button, View, ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -18,23 +19,17 @@ import Animated, {
 import Highlight from "./Highlight";
 
 const Piece = ({ team, id, state }: PieceProps) => {
-  const { layout, logic, settings, animation } = useGameContext();
+  const { layout, logic, settings } = useGameContext();
 
-  const animate = animation.pieces[id];
+  const animate = logic.pieceAnimations[id];
 
-  if (!animation) {
+  if (!animate) {
     throw new Error(`No animation found for piece id ${id}`);
   }
 
   const allCells = getCellArray({ layout, result: "all", team });
 
   const slots = getCellArray({ layout, result: "slots", team });
-
-  const scaleX = useSharedValue(1);
-  const scaleY = useSharedValue(1);
-  const skewX = useSharedValue("0deg");
-  const skewY = useSharedValue("0deg");
-  const rotation = useSharedValue(0);
 
   const getCurrentWellData = (id: string) => {
     return (
@@ -137,17 +132,13 @@ const Piece = ({ team, id, state }: PieceProps) => {
       };
 
       for (const selectedCell of allCells) {
-        if (!selectedCell.layout) {
-          // animateMisplacedPiece({ animate.translateX, animate.translateY, currentWellDataSV });
-          continue;
-        }
-
         const {
           pageX: selectedCellCoordX,
           pageY: selectedCellCoordY,
           width: selectedCellWidth,
           height: selectedCellHeight,
-        } = selectedCell.layout;
+          // !@#
+        } = selectedCell.layout!;
 
         const cellFound =
           pieceCenter.x >= selectedCellCoordX &&
@@ -238,58 +229,33 @@ const Piece = ({ team, id, state }: PieceProps) => {
             return;
           }
 
-          animatePieceDrop({
-            translateX: animate.translateX,
-            translateY: animate.translateY,
-            slotX: selectedCellCoordX,
-            slotY: selectedCellCoordY,
-            slotWidth: selectedCellWidth,
-            slotHeight: selectedCellHeight,
-            spaceX: finalSpaceLayout.pageX,
-            spaceY: finalSpaceLayout.pageY,
-            spaceWidth: finalSpaceLayout.width,
-            spaceHeight: finalSpaceLayout.height,
-          });
+          // animatePieceDrop({
+          //   translateX: animate.translateX,
+          //   translateY: animate.translateY,
+          //   slotX: selectedCellCoordX,
+          //   slotY: selectedCellCoordY,
+          //   slotWidth: selectedCellWidth,
+          //   slotHeight: selectedCellHeight,
+          //   spaceX: finalSpaceLayout.pageX,
+          //   spaceY: finalSpaceLayout.pageY,
+          //   spaceWidth: finalSpaceLayout.width,
+          //   spaceHeight: finalSpaceLayout.height,
+          // });
 
           runOnJS(setBPLUI)(finalSpaceId);
         } else if (isSpace) {
           const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
-          if (dropSlotData.dropSlot) {
-            const slotData = slots.find(
-              (s) => s.id === dropSlotData.dropSlot.id
-            );
-            if (slotData) {
-              animatePieceDrop({
-                translateX: animate.translateX,
-                translateY: animate.translateY,
-                slotX: slotData!.layout!.pageX,
-                slotY: slotData!.layout!.pageY,
-                slotWidth: slotData!.layout!.width,
-                slotHeight: slotData!.layout!.height,
-                spaceX: selectedCellCoordX,
-                spaceY: selectedCellCoordY,
-                spaceWidth: selectedCellWidth,
-                spaceHeight: selectedCellHeight,
-              });
+          const slotData = slots.find((s) => s.id === dropSlotData.dropSlot.id);
+          if (!hasLayout(slotData)) continue;
+          animatePieceDrop({
+            translateX: animate.translateX,
+            translateY: animate.translateY,
+            slotLayout: slotData.layout,
+            // !@#
+            spaceLayout: selectedCell.layout!,
+          });
 
-              runOnJS(setBPLUI)(id);
-            } else {
-              if (
-                currentWellDataSV.value?.layout &&
-                currentWellDataSV.value?.id
-              ) {
-                runOnJS(setWPLUI)(currentWellDataSV.value.id);
-                // animateMisplacedPiece({
-                //   animate.translateX,
-                //   animate.translateY,
-                //   currentWellDataSV,
-                // });
-              }
-            }
-          }
-        } else if (isWell) {
-          runOnJS(setWPLUI)(selectedCell.id);
-          // animateToSelectedCell({ animate.translateX, animate.translateY, selectedCell });
+          runOnJS(setBPLUI)(id);
         }
       }
     });
@@ -298,11 +264,11 @@ const Piece = ({ team, id, state }: PieceProps) => {
     transform: [
       { translateX: animate.translateX.value },
       { translateY: animate.translateY.value },
-      { scaleX: scaleX.value },
-      { scaleY: scaleY.value },
-      { skewX: skewX.value },
-      { skewY: skewY.value },
-      { rotate: `${rotation.value}deg` },
+      { scaleX: animate.scaleX!.value },
+      { scaleY: animate.scaleY!.value },
+      { skewX: `${animate.skewX!.value}deg` },
+      { skewY: `${animate.skewY!.value}deg` },
+      { rotate: `${animate.rotation!.value}deg` },
     ],
     // shadows: [
     //   { shadowOpacity: shadowOpacity.value },
@@ -343,11 +309,11 @@ const Piece = ({ team, id, state }: PieceProps) => {
             animateWinner({
               translateX: animate.translateX,
               translateY: animate.translateY,
-              scaleX,
-              scaleY,
-              skewX,
-              skewY,
-              rotation,
+              scaleX: animate.scaleX,
+              scaleY: animate.scaleY,
+              skewX: animate.skewX,
+              skewY: animate.skewY,
+              rotation: animate.rotation,
             });
           }}
         />

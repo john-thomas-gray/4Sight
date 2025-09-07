@@ -1,87 +1,22 @@
 Zoom on board
 
-4 player logic
+4 player logic:
 
-Menu (restart, quit, settings)
-
-Tutorial
-
-Async Storage saves board state
-
-Five swipes back and forth to forfeit
+- Board lifts up when you hold down on a corner
 
 Graphics
 
 - all slot arrows turn the direction of the pull
-- Board lifts up when turning is possible
-- Long press on opposite side of board for pull preview
-
-Bugs:
-
-- Fix well piece locations
-- Can drop pieces while pull is animating
-- Can pull when you pull
-- Retrict pull to space grid
-- Placed pieces bounce when you return to the page
-- You can set pieces on a square if it's occupied
-
-Win State
-
-- Animation? Pieces fill in gold jump and jiggle in a cascade
-- Message. Appears and disappears.
-- Disable movements
-  - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
-  - Swipe / shake phone knocks all the pieces off and they go back to their wells
-
-Near Win State
-
-- Three pieces in a row with an accessible empty square as the next space are highlighted
-  $ create function that checks if a space is accessible
-  $ function that checks the condition above
-
-4 Player
 
 - turns handled differently
 - can only drop from one side
   $ Available slot visual
 - can only pull from one side
 - rotate function
+  - Long press on opposite side of board for pull preview
   - rotate animation: long touch, pan, flick
 
-Feedforward:
-
-- hover piece over slot shows preview
-- pressing the opposite side of the board shows where pushed pieces would go.
-- hightlights three pieces in a row with flashing beacons
-
-Signifiers
-
-- Available slot visualizations
-
-Feedback:
-Piece dropped on inaccessible space bounces off glass.
-Grabbing piece raises z index above all other pieces
-Piece placed in unavailable slot bumps the piece that's blocking it
-
-Today I will focus on creating animation states for the pieces.
-The first of these will be triggered by the winState.
-I will create a transition to the win state, followed by
-the looping win state.
-
-1. The findPieceRelationships outputs a list of groups of winners.
-
-2. Iterate through each group of winners, starting with the most recently placed.
-   On each loop set the piece state to "winner".
-   setWinningPieces(Record< Team, []>)
-   set piece state to "winner"
-   return list of winner ids
-
-3. On first iteration this will make the
-   highlight appear. Whe refined it will trigger a one-time "becoming winner" animation
-   and a looping winner state.
-
-animateChangeToWinner()
-animateWinnerLoop()
+Near Win State
 
 REMOVE GAME STATE LOGIC FROM PIECE
 
@@ -94,4 +29,63 @@ loop winner anim in sync(?)
 Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
 slight pulsing. Highlight undulates and shimmers.
 
-Animation Context is next.
+ALPHA BUILD
+
+Menu Tab
+
+- On the play screen, pulling brings the homepage back
+- Reacts to device orientation so that it is never on the blocked side
+
+Tutorial
+
+- Interactive introduction that runs the first time you play
+
+Async storage saves board state.
+
+Gestures that affect game state:
+
+- Swipe back and forth three times to forfeit
+- Swipe to clear the board and restart the game
+- Shaking forfeits
+
+Win State
+
+- Animation? Pieces fill in gold jump and jiggle in a cascade
+- Message. Appears and disappears.
+- Disable movements
+  - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
+  - Shake phone knocks all the pieces off and they go back to their wells
+
+Win Logic:
+
+- Three pieces in a row with an accessible empty square as the next space are highlighted
+- hightlights three pieces in a row with flashing beacons
+
+Previsualizations
+Feedforward:
+
+- over piece over slot shows preview
+- pressing the opposite side of the board shows where pushed pieces would go.
+  Signifiers
+  - Available/unavailable slot visualizations
+
+Bugs:
+
+- animate to slot, to space doesn't work. The to slot part doesn't animate.
+- Can drop pieces while pull is animating
+- Can pull when you pull
+- Placing outside a viable space crashes the game
+
+Feedback:
+
+- Piece dropped on inaccessible space bounces off glass.
+- Grabbing piece raises z index above all other pieces
+- Piece placed in unavailable slot bumps the piece that's blocking it
+
+Refactoring:
+
+- Remove game state logic from piece
+
+Tests:
+
+- For everything

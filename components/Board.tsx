@@ -28,7 +28,7 @@ type BoardProps = {
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { logic, layout, animation } = useGameContext();
+  const { logic, layout } = useGameContext();
 
   const isSlotPosition = (row: number, col: number) => {
     return (
@@ -57,7 +57,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       );
       if (entry) {
         const [spaceId] = entry;
-        const animate = animation.pieces[pieceId];
+        const animate = logic.pieceAnimations[pieceId];
         animateGravity({
           translateX: animate.translateX,
           translateY: animate.translateY,

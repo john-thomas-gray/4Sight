@@ -11,8 +11,8 @@ type AnimateWinner = {
   translateY: SharedValue<number>;
   scaleX: SharedValue<number>;
   scaleY: SharedValue<number>;
-  skewX: SharedValue<string>;
-  skewY: SharedValue<string>;
+  skewX: SharedValue<number>;
+  skewY: SharedValue<number>;
   rotation: SharedValue<number>;
   shadowOpacity?: SharedValue<number>;
   shadowRadius?: SharedValue<number>;
@@ -31,6 +31,7 @@ export function animateWinner({
 // shadowRadius,
 // shadowOffset,
 AnimateWinner) {
+  "worklet";
   const trans = {
     0: { x: translateX.value, y: translateY.value },
     1: { x: translateX.value - 5, y: translateY.value - 15 },
@@ -123,5 +124,5 @@ AnimateWinner) {
 
   animation({ svx: translateX, svy: translateY, v0: trans[0], v1: trans[1] });
   animation({ svx: scaleX, svy: scaleY, v0: scale[0], v1: scale[1] });
-  animationSkew({ svx: skewX, svy: skewY, v0: skew[0], v1: skew[1] });
+  // animationSkew({ svx: skewX, svy: skewY, v0: skew[0], v1: skew[1] });
 }
