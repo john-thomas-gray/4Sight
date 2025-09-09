@@ -1,12 +1,11 @@
 import { animateMisplacedPiece, animatePieceDrop, animateToSelectedCell } from "@/animations/animations";
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
-import { Board } from "@/types";
 import { Team } from "@/types/board";
-import { PieceProps, PieceState } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -16,14 +15,24 @@ import Animated, {
 } from "react-native-reanimated";
 import Highlight from "./Highlight";
 
-const Piece = ({ team, id, state }: PieceProps) => {
+const Piece = ({ team, id }: PieceProps) => {
   const { layout, logic, settings } = useGameContext();
-
-  const animate = logic.pieceAnimations[id];
-
+  const animate = useMemo(() => {
+    return logic.pieceAnimations[id];
+  }, [logic.pieceAnimations, id]);
+  const status = useMemo(() => {
+    return logic.pieceStatusMap[id];
+  }, [logic.pieceStatusMap, id]);
   if (!animate) {
     throw new Error(`No animation found for piece id ${id}`);
   }
+
+  useEffect(() => {
+    logic.setPieceStatusMap((prev) => ({
+      ...prev,
+      [id]: PieceStatus.inWell,
+    }));
+  }, []);
 
   const allCells = getCellArray({ layout, result: "all", team });
 
@@ -38,39 +47,41 @@ const Piece = ({ team, id, state }: PieceProps) => {
   };
 
   let currentWellId: string = "";
-  if (
-    Object.entries(layout.wellPieceLocations!).find(
-      ([, pieceId]) => pieceId === id
-    )?.[0]
-  ) {
-    currentWellId = Object.entries(layout.wellPieceLocations!).find(
-      ([, pieceId]) => pieceId === id
-    )?.[0]!;
-  }
+  // const entry = Object.entries(layout.wellPieceLocations!).find(
+  //   ([, pieceId]) => pieceId === id
+  // );
 
-  const currentWellDataSV = useSharedValue<Board.CellProps | null>(
-    currentWellId ? getCurrentWellData(currentWellId) : null
-  );
+  // if (entry) {
+  //   currentWellId = entry[0];
+  // }
 
-  const isHeld = useSharedValue(false);
+  // useEffect(() => {
+  //   if (status === PieceStatus.inWell) {
+  //     getCurrentWellData(id);
+  //   } else {
+  //     currentWellDataSV.value = null;
+  //   }
+  // }, [currentWellId]);
+
+  // const currentWellDataSV = useSharedValue<Board.CellProps | null>(
+  //   currentWellId ? getCurrentWellData(currentWellId) : null
+  // );
+  // console.log(currentWellDataSV);
+
+
+
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
   }, [layout.boardPieceLocations]);
 
-  useEffect(() => {
-    if (state === PieceState.inWell) {
-      getCurrentWellData(id);
-    } else {
-      currentWellDataSV.value = null;
-    }
-  }, [currentWellId]);
+
 
   const setBPLUI = (finalSpaceId: string) => {
     const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
     layout.setBoardPieceLocations(updated);
-    logic.checkGameFinished(updated);
+    // logic.checkGameFinished(updated);
   };
 
   const setWPLUI = (wellId: string) => {
@@ -80,49 +91,48 @@ const Piece = ({ team, id, state }: PieceProps) => {
     }));
   };
 
-  const deleteWPLUI = () => {
-    if (currentWellId) {
-      layout.setWellPieceLocations((prev) => {
-        const updated = { ...prev };
-        delete updated[currentWellId as string];
-        return updated;
-      });
-    }
+  const updateStatus = (status: PieceStatus) => {
+    logic.setPieceStatusMap((prev) => ({
+      ...prev,
+      [id]: status,
+    }));
   };
+
+  // const deleteWPLUI = () => {
+  //   if (currentWellId) {
+  //     layout.setWellPieceLocations((prev) => {
+  //       const updated = { ...prev };
+  //       delete updated[currentWellId as string];
+  //       return updated;
+  //     });
+  //   }
+  // };
+
   useEffect(() => {
-    if (currentWellId) {
-      layout.setWellPieceLocations((prev) => ({
-        ...prev,
-        [currentWellId]: id,
-      }));
+    if (team === Team.TeamOne) {
+      animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
+      // animate.winnerColor.value = settings.colorTheme.TEAM_ONE_WINNER_COLOR;
+    } else {
+      animate.color.value = settings.colorTheme.TEAM_TWO_COLOR;
+      animate.winnerColor.value = settings.colorTheme.TEAM_TWO_WINNER_COLOR;
     }
   }, []);
-
-  useEffect(() => {
-    setHighlightProps(state);
-    if (state === PieceState.winner) {
-      // Run winner transition and then
-      // loop winner animation
-    }
-    if (isHeld) {
-    }
-  }, [state]);
-
-  const [highlightProps, setHighlightProps] = useState(PieceState.inWell);
-
   const movePiece = Gesture.Pan()
-    // .enabled(logic.gameState !== GameState.Finished && !onBoard && myTurn)
+    .enabled(
+      logic.gameState !== GameState.Finished &&
+        (status === PieceStatus.isHeld || status === PieceStatus.inWell)
+    )
     .onStart(() => {
-      isHeld.value = true;
-      runOnJS(deleteWPLUI)();
+
+      // runOnJS(deleteWPLUI)();
+      runOnJS(updateStatus)(PieceStatus.isHeld);
     })
     .onUpdate((event) => {
       animate.translateX.value = event.absoluteX - GameElements.PIECE_RADIUS;
       animate.translateY.value = event.absoluteY - GameElements.PIECE_RADIUS;
     })
     .onEnd(() => {
-      isHeld.value = false;
-
+      console.log("blah")
       const pieceCenter = {
         x: animate.translateX.value + GameElements.PIECE_RADIUS,
         y: animate.translateY.value + GameElements.PIECE_RADIUS,
@@ -143,8 +153,7 @@ const Piece = ({ team, id, state }: PieceProps) => {
           pieceCenter.y >= selectedCellCoordY &&
           pieceCenter.y <= selectedCellCoordY + selectedCellHeight;
 
-          if (!cellFound) continue
-
+        if (!cellFound) continue;
         const id = selectedCell.id;
         const isSlot = selectedCell.id in layout.slots;
         const isSpace = selectedCell.id in layout.spaces;
@@ -158,7 +167,7 @@ const Piece = ({ team, id, state }: PieceProps) => {
         let prevCol: number | null = null;
 
         if (isSlot) {
-          console.log("isSlot")
+          console.log("isSlot");
           const slotDirection =
             nextRow === 8
               ? "N"
@@ -205,7 +214,10 @@ const Piece = ({ team, id, state }: PieceProps) => {
           }
 
           if (prevRow === null || prevCol === null) {
-            console.warn("No free board space near slot. Slot blocked!:", selectedCell.id);
+            console.warn(
+              "No free board space near slot. Slot blocked!:",
+              selectedCell.id
+            );
             if (
               currentWellDataSV.value?.layout &&
               currentWellDataSV.value?.id
@@ -236,20 +248,19 @@ const Piece = ({ team, id, state }: PieceProps) => {
           });
 
           runOnJS(setBPLUI)(finalSpaceId);
+          runOnJS(updateStatus)(PieceStatus.onBoard);
           return;
-        }
-        else if (isSpace) {
-          console.log("isSpace")
+        } else if (isSpace) {
+          console.log("isSpace");
           const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
           const slotData = slots.find((s) => s.id === dropSlotData.dropSlot.id);
-          if(!slotData){
-
+          if (!slotData) {
             animateMisplacedPiece({
               translateX: animate.translateX,
               translateY: animate.translateY,
               currentWellLayout: currentWellDataSV!.value!.layout!,
             });
-            continue
+            continue;
           }
           animatePieceDrop({
             translateX: animate.translateX,
@@ -259,20 +270,26 @@ const Piece = ({ team, id, state }: PieceProps) => {
           });
 
           runOnJS(setBPLUI)(id);
-          return
+          runOnJS(updateStatus)(PieceStatus.onBoard);
+          return;
         } else if (isWell) {
-          console.log("isWell")
-          animateToSelectedCell({translateX: animate.translateX, translateY: animate.translateY, selectedCell})
+          console.log("isWell");
+          animateToSelectedCell({
+            translateX: animate.translateX,
+            translateY: animate.translateY,
+            selectedCell,
+          });
           return;
         }
       }
-
-      animateMisplacedPiece({
-        translateX: animate.translateX,
-        translateY: animate.translateY,
-        currentWellLayout: currentWellDataSV!.value!.layout!,
-      });
-      return
+      console.log("hi");
+      console.log(currentWellDataSV)
+      // animateMisplacedPiece({
+      //   translateX: animate.translateX,
+      //   translateY: animate.translateY,
+      //   currentWellLayout: currentWellDataSV!.value!.layout!,
+      // });
+      return;
     });
 
   const animatedStyles = useAnimatedStyle(() => ({
@@ -285,6 +302,7 @@ const Piece = ({ team, id, state }: PieceProps) => {
       { skewY: `${animate.skewY!.value}deg` },
       { rotate: `${animate.rotation!.value}deg` },
     ],
+    backgroundColor: animate.color.value,
     // shadows: [
     //   { shadowOpacity: shadowOpacity.value },
     //   { shadowRadius: shadowRadius },
@@ -296,10 +314,6 @@ const Piece = ({ team, id, state }: PieceProps) => {
     height: GameElements.PIECE_SIZE,
     width: GameElements.PIECE_SIZE,
     borderRadius: GameElements.PIECE_RADIUS,
-    backgroundColor:
-      team === Team.TeamOne
-        ? settings.colorTheme.TEAM_ONE_COLOR
-        : settings.colorTheme.TEAM_TWO_COLOR,
     borderWidth: 2,
     borderColor: "#9CA3AF",
     zIndex: 1000,
@@ -314,7 +328,7 @@ const Piece = ({ team, id, state }: PieceProps) => {
     <>
       <GestureDetector gesture={movePiece}>
         <Animated.View style={[baseStyle, animatedStyles]}>
-          <Highlight props={highlightProps} />
+          <Highlight pieceId={id} />
         </Animated.View>
       </GestureDetector>
     </>

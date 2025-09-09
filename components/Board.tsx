@@ -50,6 +50,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
   const pullPieces = useGravity();
 
+  // !@# Should only fire when we actually pull gravity
   useLayoutEffect(() => {
     Object.keys(logic.pieces).forEach((pieceId) => {
       const entry = Object.entries(layout.boardPieceLocations).find(
@@ -65,6 +66,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
         });
       }
     });
+    setTimeout(() => logic.checkGameFinished(layout.boardPieceLocations), 1000);
+
   }, [layout.boardPieceLocations]);
 
   const executePull = (direction: Direction) => {

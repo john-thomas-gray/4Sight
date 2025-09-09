@@ -1,9 +1,11 @@
 import { Animations, GameElements } from "@/constants";
+import { SLOT_INSERT_DURATION } from "@/constants/animations";
 import { Board } from "@/types";
 import { CellLayout, EachCellType } from "@/types/board";
 import {
   Easing,
   SharedValue,
+  withDelay,
   withSequence,
   withTiming
 } from "react-native-reanimated";
@@ -74,7 +76,8 @@ export const animateToSelectedCell = ({
   );
 };
 
-//!@# I don't understand how this works?
+/* This can work without the second animation if gravity animates
+every turn. */
 export const animatePieceDrop = ({
   translateX,
   translateY,
@@ -95,14 +98,14 @@ export const animatePieceDrop = ({
         easing: Easing.inOut(Easing.quad),
       }
     ),
-    // withDelay(SLOT_INSERT_DURATION, withTiming(
-    //   spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
-    //   {
-    //     duration: Animations.SLOT_TO_SPACE_DURATION,
-    //     easing: Easing.bounce,
-    //   }
+    withDelay(SLOT_INSERT_DURATION, withTiming(
+      spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_TO_SPACE_DURATION,
+        easing: Easing.bounce,
+      }
 
-    // ))
+    ))
   );
 
   translateY.value = withSequence(
@@ -113,12 +116,12 @@ export const animatePieceDrop = ({
         easing: Easing.inOut(Easing.quad),
       }
     ),
-    // withDelay(SLOT_INSERT_DURATION, withTiming(
-    //   spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
-    //   {
-    //     duration: Animations.SLOT_TO_SPACE_DURATION,
-    //     easing: Easing.bounce,
-    //   }
-    // ))
+    withDelay(SLOT_INSERT_DURATION, withTiming(
+      spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_TO_SPACE_DURATION,
+        easing: Easing.bounce,
+      }
+    ))
   );
 };

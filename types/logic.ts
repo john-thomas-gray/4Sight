@@ -18,7 +18,7 @@ export enum GameState {
   Finished = "finished",
 }
 
-export enum PieceState {
+export enum PieceStatus {
   inWell = "inWell",
   onBoard = "onBoard",
   isHeld = "isHeld",
@@ -29,5 +29,6 @@ export enum PieceState {
 export type PieceProps = {
   team: Team;
   id: string;
-  state: PieceState;
 };
+
+export type PieceStatusMap = Record<string, PieceStatus>;

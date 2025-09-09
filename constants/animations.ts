@@ -8,3 +8,7 @@ export const WINNER_V1_DELAY = 1000;
 export const WINNER_V1 = 700;
 export const WINNER_V0_DELAY = 100;
 export const WINNER_V0 = 700;
+
+export const WAIT_FOR_WINNER_CHECK = WINNER_V1_DELAY + WINNER_V0_DELAY;
+
+export const WINNER_BASE_DELAY = 150;

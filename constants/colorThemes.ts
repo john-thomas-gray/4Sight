@@ -4,6 +4,8 @@
 export type ColorThemeType = {
   TEAM_ONE_COLOR: string;
   TEAM_TWO_COLOR: string;
+  TEAM_ONE_WINNER_COLOR: string;
+  TEAM_TWO_WINNER_COLOR: string;
   CORNER_COLOR_ONE: string;
   CORNER_COLOR_TWO: string;
   WELL_GRID_BG_COLOR_ONE: string;
@@ -21,6 +23,8 @@ export type ColorThemeType = {
 export const CLASSIC: ColorThemeType = {
   TEAM_ONE_COLOR: "#ffffff",
   TEAM_TWO_COLOR: "#000000",
+  TEAM_ONE_WINNER_COLOR: "#fdffd0ff",
+  TEAM_TWO_WINNER_COLOR: "#967d00ff",
   CORNER_COLOR_ONE: "#ffffff",
   CORNER_COLOR_TWO: "#000000",
   WELL_GRID_BG_COLOR_ONE: "#6E2C00",
@@ -38,6 +42,8 @@ export const CLASSIC: ColorThemeType = {
 export const SCHOOLHOUSE: ColorThemeType = {
   TEAM_ONE_COLOR: "#d8c744ff",
   TEAM_TWO_COLOR: "#d84444ff",
+  TEAM_ONE_WINNER_COLOR: "#fdffd0ff",
+  TEAM_TWO_WINNER_COLOR: "#967d00ff",
   CORNER_COLOR_ONE: "#d8c744ff",
   CORNER_COLOR_TWO: "#d84444ff",
   WELL_GRID_BG_COLOR_ONE: "#333333",

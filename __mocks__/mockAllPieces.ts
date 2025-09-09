@@ -1,5 +1,5 @@
 import { Team } from "@/types/board";
-import { PieceProps, PieceState } from "@/types/logic";
+import { PieceProps } from "@/types/logic";
 
 const totalPieces = 48;
 
@@ -9,7 +9,6 @@ for (let i = 0; i < totalPieces; i++) {
   mockAllPieces[i.toString()] = {
     id: i.toString(),
     team: i < 24 ? Team.TeamOne : Team.TeamTwo,
-    state: PieceState.inWell,
   };
 }
 

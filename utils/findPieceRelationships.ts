@@ -1,4 +1,5 @@
-import { PieceProps, Team } from "@/types/board";
+import { Team } from "@/types/board";
+import { PieceProps } from "@/types/logic";
 
 interface FindPieceRelationships {
   boardPieceLocations: Record<string, string>;

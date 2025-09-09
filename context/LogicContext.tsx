@@ -1,15 +1,16 @@
+import { animateWinner } from "@/animations/pieceAnimations";
 import { Animations, Logic } from "@/constants";
+import { WINNER_BASE_DELAY } from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import {
   GameMode,
   GameState,
   PieceProps,
-  PieceState,
-  Turn,
+  PieceStatus,
+  PieceStatusMap
 } from "@/types/logic";
-import findPieceRelationships from "@/utils/findPieceRelationships";
-import setWinningPieces from "@/utils/setWinningPieces";
+import findPieceRelationships, { BoardPiece, BoardPieces } from "@/utils/findPieceRelationships";
 import React, { createContext, ReactNode, useContext, useState } from "react";
 import { useLayout } from "./LayoutContext";
 
@@ -27,6 +28,8 @@ export type LogicContextType = {
   pieces: Record<string, PieceProps>;
   setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
   pieceAnimations: Record<string, PieceAnimation>;
+  pieceStatusMap: PieceStatusMap;
+  setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -40,9 +43,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
-
   const { wells, layoutReady, setWellPieceLocations } = useLayout();
-  const pieceAnimations = usePieceAnimations(); // now part of LogicContext
+  const pieceAnimations = usePieceAnimations();
 
   const toPieces = (
     team: Team,
@@ -60,7 +62,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieces[id] = {
         id,
         team,
-        state: PieceState.inWell,
       };
 
       setWellPieceLocations((prev) => ({
@@ -83,27 +84,40 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     setPieces(built);
   }, [layoutReady, wells]);
 
-  const logicalStrategies: Record<
-    string,
-    {
-      getNextTurn: (currentTurn: Turn) => Turn;
-      team: (currentTurn: Turn) => Team;
-    }
-  > = {
-    twoPlayer: {
-      getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
-      team: (currentTurn) => (currentTurn === 1 ? Team.TeamOne : Team.TeamTwo),
-    },
-    fourPlayer: {
-      getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
-      team: (currentTurn) =>
-        currentTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne,
-    },
+  const initialPieceStatusMap: PieceStatusMap = {};
+  for (let i = 0; i < 48; i++) {
+    initialPieceStatusMap[i.toString()] = PieceStatus.inWell;
+  }
+  const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>({});
+
+  // const logicalStrategies: Record<
+  //   string,
+  //   {
+  //     getNextTurn: (currentTurn: Turn) => Turn;
+  //     team: (currentTurn: Turn) => Team;
+  //   }
+  // > = {
+  //   twoPlayer: {
+  //     getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
+  //     team: (currentTurn) => (currentTurn === 1 ? Team.TeamOne : Team.TeamTwo),
+  //   },
+  //   fourPlayer: {
+  //     getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
+  //     team: (currentTurn) =>
+  //       currentTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne,
+  //   },
+  // };
+
+  /* Look into logical strategies for implementing two game modes */
+  const getNextPlayersTurn = (currentTurn: number): 1 | 2 | 3 |4 => {
+
+    return ((currentTurn % 4) + 1) as 1 | 2 | 3 | 4;
+
   };
 
+  // THIS WILL NOT WORK
   const nextTurn = () => {
-    const strategy = logicalStrategies[gameMode];
-    setPlayersTurn(strategy.getNextTurn(playersTurn));
+    setPlayersTurn(getNextPlayersTurn(playersTurn));
     setTurnCount((prev) => prev + 1);
   };
 
@@ -115,7 +129,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       else if (turn > 0) setGameState(GameState.Playing);
     }
   };
-
   const checkGameFinished = (
     updatedBoardPieceLocations: Record<string, string>
   ) => {
@@ -124,6 +137,57 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       winLen: Logic.WIN_LENGTH,
       allPieces: pieces,
     });
+
+    type SetWinningPieces = {
+      partials: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
+      winners: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
+      setPieces: React.Dispatch<
+        React.SetStateAction<Record<string, PieceProps>>
+      >;
+      animations: Record<string, PieceAnimation>;
+    };
+
+    function setWinningPieces({
+      partials,
+      winners,
+      setPieces,
+      animations,
+    }: SetWinningPieces) {
+      const updatePieceStatus = (
+        groups: BoardPieces[],
+        pieceStatus: PieceStatus
+      ) => {
+        const pieceAnims = animations;
+        let baseDelay = WINNER_BASE_DELAY;
+
+        groups.forEach((group) => {
+          group.forEach((boardPiece: BoardPiece, idx) => {
+            const delay = baseDelay + idx * 300; // stagger each piece
+            setTimeout(() => {
+              setPieceStatusMap((prev) => ({
+                ...prev,
+                [boardPiece.pieceId]: pieceStatus,
+              }));
+              animateWinner({
+                ...pieceAnims[boardPiece.pieceId],
+              });
+            }, delay);
+          });
+          baseDelay += group.length * 100; // increment baseDelay for next group
+        });
+      };
+
+      const winnersOne = winners.teamOne;
+      const winnersTwo = winners.teamTwo;
+      // const partialsOne = partials.teamOne;
+      // const partialsTwo = partials.teamTwo;
+
+      updatePieceStatus(winnersOne, PieceStatus.winner);
+      updatePieceStatus(winnersTwo, PieceStatus.winner);
+      // updatePieceStatus(partialsOne, PieceStatus.partial);
+      // updatePieceStatus(partialsTwo, PieceStatus.partial);
+    }
+    // console.log("pieceR", pieceRelationships)
 
     setWinningPieces({
       partials: pieceRelationships.partials,
@@ -171,7 +235,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         setWinner,
         pieces,
         setPieces,
-        pieceAnimations, // exposed here
+        pieceAnimations,
+        pieceStatusMap,
+        setPieceStatusMap,
       }}
     >
       {children}

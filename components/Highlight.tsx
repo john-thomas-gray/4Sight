@@ -1,15 +1,27 @@
-import { PieceState } from "@/types/logic";
+import { useGameContext } from "@/context/GameContext";
+import { PieceStatus } from "@/types/logic";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-const Highlight = ({ props }: { props: PieceState }) => {
+interface HighlightProps {
+  pieceId: string;
+}
+
+const Highlight: React.FC<HighlightProps> = ({ pieceId }) => {
+  const { logic } = useGameContext();
+  const pieceStatus = logic.pieceStatusMap[pieceId];
   const [style, setStyle] = useState(styles.off);
 
   useEffect(() => {
-    if (props === PieceState.winner) {
-      setStyle(styles.winner);
+    if (pieceStatus === PieceStatus.winner) {
+      setStyle(styles.winner)
+      return
+    } else if (pieceStatus === PieceStatus.partial) {
+      setStyle(styles.partial);
+    } else {
+      setStyle(styles.off);
     }
-  }, [props]);
+  }, [pieceStatus]);
 
   return <View style={style} />;
 };
@@ -23,26 +35,22 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: "rgba(255, 217, 0, 0.1)",
     position: "absolute",
-    // iOS shadow
     shadowColor: "rgba(255, 217, 0, 0.9)",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
     shadowRadius: 15,
-    // Android elevation
     elevation: 10,
   },
-  almost: {
+  partial: {
     height: 60,
     width: 60,
     borderRadius: 30,
-    backgroundColor: "rgba(255, 217, 0, 0.1)",
+    backgroundColor: "rgba(255, 0, 0, 0.1)",
     position: "absolute",
-    // iOS shadow
-    shadowColor: "rgba(255, 217, 0, 0.9)",
+    shadowColor: "rgba(255, 0, 0, 0.9)",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
     shadowRadius: 15,
-    // Android elevation
     elevation: 10,
   },
   winner: {
@@ -51,12 +59,10 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: "rgba(255, 217, 0, 0.1)",
     position: "absolute",
-    // iOS shadow
     shadowColor: "rgba(255, 217, 0, 0.9)",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
     shadowRadius: 15,
-    // Android elevation
     elevation: 10,
   },
 });

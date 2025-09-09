@@ -53,6 +53,10 @@ Gestures that affect game state:
 \*Win State
 
 - Animation? Pieces fill in gold jump and jiggle in a cascade\*
+- Polish: If it's a tie, the person who shifted gravity's pieces light up first, then
+  the other players pieces light up. A little "gotcha".
+- On a tie the corners change 2 red, 2 yellow. Maybe animate in a circle. Or maybe flash
+  from yellow to red and back
 - Message. Appears and disappears.\*
 - Disable movements
   - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
@@ -86,11 +90,10 @@ Tests:
 - For everything
 
 Sunday:
-Fix animations
 
-- Placing outside a viable space crashes the game
-- animate to slot, to space doesn't work. The to slot part doesn't animate.
-- Winner animation starts immediately and interupts well to slot animation
+- change color
+- loop animation
+- prevent winner intro animation from playing again, unless a new piece is added to the row
 
 Monday:
 

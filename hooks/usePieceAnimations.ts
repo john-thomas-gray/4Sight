@@ -8,6 +8,8 @@ export type PieceAnimation = {
   scaleY: SharedValue<number>;
   skewX: SharedValue<number>;
   skewY: SharedValue<number>;
+  color: SharedValue<string>;
+  winnerColor: SharedValue<string>;
   rotation: SharedValue<number>;
 };
 
@@ -20,6 +22,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "1": {
@@ -29,6 +33,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "2": {
@@ -38,6 +44,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "3": {
@@ -47,6 +55,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "4": {
@@ -56,6 +66,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "5": {
@@ -65,6 +77,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "6": {
@@ -74,6 +88,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "7": {
@@ -83,6 +99,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "8": {
@@ -92,6 +110,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "9": {
@@ -101,6 +121,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "10": {
@@ -110,6 +132,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "11": {
@@ -119,6 +143,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "12": {
@@ -128,6 +154,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "13": {
@@ -137,6 +165,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "14": {
@@ -146,6 +176,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "15": {
@@ -155,6 +187,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "16": {
@@ -164,6 +198,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "17": {
@@ -173,6 +209,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "18": {
@@ -182,6 +220,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "19": {
@@ -191,6 +231,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "20": {
@@ -200,6 +242,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "21": {
@@ -209,6 +253,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "22": {
@@ -218,6 +264,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "23": {
@@ -227,6 +275,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "24": {
@@ -236,6 +286,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "25": {
@@ -245,6 +297,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "26": {
@@ -254,6 +308,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "27": {
@@ -263,6 +319,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "28": {
@@ -272,6 +330,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "29": {
@@ -281,6 +341,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "30": {
@@ -290,6 +352,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "31": {
@@ -299,6 +363,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "32": {
@@ -308,6 +374,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "33": {
@@ -317,6 +385,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "34": {
@@ -326,6 +396,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "35": {
@@ -335,6 +407,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "36": {
@@ -344,6 +418,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "37": {
@@ -353,6 +429,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "38": {
@@ -362,6 +440,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "39": {
@@ -371,6 +451,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "40": {
@@ -380,6 +462,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "41": {
@@ -389,6 +473,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "42": {
@@ -398,6 +484,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "43": {
@@ -407,6 +495,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "44": {
@@ -416,6 +506,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "45": {
@@ -425,6 +517,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "46": {
@@ -434,6 +528,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
     "47": {
@@ -443,6 +539,8 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       scaleY: useSharedValue(1),
       skewX: useSharedValue(0),
       skewY: useSharedValue(0),
+      color: useSharedValue("#ffffff"),
+      winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
     },
   };
