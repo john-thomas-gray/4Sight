@@ -1,6 +1,12 @@
-import { animateMisplacedPiece, animatePieceDrop, animateToSelectedCell } from "@/animations/animations";
+import {
+  animateMisplacedPiece,
+  animatePieceDrop,
+  animateToSelectedCell,
+} from "@/animations/animations";
 import { GameElements } from "@/constants";
+import { RESTRICTIONS_OFF } from "@/constants/logic";
 import { useGameContext } from "@/context/GameContext";
+import { Board } from "@/types";
 import { Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
@@ -47,28 +53,25 @@ const Piece = ({ team, id }: PieceProps) => {
   };
 
   let currentWellId: string = "";
-  // const entry = Object.entries(layout.wellPieceLocations!).find(
-  //   ([, pieceId]) => pieceId === id
-  // );
+  const entry = Object.entries(layout.wellPieceLocations!).find(
+    ([, pieceId]) => pieceId === id
+  );
 
-  // if (entry) {
-  //   currentWellId = entry[0];
-  // }
+  if (entry) {
+    currentWellId = entry[0];
+  }
 
-  // useEffect(() => {
-  //   if (status === PieceStatus.inWell) {
-  //     getCurrentWellData(id);
-  //   } else {
-  //     currentWellDataSV.value = null;
-  //   }
-  // }, [currentWellId]);
+  useEffect(() => {
+    if (status === PieceStatus.inWell) {
+      getCurrentWellData(id);
+    } else {
+      currentWellDataSV.value = null;
+    }
+  }, [currentWellId]);
 
-  // const currentWellDataSV = useSharedValue<Board.CellProps | null>(
-  //   currentWellId ? getCurrentWellData(currentWellId) : null
-  // );
-  // console.log(currentWellDataSV);
-
-
+  const currentWellDataSV = useSharedValue<Board.CellProps | null>(
+    currentWellId ? getCurrentWellData(currentWellId) : null
+  );
 
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
 
@@ -76,12 +79,9 @@ const Piece = ({ team, id }: PieceProps) => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
   }, [layout.boardPieceLocations]);
 
-
-
   const setBPLUI = (finalSpaceId: string) => {
     const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
     layout.setBoardPieceLocations(updated);
-    // logic.checkGameFinished(updated);
   };
 
   const setWPLUI = (wellId: string) => {
@@ -98,15 +98,15 @@ const Piece = ({ team, id }: PieceProps) => {
     }));
   };
 
-  // const deleteWPLUI = () => {
-  //   if (currentWellId) {
-  //     layout.setWellPieceLocations((prev) => {
-  //       const updated = { ...prev };
-  //       delete updated[currentWellId as string];
-  //       return updated;
-  //     });
-  //   }
-  // };
+  const deleteWPLUI = () => {
+    if (currentWellId) {
+      layout.setWellPieceLocations((prev) => {
+        const updated = { ...prev };
+        delete updated[currentWellId as string];
+        return updated;
+      });
+    }
+  };
 
   useEffect(() => {
     if (team === Team.TeamOne) {
@@ -119,12 +119,11 @@ const Piece = ({ team, id }: PieceProps) => {
   }, []);
   const movePiece = Gesture.Pan()
     .enabled(
-      logic.gameState !== GameState.Finished &&
+      RESTRICTIONS_OFF || logic.gameState !== GameState.Finished &&
         (status === PieceStatus.isHeld || status === PieceStatus.inWell)
     )
     .onStart(() => {
-
-      // runOnJS(deleteWPLUI)();
+      runOnJS(deleteWPLUI)();
       runOnJS(updateStatus)(PieceStatus.isHeld);
     })
     .onUpdate((event) => {
@@ -132,7 +131,7 @@ const Piece = ({ team, id }: PieceProps) => {
       animate.translateY.value = event.absoluteY - GameElements.PIECE_RADIUS;
     })
     .onEnd(() => {
-      console.log("blah")
+      console.log("blah");
       const pieceCenter = {
         x: animate.translateX.value + GameElements.PIECE_RADIUS,
         y: animate.translateY.value + GameElements.PIECE_RADIUS,
@@ -271,6 +270,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
           runOnJS(setBPLUI)(id);
           runOnJS(updateStatus)(PieceStatus.onBoard);
+
           return;
         } else if (isWell) {
           console.log("isWell");
@@ -283,7 +283,6 @@ const Piece = ({ team, id }: PieceProps) => {
         }
       }
       console.log("hi");
-      console.log(currentWellDataSV)
       // animateMisplacedPiece({
       //   translateX: animate.translateX,
       //   translateY: animate.translateY,
@@ -316,7 +315,7 @@ const Piece = ({ team, id }: PieceProps) => {
     borderRadius: GameElements.PIECE_RADIUS,
     borderWidth: 2,
     borderColor: "#9CA3AF",
-    zIndex: 1000,
+    zIndex: 500,
     alignItems: "center",
     justifyContent: "center",
     position: "absolute",

@@ -8,10 +8,19 @@ import {
   GameState,
   PieceProps,
   PieceStatus,
-  PieceStatusMap
+  PieceStatusMap,
 } from "@/types/logic";
-import findPieceRelationships, { BoardPiece, BoardPieces } from "@/utils/findPieceRelationships";
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import findPieceRelationships, {
+  BoardPiece,
+  BoardPieces,
+} from "@/utils/findPieceRelationships";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import { useLayout } from "./LayoutContext";
 
 export type LogicContextType = {
@@ -29,7 +38,7 @@ export type LogicContextType = {
   setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
   pieceAnimations: Record<string, PieceAnimation>;
   pieceStatusMap: PieceStatusMap;
-  setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>
+  setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -45,6 +54,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
   const { wells, layoutReady, setWellPieceLocations } = useLayout();
   const pieceAnimations = usePieceAnimations();
+  console.log(gameState);
+  console.log(turnCount);
+  console.log(playersTurn);
 
   const toPieces = (
     team: Team,
@@ -90,45 +102,22 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   }
   const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>({});
 
-  // const logicalStrategies: Record<
-  //   string,
-  //   {
-  //     getNextTurn: (currentTurn: Turn) => Turn;
-  //     team: (currentTurn: Turn) => Team;
-  //   }
-  // > = {
-  //   twoPlayer: {
-  //     getNextTurn: (currentTurn) => (currentTurn === 1 ? 2 : 1),
-  //     team: (currentTurn) => (currentTurn === 1 ? Team.TeamOne : Team.TeamTwo),
-  //   },
-  //   fourPlayer: {
-  //     getNextTurn: (currentTurn) => ((currentTurn % 4) + 1) as Turn,
-  //     team: (currentTurn) =>
-  //       currentTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne,
-  //   },
-  // };
-
   /* Look into logical strategies for implementing two game modes */
-  const getNextPlayersTurn = (currentTurn: number): 1 | 2 | 3 |4 => {
-
+  const getNextPlayersTurn = (currentTurn: number): 1 | 2 | 3 | 4 => {
     return ((currentTurn % 4) + 1) as 1 | 2 | 3 | 4;
-
   };
 
-  // THIS WILL NOT WORK
   const nextTurn = () => {
+    if(gameState === GameState.Ready){
+      setGameState(GameState.Playing)
+    } else if (gameState === GameState.Finished) return
     setPlayersTurn(getNextPlayersTurn(playersTurn));
     setTurnCount((prev) => prev + 1);
+    console.log("Next turn ran");
   };
 
-  const currentTeam = logicalStrategies[gameMode].team(playersTurn);
+  const currentTeam = playersTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne;
 
-  const gameCycle = (turn: number) => {
-    if (gameState !== GameState.Playing && gameState !== GameState.Finished) {
-      if (turn === 0) setGameState(GameState.Ready);
-      else if (turn > 0) setGameState(GameState.Playing);
-    }
-  };
   const checkGameFinished = (
     updatedBoardPieceLocations: Record<string, string>
   ) => {
@@ -218,28 +207,57 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  React.useEffect(() => gameCycle(turnCount + 1), [turnCount]);
+  const contextValue = React.useMemo(
+    () => ({
+      gameMode,
+      setGameMode,
+      turnCount,
+      currentTeam,
+      nextTurn,
+      checkGameFinished,
+      gameState,
+      setGameState,
+      winner,
+      setWinner,
+      pieces,
+      setPieces,
+      pieceAnimations,
+      pieceStatusMap,
+      setPieceStatusMap,
+    }),
+    [
+      gameMode,
+      turnCount,
+      currentTeam,
+      gameState,
+      winner,
+      pieces,
+      pieceAnimations,
+      pieceStatusMap,
+    ]
+  );
+
+  const firstTurn = useRef(true);
+
+  const debounce = setTimeout(() => {
+    if (firstTurn.current) {
+      firstTurn.current = false;
+      return clearTimeout(debounce);
+    } else if (debounce) {
+      return
+    }
+      setGameState(GameState.Ready);
+  }, 300);
+
+  const resetGame = () => {
+    setTurnCount(0)
+    setGameState(GameState.Ready)
+
+  }
+console.log(currentTeam);
 
   return (
-    <LogicContext.Provider
-      value={{
-        gameMode,
-        setGameMode,
-        turnCount,
-        currentTeam,
-        nextTurn,
-        checkGameFinished,
-        gameState,
-        setGameState,
-        winner,
-        setWinner,
-        pieces,
-        setPieces,
-        pieceAnimations,
-        pieceStatusMap,
-        setPieceStatusMap,
-      }}
-    >
+    <LogicContext.Provider value={contextValue}>
       {children}
     </LogicContext.Provider>
   );

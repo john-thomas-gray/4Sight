@@ -11,4 +11,4 @@ export const WINNER_V0 = 700;
 
 export const WAIT_FOR_WINNER_CHECK = WINNER_V1_DELAY + WINNER_V0_DELAY;
 
-export const WINNER_BASE_DELAY = 150;
+export const WINNER_BASE_DELAY = 500;

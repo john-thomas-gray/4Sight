@@ -6,6 +6,8 @@ Zoom on board
 
 Graphics
 
+- fancy loading screem
+
 - all slot arrows turn the direction of the pull
 
 - turns handled differently
@@ -84,10 +86,12 @@ Feedback:
 Refactoring:
 
 - Remove game state logic from piece
-
+- Debounce updates that run a million times
+- Team theme encompasses colorTheme. Add another set of themes that contains teamName to be used in end message
 Tests:
 
 - For everything
+
 
 Sunday:
 

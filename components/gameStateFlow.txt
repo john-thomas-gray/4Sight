@@ -1,0 +1,52 @@
+(If no current game is saved in memory)
+Menu loaded ->
+  GameState.PreGame
+    GamePlay
+    Assets loaded ->
+      GameState.Ready
+        currentTeam = Team.TeamOne
+        turnCount = 0
+        playersTurn = 1
+        Place a piece ->
+          (no winner)
+          GameState.Playing
+            Layout Updates:
+            [
+              PieceWell
+            PieceBoard
+            Wells
+            Spaces
+            Slots
+            ]
+            Logic Updates:
+            [
+              Pieces
+            pieceStatusMap
+            setPartials
+            PieceAnimations (partials)
+            ]
+            Other team's pieces become grabble...
+            NextTurn():
+            [
+              ++turnCount
+              ++playersTurn
+              currentTeam = !currentTeam
+            ]
+            (winner)
+            Layout Updates:
+            [PieceWell
+            PieceBoard
+            Wells
+            Spaces
+            Slots ]
+            Logic Updates:
+            [Pieces
+            pieceStatusMap (finds winner) ->
+              GameState.Finished
+              Both teams' pieces locked
+              PieceAnimations (winner)]
+              Partials are removed.
+              Modal animates in and out
+              Swipe board ->
+                Pieces animate off and back to well
+                GameState.Ready

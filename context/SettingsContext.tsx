@@ -11,6 +11,7 @@ import React, {
 type SettingsContextType = {
   colorTheme: ColorThemeType;
   setColorTheme: React.Dispatch<React.SetStateAction<ColorThemeType>>;
+  // teamTheme:
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -21,6 +22,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [colorTheme, setColorTheme] = useState<ColorThemeType>(CLASSIC);
+  // const [teamTheme, setTeamTheme] = useState<TeamThemeType>(CLASSIC);
 
   // Load saved theme on mount
   useEffect(() => {
@@ -28,6 +30,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
       const saved = await loadAppState();
       if (saved?.theme) {
         setColorTheme(saved.theme);
+        // setTeamTheme(saved.theme)
       }
       // if (saved.boardPieceLocations) {
       //   setBoardPieceLocations(saved.boardPieceLocations);

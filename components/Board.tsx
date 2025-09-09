@@ -8,7 +8,7 @@ import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction } from "@/types/board";
 import { GameState } from "@/types/logic";
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   Directions,
@@ -49,9 +49,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
   };
 
   const pullPieces = useGravity();
-
+  const firstTurn = useRef(true);
+  const timer = useRef(0);
   // !@# Should only fire when we actually pull gravity
   useLayoutEffect(() => {
+    if (timer.current > 0) return;
     Object.keys(logic.pieces).forEach((pieceId) => {
       const entry = Object.entries(layout.boardPieceLocations).find(
         ([, value]) => value === pieceId
@@ -66,13 +68,27 @@ const Board = ({ className, onRotate }: BoardProps) => {
         });
       }
     });
-    setTimeout(() => logic.checkGameFinished(layout.boardPieceLocations), 1000);
-
+    timer.current = setTimeout(() => {
+      if (firstTurn.current) {
+        logic.setGameState(GameState.Ready);
+        firstTurn.current = false;
+        return;
+      }
+      console.log("checkgamefinished");
+      logic.checkGameFinished(layout.boardPieceLocations);
+    }, 300);
+    return () => {
+      clearTimeout(timer.current);
+      timer.current = 0;
+    };
   }, [layout.boardPieceLocations]);
 
   const executePull = (direction: Direction) => {
-    if (logic.gameState === GameState.Finished) return;
-
+    if (
+      logic.gameState === GameState.Finished ||
+      logic.gameState === GameState.Ready
+    )
+      return;
     pullPieces(direction);
   };
 
