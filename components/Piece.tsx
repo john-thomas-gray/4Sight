@@ -55,8 +55,6 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const [currentWellId, currentWellData] = getCurrentWellData()
 
-  console.log(currentWellData)
-
   const currentWellDataSV = useSharedValue(currentWellData)
 
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
@@ -239,6 +237,8 @@ const Piece = ({ team, id }: PieceProps) => {
           return;
         } else if (isSpace) {
           console.log("isSpace");
+          /* Need to add a check to see
+          if the well is occupied */
           const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
           const slotData = slots.find((s) => s.id === dropSlotData.dropSlot.id);
           if (!slotData) {
@@ -266,6 +266,8 @@ const Piece = ({ team, id }: PieceProps) => {
           return;
         } else if (isWell) {
           console.log("isWell");
+          /* Need to add a check to see
+          if the well is occupied */
           animateToSelectedCell({
             translateX: animate.translateX,
             translateY: animate.translateY,

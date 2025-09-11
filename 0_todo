@@ -95,7 +95,6 @@ Tests:
 
 Sunday:
 
-- change color
 - loop animation
 - prevent winner intro animation from playing again, unless a new piece is added to the row
 
@@ -115,3 +114,7 @@ Tuesday:
 Wednesday:
 
 - Async storage saves board state.
+
+
+Bugs
+Piece will be dropped without letting go of it if you hover a droppable location
