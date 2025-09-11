@@ -18,7 +18,6 @@ export const getCellArray = ({
     type: Board.CellType.Well as const,
     team,
   }));
-
   if (result === "wells") return wellArray;
 
   const slotArray = Object.entries(layout.slots).map(([id, layout]) => ({

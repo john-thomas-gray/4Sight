@@ -1,2 +1,2 @@
-export const WIN_LENGTH = 3;
-export const RESTRICTIONS_OFF = true;
+export const WIN_LENGTH = 4;
+export const RESTRICTIONS_ON = false;

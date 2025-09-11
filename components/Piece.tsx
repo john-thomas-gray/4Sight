@@ -1,12 +1,7 @@
-import {
-  animateMisplacedPiece,
-  animatePieceDrop,
-  animateToSelectedCell,
-} from "@/animations/animations";
+import { animateMisplacedPiece, animatePieceDrop, animateToSelectedCell } from "@/animations/animations";
 import { GameElements } from "@/constants";
-import { RESTRICTIONS_OFF } from "@/constants/logic";
+import { ANIMATE_PIECE_DROP } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
-import { Board } from "@/types";
 import { Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
@@ -44,36 +39,28 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const slots = getCellArray({ layout, result: "slots", team });
 
-  const getCurrentWellData = (id: string) => {
-    return (
-      getCellArray({ layout, result: "wells", team }).find(
-        (well) => well.id === id
-      ) || null
+  const getCurrentWellData = () => {
+    let CWID = "";
+    const entry = Object.entries(layout.wellPieceLocations).find(
+      ([, pieceId]) => pieceId === id
     );
+    if (entry) {
+      CWID = entry[0];
+    }
+    const currentWellData = getCellArray({ layout, result: "wells", team }).find(
+      (well) => well.id === CWID
+    );
+    return [CWID, currentWellData]
   };
 
-  let currentWellId: string = "";
-  const entry = Object.entries(layout.wellPieceLocations!).find(
-    ([, pieceId]) => pieceId === id
-  );
+  const [currentWellId, currentWellData] = getCurrentWellData()
 
-  if (entry) {
-    currentWellId = entry[0];
-  }
+  console.log(currentWellData)
 
-  useEffect(() => {
-    if (status === PieceStatus.inWell) {
-      getCurrentWellData(id);
-    } else {
-      currentWellDataSV.value = null;
-    }
-  }, [currentWellId]);
-
-  const currentWellDataSV = useSharedValue<Board.CellProps | null>(
-    currentWellId ? getCurrentWellData(currentWellId) : null
-  );
+  const currentWellDataSV = useSharedValue(currentWellData)
 
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
+
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
@@ -117,21 +104,24 @@ const Piece = ({ team, id }: PieceProps) => {
       animate.winnerColor.value = settings.colorTheme.TEAM_TWO_WINNER_COLOR;
     }
   }, []);
+
   const movePiece = Gesture.Pan()
     .enabled(
-      RESTRICTIONS_OFF || logic.gameState !== GameState.Finished &&
-        (status === PieceStatus.isHeld || status === PieceStatus.inWell)
+      logic.gameState !== GameState.Finished &&
+        (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
+        logic.currentTeam === team &&
+        logic.moveInProgress === false
     )
     .onStart(() => {
       runOnJS(deleteWPLUI)();
       runOnJS(updateStatus)(PieceStatus.isHeld);
+      runOnJS(logic.setMIP)({ setting: true, delay: 0 });
     })
     .onUpdate((event) => {
       animate.translateX.value = event.absoluteX - GameElements.PIECE_RADIUS;
       animate.translateY.value = event.absoluteY - GameElements.PIECE_RADIUS;
     })
     .onEnd(() => {
-      console.log("blah");
       const pieceCenter = {
         x: animate.translateX.value + GameElements.PIECE_RADIUS,
         y: animate.translateY.value + GameElements.PIECE_RADIUS,
@@ -143,8 +133,7 @@ const Piece = ({ team, id }: PieceProps) => {
           pageY: selectedCellCoordY,
           width: selectedCellWidth,
           height: selectedCellHeight,
-          // !@#
-        } = selectedCell.layout!;
+        } = selectedCell.layout;
 
         const cellFound =
           pieceCenter.x >= selectedCellCoordX &&
@@ -153,6 +142,7 @@ const Piece = ({ team, id }: PieceProps) => {
           pieceCenter.y <= selectedCellCoordY + selectedCellHeight;
 
         if (!cellFound) continue;
+
         const id = selectedCell.id;
         const isSlot = selectedCell.id in layout.slots;
         const isSpace = selectedCell.id in layout.spaces;
@@ -217,60 +207,62 @@ const Piece = ({ team, id }: PieceProps) => {
               "No free board space near slot. Slot blocked!:",
               selectedCell.id
             );
-            if (
-              currentWellDataSV.value?.layout &&
-              currentWellDataSV.value?.id
-            ) {
-              runOnJS(setWPLUI)(currentWellDataSV.value.id);
-
+            if (currentWellDataSV.value?.layout) {
               animateMisplacedPiece({
                 translateX: animate.translateX,
                 translateY: animate.translateY,
                 currentWellLayout: currentWellDataSV.value.layout,
               });
             }
+            runOnJS(logic.setMIP)({ setting: false });
             return;
           }
 
           const finalSpaceId = `${prevRow}-${prevCol}`;
           const finalSpaceLayout = layout.spaces[finalSpaceId];
 
-          if (!finalSpaceLayout) {
-            return;
-          }
+          if (!finalSpaceLayout) return;
 
           animatePieceDrop({
             translateX: animate.translateX,
             translateY: animate.translateY,
-            slotLayout: selectedCell.layout!,
+            slotLayout: selectedCell.layout,
             spaceLayout: finalSpaceLayout,
           });
 
           runOnJS(setBPLUI)(finalSpaceId);
           runOnJS(updateStatus)(PieceStatus.onBoard);
+          runOnJS(logic.setMIP)({
+            setting: false,
+            delay: ANIMATE_PIECE_DROP,
+          });
           return;
         } else if (isSpace) {
           console.log("isSpace");
           const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
           const slotData = slots.find((s) => s.id === dropSlotData.dropSlot.id);
           if (!slotData) {
-            animateMisplacedPiece({
-              translateX: animate.translateX,
-              translateY: animate.translateY,
-              currentWellLayout: currentWellDataSV!.value!.layout!,
-            });
-            continue;
+            if (currentWellDataSV.value?.layout) {
+              animateMisplacedPiece({
+                translateX: animate.translateX,
+                translateY: animate.translateY,
+                currentWellLayout: currentWellDataSV.value.layout,
+              });
+            }
+            runOnJS(logic.setMIP)({ setting: false });
+            return;
           }
+
           animatePieceDrop({
             translateX: animate.translateX,
             translateY: animate.translateY,
-            slotLayout: slotData!.layout!,
-            spaceLayout: selectedCell.layout!,
+            slotLayout: slotData.layout,
+            spaceLayout: selectedCell.layout,
           });
 
           runOnJS(setBPLUI)(id);
           runOnJS(updateStatus)(PieceStatus.onBoard);
-
+          runOnJS(logic.setMIP)({ setting: false, delay: ANIMATE_PIECE_DROP });
           return;
         } else if (isWell) {
           console.log("isWell");
@@ -279,27 +271,33 @@ const Piece = ({ team, id }: PieceProps) => {
             translateY: animate.translateY,
             selectedCell,
           });
+          runOnJS(logic.setMIP)({ setting: false });
           return;
         }
       }
-      console.log("hi");
-      // animateMisplacedPiece({
-      //   translateX: animate.translateX,
-      //   translateY: animate.translateY,
-      //   currentWellLayout: currentWellDataSV!.value!.layout!,
-      // });
+
+      if (currentWellDataSV.value?.layout) {
+        animateMisplacedPiece({
+          translateX: animate.translateX,
+          translateY: animate.translateY,
+          currentWellLayout: currentWellDataSV.value.layout,
+        });
+      }
+
+      runOnJS(logic.setMIP)({ setting: false });
       return;
     });
+
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
       { translateX: animate.translateX.value },
       { translateY: animate.translateY.value },
-      { scaleX: animate.scaleX!.value },
-      { scaleY: animate.scaleY!.value },
-      { skewX: `${animate.skewX!.value}deg` },
-      { skewY: `${animate.skewY!.value}deg` },
-      { rotate: `${animate.rotation!.value}deg` },
+      { scaleX: animate.scaleX.value },
+      { scaleY: animate.scaleY.value },
+      { skewX: `${animate.skewX.value}deg` },
+      { skewY: `${animate.skewY.value}deg` },
+      { rotate: `${animate.rotation.value}deg` },
     ],
     backgroundColor: animate.color.value,
     // shadows: [

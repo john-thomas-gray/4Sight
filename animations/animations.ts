@@ -1,5 +1,5 @@
 import { Animations, GameElements } from "@/constants";
-import { SLOT_INSERT_DURATION } from "@/constants/animations";
+import { SLOT_INSERT } from "@/constants/animations";
 import { Board } from "@/types";
 import { CellLayout, EachCellType } from "@/types/board";
 import {
@@ -29,14 +29,14 @@ export const animateMisplacedPiece = ({
   translateX.value = withTiming(
     well.pageX + well.width / 2 - GameElements.PIECE_RADIUS,
     {
-      duration: Animations.WELL_RETURN_DURATION,
+      duration: Animations.WELL_RETURN,
       easing: Easing.inOut(Easing.quad),
     }
   );
   translateY.value = withTiming(
     well.pageY + well.height / 2 - GameElements.PIECE_RADIUS,
     {
-      duration: Animations.WELL_RETURN_DURATION,
+      duration: Animations.WELL_RETURN,
       easing: Easing.inOut(Easing.quad),
     }
   );
@@ -60,7 +60,7 @@ export const animateToSelectedCell = ({
       selectedCell.layout!.height / 2 -
       GameElements.PIECE_RADIUS,
     {
-      duration: Animations.WELL_RETURN_DURATION,
+      duration: Animations.WELL_RETURN,
       easing: Easing.inOut(Easing.quad),
     }
   );
@@ -70,7 +70,7 @@ export const animateToSelectedCell = ({
       selectedCell.layout!.height / 2 -
       GameElements.PIECE_RADIUS,
     {
-      duration: Animations.WELL_RETURN_DURATION,
+      duration: Animations.WELL_RETURN,
       easing: Easing.inOut(Easing.quad),
     }
   );
@@ -94,14 +94,14 @@ export const animatePieceDrop = ({
     withTiming(
       slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS,
       {
-        duration: Animations.SLOT_INSERT_DURATION,
+        duration: Animations.SLOT_INSERT,
         easing: Easing.inOut(Easing.quad),
       }
     ),
-    withDelay(SLOT_INSERT_DURATION, withTiming(
+    withDelay(SLOT_INSERT, withTiming(
       spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
       {
-        duration: Animations.SLOT_TO_SPACE_DURATION,
+        duration: Animations.SLOT_TO_SPACE,
         easing: Easing.bounce,
       }
 
@@ -112,14 +112,14 @@ export const animatePieceDrop = ({
     withTiming(
       slotLayout.pageY + slotLayout.height / 2 - GameElements.PIECE_RADIUS,
       {
-        duration: Animations.SLOT_INSERT_DURATION,
+        duration: Animations.SLOT_INSERT,
         easing: Easing.inOut(Easing.quad),
       }
     ),
-    withDelay(SLOT_INSERT_DURATION, withTiming(
+    withDelay(SLOT_INSERT, withTiming(
       spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
       {
-        duration: Animations.SLOT_TO_SPACE_DURATION,
+        duration: Animations.SLOT_TO_SPACE,
         easing: Easing.bounce,
       }
     ))

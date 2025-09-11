@@ -16,14 +16,14 @@ const animateGravity = ({
   translateX.value = withTiming(
     spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
     {
-      duration: Animations.SLOT_TO_SPACE_DURATION,
+      duration: Animations.SLOT_TO_SPACE,
       easing: Easing.bounce,
     }
   );
   translateY.value = withTiming(
     spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
     {
-      duration: Animations.SLOT_TO_SPACE_DURATION,
+      duration: Animations.SLOT_TO_SPACE,
       easing: Easing.bounce,
     }
   );

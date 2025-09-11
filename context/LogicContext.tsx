@@ -39,6 +39,9 @@ export type LogicContextType = {
   pieceAnimations: Record<string, PieceAnimation>;
   pieceStatusMap: PieceStatusMap;
   setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
+  moveInProgress: boolean;
+  setMoveInProgress: React.Dispatch<React.SetStateAction<boolean>>;
+  setMIP: ({ setting, delay }: { setting: boolean; delay?: number }) => void;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -54,9 +57,18 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
   const { wells, layoutReady, setWellPieceLocations } = useLayout();
   const pieceAnimations = usePieceAnimations();
+  const [moveInProgress, setMoveInProgress] = useState(false);
+  const setMIP = ({setting, delay}: {setting: boolean, delay?:number}) => {
+    setTimeout(() => setMoveInProgress(setting), delay || 0)
+  };
   console.log(gameState);
   console.log(turnCount);
   console.log(playersTurn);
+
+
+  React.useEffect(() => {
+    console.log("moveInProgress:", moveInProgress)
+  }, [moveInProgress]);
 
   const toPieces = (
     team: Team,
@@ -203,7 +215,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setWinner(winnerTeam);
       setGameState(GameState.Finished);
     } else {
-      setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE_DURATION);
+      setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE);
     }
   };
 
@@ -224,6 +236,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieceAnimations,
       pieceStatusMap,
       setPieceStatusMap,
+      moveInProgress,
+      setMoveInProgress,
+      setMIP
     }),
     [
       gameMode,
@@ -234,6 +249,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieces,
       pieceAnimations,
       pieceStatusMap,
+      moveInProgress
     ]
   );
 
