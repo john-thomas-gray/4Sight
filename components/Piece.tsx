@@ -94,7 +94,7 @@ const Piece = ({ team, id }: PieceProps) => {
       });
     }
   };
-
+  // Looks good
   useEffect(() => {
     if (team === Team.TeamOne) {
       animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
