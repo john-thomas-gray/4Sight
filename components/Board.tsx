@@ -1,5 +1,4 @@
 import animateGravity from "@/animations/animateGravity";
-import { SLOT_TO_SPACE } from "@/constants/animations";
 import {
   BASE_CELL_SIZE,
   BOARD_SIZE,
@@ -83,17 +82,20 @@ const Board = ({ className, onRotate }: BoardProps) => {
       timer.current = 0;
     };
   }, [layout.boardPieceLocations]);
-
+  const isMoving = useRef(false)
   const executePull = (direction: Direction) => {
     if (
       logic.gameState === GameState.Finished ||
       logic.gameState === GameState.Ready ||
-      logic.moveInProgress
+      isMoving.current
     )
       return;
+
+    isMoving.current = true
+
     pullPieces(direction);
-    logic.setMIP({setting: true})
-    logic.setMIP({setting: false, delay: SLOT_TO_SPACE})
+
+    setTimeout(() => {isMoving.current = false}, 1500)
   };
 
   const pullLeft = Gesture.Fling()

@@ -27,6 +27,9 @@ const Piece = ({ team, id }: PieceProps) => {
   if (!animate) {
     throw new Error(`No animation found for piece id ${id}`);
   }
+  useEffect(() => {
+    console.log(logic.moveInProgress)
+  }, [logic.moveInProgress])
 
   useEffect(() => {
     logic.setPieceStatusMap((prev) => ({
