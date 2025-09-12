@@ -258,8 +258,21 @@ const Piece = ({ team, id }: PieceProps) => {
               return;
             } else if (isSpace) {
               console.log("isSpace");
-              /* Need to add a check to see
-          if the well is occupied */
+              // Check if the space is occupied
+              const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
+              if (isOccupied) {
+                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                  animateMisplacedPiece({
+                    translateX: animate.translateX,
+                    translateY: animate.translateY,
+                    currentWellLayout: currentWellDataSV.value.layout,
+                  });
+                }
+                runOnJS(set)();
+                runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
+                return;
+              }
+
               const dropSlotData = getReachableSlot(
                 layout.boardPieceLocations,
                 id
@@ -296,8 +309,21 @@ const Piece = ({ team, id }: PieceProps) => {
               return;
             } else if (isWell) {
               console.log("isWell");
-              /* Need to add a check to see
-          if the well is occupied */
+              // Check if the well is occupied
+              const isOccupied = layout.wellPieceLocations[id] !== undefined;
+              if (isOccupied) {
+                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                  animateMisplacedPiece({
+                    translateX: animate.translateX,
+                    translateY: animate.translateY,
+                    currentWellLayout: currentWellDataSV.value.layout,
+                  });
+                }
+                runOnJS(set)();
+                runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
+                return;
+              }
+
               animateToSelectedCell({
                 translateX: animate.translateX,
                 translateY: animate.translateY,
