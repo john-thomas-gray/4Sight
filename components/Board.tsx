@@ -86,7 +86,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const executePull = (direction: Direction) => {
     if (
       logic.gameState === GameState.Finished ||
-      logic.gameState === GameState.Ready ||
+      logic.gameState === GameState.Ready
+      ||
       isMoving.current
     )
       return;

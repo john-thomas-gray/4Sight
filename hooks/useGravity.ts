@@ -18,9 +18,15 @@ const moveLog = ({
 };
 
 export const useGravity = () => {
-  const { layout } = useGameContext();
+  const { layout, logic } = useGameContext();
   const applyGravity = (direction: GravityProps["direction"]) => {
+    // Don't apply gravity if a move is already in progress
+    if (logic.moveInProgress) {
+      return;
+    }
+
     const updatedPieceLocations = { ...layout.boardPieceLocations };
+    let hasMoves = false;
 
     if (direction === Direction.Up) {
       for (let row = 2; row <= 7; row++) {
@@ -39,6 +45,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
@@ -62,6 +69,7 @@ export const useGravity = () => {
             }
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
@@ -86,6 +94,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
@@ -110,6 +119,7 @@ export const useGravity = () => {
 
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
@@ -123,7 +133,18 @@ export const useGravity = () => {
       return;
     }
 
+    // Only apply gravity if there are actual moves to make
+    if (!hasMoves) {
+      return;
+    }
+
+    // Set move in progress to prevent other pieces from moving
+    logic.setMoveInProgress(true);
+
     layout.setBoardPieceLocations(updatedPieceLocations);
+
+    // Reset move in progress after gravity completes
+    logic.setMoveInProgress(false);
   };
   return applyGravity;
 };

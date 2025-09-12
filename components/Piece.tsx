@@ -1,6 +1,10 @@
-import { animateMisplacedPiece, animatePieceDrop, animateToSelectedCell } from "@/animations/animations";
+import {
+  animateMisplacedPiece,
+  animatePieceDrop,
+  animateToSelectedCell,
+} from "@/animations/animations";
 import { GameElements } from "@/constants";
-import { ANIMATE_PIECE_DROP } from "@/constants/animations";
+import { ANIMATE_MISPLACED_PIECE, ANIMATE_PIECE_DROP, WELL_RETURN } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
@@ -18,6 +22,17 @@ import Highlight from "./Highlight";
 
 const Piece = ({ team, id }: PieceProps) => {
   const { layout, logic, settings } = useGameContext();
+
+  const set = () => {
+    logic.setMoveInProgress(true);
+  };
+  const unset = (delay = 0) => {
+    if (delay > 0) {
+      logic.setMIP({ setting: false, delay });
+    } else {
+      logic.setMoveInProgress(false);
+    }
+  };
   const animate = useMemo(() => {
     return logic.pieceAnimations[id];
   }, [logic.pieceAnimations, id]);
@@ -27,9 +42,6 @@ const Piece = ({ team, id }: PieceProps) => {
   if (!animate) {
     throw new Error(`No animation found for piece id ${id}`);
   }
-  useEffect(() => {
-    console.log(logic.moveInProgress)
-  }, [logic.moveInProgress])
 
   useEffect(() => {
     logic.setPieceStatusMap((prev) => ({
@@ -50,18 +62,19 @@ const Piece = ({ team, id }: PieceProps) => {
     if (entry) {
       CWID = entry[0];
     }
-    const currentWellData = getCellArray({ layout, result: "wells", team }).find(
-      (well) => well.id === CWID
-    );
-    return [CWID, currentWellData]
+    const currentWellData = getCellArray({
+      layout,
+      result: "wells",
+      team,
+    }).find((well) => well.id === CWID);
+    return [CWID, currentWellData];
   };
 
-  const [currentWellId, currentWellData] = getCurrentWellData()
+  const [currentWellId, currentWellData] = getCurrentWellData();
 
-  const currentWellDataSV = useSharedValue(currentWellData)
+  const currentWellDataSV = useSharedValue(currentWellData);
 
   const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
-
 
   useEffect(() => {
     boardPieceLocationsSV.value = layout.boardPieceLocations;
@@ -106,193 +119,209 @@ const Piece = ({ team, id }: PieceProps) => {
     }
   }, []);
 
-  const movePiece = Gesture.Pan()
-    .enabled(
-      logic.gameState !== GameState.Finished &&
-        (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
-        logic.currentTeam === team &&
-        logic.moveInProgress === false
-    )
-    .onStart(() => {
-      runOnJS(deleteWPLUI)();
-      runOnJS(updateStatus)(PieceStatus.isHeld);
-      runOnJS(logic.setMIP)({ setting: true, delay: 0 });
-    })
-    .onUpdate((event) => {
-      animate.translateX.value = event.absoluteX - GameElements.PIECE_RADIUS;
-      animate.translateY.value = event.absoluteY - GameElements.PIECE_RADIUS;
-    })
-    .onEnd(() => {
-      const pieceCenter = {
-        x: animate.translateX.value + GameElements.PIECE_RADIUS,
-        y: animate.translateY.value + GameElements.PIECE_RADIUS,
-      };
+  const movePiece = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(
+          logic.gameState !== GameState.Finished &&
+          (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
+          logic.currentTeam === team &&
+          logic.moveInProgress === false
+        )
+        .onStart(() => {
 
-      for (const selectedCell of allCells) {
-        const {
-          pageX: selectedCellCoordX,
-          pageY: selectedCellCoordY,
-          width: selectedCellWidth,
-          height: selectedCellHeight,
-        } = selectedCell.layout;
-
-        const cellFound =
-          pieceCenter.x >= selectedCellCoordX &&
-          pieceCenter.x <= selectedCellCoordX + selectedCellWidth &&
-          pieceCenter.y >= selectedCellCoordY &&
-          pieceCenter.y <= selectedCellCoordY + selectedCellHeight;
-
-        if (!cellFound) continue;
-
-        const id = selectedCell.id;
-        const isSlot = selectedCell.id in layout.slots;
-        const isSpace = selectedCell.id in layout.spaces;
-        const isWell = selectedCell.id in layout.wells[team];
-
-        let [nextRow, nextCol] = selectedCell.id.split("-").map(Number) as [
-          number,
-          number
-        ];
-        let prevRow: number | null = null;
-        let prevCol: number | null = null;
-
-        if (isSlot) {
-          console.log("isSlot");
-          const slotDirection =
-            nextRow === 8
-              ? "N"
-              : nextRow === 0
-              ? "S"
-              : nextCol === 0
-              ? "E"
-              : "W";
-
-          const deltas: Record<string, { dr: number; dc: number }> = {
-            N: { dr: -1, dc: 0 },
-            S: { dr: 1, dc: 0 },
-            E: { dr: 0, dc: 1 },
-            W: { dr: 0, dc: -1 },
+          runOnJS(deleteWPLUI)();
+          runOnJS(updateStatus)(PieceStatus.isHeld);
+        })
+        .onUpdate((event) => {
+          animate.translateX.value =
+            event.absoluteX - GameElements.PIECE_RADIUS;
+          animate.translateY.value =
+            event.absoluteY - GameElements.PIECE_RADIUS;
+        })
+        .onEnd(() => {
+          const pieceCenter = {
+            x: animate.translateX.value + GameElements.PIECE_RADIUS,
+            y: animate.translateY.value + GameElements.PIECE_RADIUS,
           };
 
-          nextRow += deltas[slotDirection].dr;
-          nextCol += deltas[slotDirection].dc;
+          for (const selectedCell of allCells) {
+            // Add null check for layout
+            if (!selectedCell.layout) continue;
 
-          while (true) {
-            const nextSpaceId = `${nextRow}-${nextCol}`;
-            const nextSpace = layout.spaces[nextSpaceId];
+            const {
+              pageX: selectedCellCoordX,
+              pageY: selectedCellCoordY,
+              width: selectedCellWidth,
+              height: selectedCellHeight,
+            } = selectedCell.layout;
 
-            const isOccupied =
-              boardPieceLocationsSV.value[nextSpaceId] !== undefined;
+            const cellFound =
+              pieceCenter.x >= selectedCellCoordX &&
+              pieceCenter.x <= selectedCellCoordX + selectedCellWidth &&
+              pieceCenter.y >= selectedCellCoordY &&
+              pieceCenter.y <= selectedCellCoordY + selectedCellHeight;
 
-            if (
-              nextRow < 0 ||
-              nextRow >= GameElements.BOARD_SIZE ||
-              nextCol < 0 ||
-              nextCol >= GameElements.BOARD_SIZE
-            )
-              break;
+            if (!cellFound) continue;
 
-            if (!nextSpace) break;
+            const id = selectedCell.id;
+            const isSlot = selectedCell.id in layout.slots;
+            const isSpace = selectedCell.id in layout.spaces;
+            const isWell = selectedCell.id in layout.wells[team];
 
-            if (isOccupied) break;
+            let [nextRow, nextCol] = selectedCell.id.split("-").map(Number) as [
+              number,
+              number
+            ];
+            let prevRow: number | null = null;
+            let prevCol: number | null = null;
 
-            prevRow = nextRow;
-            prevCol = nextCol;
+            if (isSlot) {
+              console.log("isSlot");
+              const slotDirection =
+                nextRow === 8
+                  ? "N"
+                  : nextRow === 0
+                  ? "S"
+                  : nextCol === 0
+                  ? "E"
+                  : "W";
 
-            nextRow += deltas[slotDirection].dr;
-            nextCol += deltas[slotDirection].dc;
-          }
+              const deltas: Record<string, { dr: number; dc: number }> = {
+                N: { dr: -1, dc: 0 },
+                S: { dr: 1, dc: 0 },
+                E: { dr: 0, dc: 1 },
+                W: { dr: 0, dc: -1 },
+              };
 
-          if (prevRow === null || prevCol === null) {
-            console.warn(
-              "No free board space near slot. Slot blocked!:",
-              selectedCell.id
-            );
-            if (currentWellDataSV.value?.layout) {
-              animateMisplacedPiece({
+              nextRow += deltas[slotDirection].dr;
+              nextCol += deltas[slotDirection].dc;
+
+              while (true) {
+                const nextSpaceId = `${nextRow}-${nextCol}`;
+                const nextSpace = layout.spaces[nextSpaceId];
+
+                const isOccupied =
+                  boardPieceLocationsSV.value[nextSpaceId] !== undefined;
+
+                if (
+                  nextRow < 0 ||
+                  nextRow >= GameElements.BOARD_SIZE ||
+                  nextCol < 0 ||
+                  nextCol >= GameElements.BOARD_SIZE
+                )
+                  break;
+
+                if (!nextSpace) break;
+
+                if (isOccupied) break;
+
+                prevRow = nextRow;
+                prevCol = nextCol;
+
+                nextRow += deltas[slotDirection].dr;
+                nextCol += deltas[slotDirection].dc;
+              }
+
+              if (prevRow === null || prevCol === null) {
+                console.warn(
+                  "No free board space near slot. Slot blocked!:",
+                  selectedCell.id
+                );
+                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                  animateMisplacedPiece({
+                    translateX: animate.translateX,
+                    translateY: animate.translateY,
+                    currentWellLayout: currentWellDataSV.value.layout,
+                  });
+                }
+                runOnJS(unset)();
+                return;
+              }
+
+              const finalSpaceId = `${prevRow}-${prevCol}`;
+              const finalSpaceLayout = layout.spaces[finalSpaceId];
+
+              if (!finalSpaceLayout) return;
+
+              animatePieceDrop({
                 translateX: animate.translateX,
                 translateY: animate.translateY,
-                currentWellLayout: currentWellDataSV.value.layout,
+                slotLayout: selectedCell.layout,
+                spaceLayout: finalSpaceLayout,
               });
-            }
-            runOnJS(logic.setMIP)({ setting: false });
-            return;
-          }
 
-          const finalSpaceId = `${prevRow}-${prevCol}`;
-          const finalSpaceLayout = layout.spaces[finalSpaceId];
-
-          if (!finalSpaceLayout) return;
-
-          animatePieceDrop({
-            translateX: animate.translateX,
-            translateY: animate.translateY,
-            slotLayout: selectedCell.layout,
-            spaceLayout: finalSpaceLayout,
-          });
-
-          runOnJS(setBPLUI)(finalSpaceId);
-          runOnJS(updateStatus)(PieceStatus.onBoard);
-          runOnJS(logic.setMIP)({
-            setting: false,
-            delay: ANIMATE_PIECE_DROP,
-          });
-          return;
-        } else if (isSpace) {
-          console.log("isSpace");
-          /* Need to add a check to see
+              runOnJS(setBPLUI)(finalSpaceId);
+              runOnJS(updateStatus)(PieceStatus.onBoard);
+              runOnJS(set)();
+              runOnJS(unset)(ANIMATE_PIECE_DROP);
+              return;
+            } else if (isSpace) {
+              console.log("isSpace");
+              /* Need to add a check to see
           if the well is occupied */
-          const dropSlotData = getReachableSlot(layout.boardPieceLocations, id);
-          const slotData = slots.find((s) => s.id === dropSlotData.dropSlot.id);
-          if (!slotData) {
-            if (currentWellDataSV.value?.layout) {
-              animateMisplacedPiece({
+              const dropSlotData = getReachableSlot(
+                layout.boardPieceLocations,
+                id
+              );
+              const slotData = slots.find(
+                (s) => s.id === dropSlotData.dropSlot.id
+              );
+              if (!slotData) {
+                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                  animateMisplacedPiece({
+                    translateX: animate.translateX,
+                    translateY: animate.translateY,
+                    currentWellLayout: currentWellDataSV.value.layout,
+                  });
+                }
+                runOnJS(set)();
+                runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
+                return;
+              }
+
+              if (!slotData.layout) return;
+
+              animatePieceDrop({
                 translateX: animate.translateX,
                 translateY: animate.translateY,
-                currentWellLayout: currentWellDataSV.value.layout,
+                slotLayout: slotData.layout,
+                spaceLayout: selectedCell.layout,
               });
+
+              runOnJS(setBPLUI)(id);
+              runOnJS(updateStatus)(PieceStatus.onBoard);
+              runOnJS(set)();
+              runOnJS(unset)(ANIMATE_PIECE_DROP);
+              return;
+            } else if (isWell) {
+              console.log("isWell");
+              /* Need to add a check to see
+          if the well is occupied */
+              animateToSelectedCell({
+                translateX: animate.translateX,
+                translateY: animate.translateY,
+                selectedCell,
+              });
+              runOnJS(set)();
+              runOnJS(unset)(WELL_RETURN);
+              return;
             }
-            runOnJS(logic.setMIP)({ setting: false });
-            return;
           }
 
-          animatePieceDrop({
-            translateX: animate.translateX,
-            translateY: animate.translateY,
-            slotLayout: slotData.layout,
-            spaceLayout: selectedCell.layout,
-          });
-
-          runOnJS(setBPLUI)(id);
-          runOnJS(updateStatus)(PieceStatus.onBoard);
-          runOnJS(logic.setMIP)({ setting: false, delay: ANIMATE_PIECE_DROP });
+          if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+            animateMisplacedPiece({
+              translateX: animate.translateX,
+              translateY: animate.translateY,
+              currentWellLayout: currentWellDataSV.value.layout,
+            });
+          }
+          runOnJS(set)();
+          runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
           return;
-        } else if (isWell) {
-          console.log("isWell");
-          /* Need to add a check to see
-          if the well is occupied */
-          animateToSelectedCell({
-            translateX: animate.translateX,
-            translateY: animate.translateY,
-            selectedCell,
-          });
-          runOnJS(logic.setMIP)({ setting: false });
-          return;
-        }
-      }
-
-      if (currentWellDataSV.value?.layout) {
-        animateMisplacedPiece({
-          translateX: animate.translateX,
-          translateY: animate.translateY,
-          currentWellLayout: currentWellDataSV.value.layout,
-        });
-      }
-
-      runOnJS(logic.setMIP)({ setting: false });
-      return;
-    });
-
+        }),
+    [logic.gameState, logic.currentTeam, status, logic.moveInProgress]
+  );
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
