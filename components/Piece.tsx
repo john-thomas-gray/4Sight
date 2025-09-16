@@ -14,7 +14,7 @@ import React, { useEffect, useMemo } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  runOnJS,
+  scheduleOnRN,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
@@ -130,8 +130,8 @@ const Piece = ({ team, id }: PieceProps) => {
         )
         .onStart(() => {
 
-          runOnJS(deleteWPLUI)();
-          runOnJS(updateStatus)(PieceStatus.isHeld);
+          scheduleOnRN(deleteWPLUI)();
+          scheduleOnRN(updateStatus)(PieceStatus.isHeld);
         })
         .onUpdate((event) => {
           animate.translateX.value =
@@ -235,7 +235,7 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
-                runOnJS(unset)();
+                scheduleOnRN(unset)();
                 return;
               }
 
@@ -251,10 +251,10 @@ const Piece = ({ team, id }: PieceProps) => {
                 spaceLayout: finalSpaceLayout,
               });
 
-              runOnJS(setBPLUI)(finalSpaceId);
-              runOnJS(updateStatus)(PieceStatus.onBoard);
-              runOnJS(set)();
-              runOnJS(unset)(ANIMATE_PIECE_DROP);
+              scheduleOnRN(setBPLUI)(finalSpaceId);
+              scheduleOnRN(updateStatus)(PieceStatus.onBoard);
+              scheduleOnRN(set)();
+              scheduleOnRN(unset)(ANIMATE_PIECE_DROP);
               return;
             } else if (isSpace) {
               console.log("isSpace");
@@ -268,8 +268,8 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
-                runOnJS(set)();
-                runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
+                scheduleOnRN(set)();
+                scheduleOnRN(unset)(ANIMATE_MISPLACED_PIECE);
                 return;
               }
 
@@ -288,8 +288,8 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
-                runOnJS(set)();
-                runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
+                scheduleOnRN(set)();
+                scheduleOnRN(unset)(ANIMATE_MISPLACED_PIECE);
                 return;
               }
 
@@ -302,10 +302,10 @@ const Piece = ({ team, id }: PieceProps) => {
                 spaceLayout: selectedCell.layout,
               });
 
-              runOnJS(setBPLUI)(id);
-              runOnJS(updateStatus)(PieceStatus.onBoard);
-              runOnJS(set)();
-              runOnJS(unset)(ANIMATE_PIECE_DROP);
+              scheduleOnRN(setBPLUI)(id);
+              scheduleOnRN(updateStatus)(PieceStatus.onBoard);
+              scheduleOnRN(set)();
+              scheduleOnRN(unset)(ANIMATE_PIECE_DROP);
               return;
             } else if (isWell) {
               console.log("isWell");
@@ -319,8 +319,8 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
-                runOnJS(set)();
-                runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
+                scheduleOnRN(set)();
+                scheduleOnRN(unset)(ANIMATE_MISPLACED_PIECE);
                 return;
               }
 
@@ -329,8 +329,8 @@ const Piece = ({ team, id }: PieceProps) => {
                 translateY: animate.translateY,
                 selectedCell,
               });
-              runOnJS(set)();
-              runOnJS(unset)(WELL_RETURN);
+              scheduleOnRN(set)();
+              scheduleOnRN(unset)(WELL_RETURN);
               return;
             }
           }
@@ -342,8 +342,8 @@ const Piece = ({ team, id }: PieceProps) => {
               currentWellLayout: currentWellDataSV.value.layout,
             });
           }
-          runOnJS(set)();
-          runOnJS(unset)(ANIMATE_MISPLACED_PIECE);
+          scheduleOnRN(set)();
+          scheduleOnRN(unset)(ANIMATE_MISPLACED_PIECE);
           return;
         }),
     [logic.gameState, logic.currentTeam, status, logic.moveInProgress]

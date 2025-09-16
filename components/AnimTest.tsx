@@ -6,7 +6,7 @@ import React from "react";
 import { Pressable, ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  runOnJS,
+  scheduleOnRN,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
@@ -57,7 +57,7 @@ const AnimTest = ({ team }: { team: Team }) => {
     <>
       <Pressable
         onPress={() => {
-          runOnJS(animateTest)({ tX: translateX, tY: translateY });
+          scheduleOnRN(animateTest)({ tX: translateX, tY: translateY });
 
           console.log("pressed");
         }}
