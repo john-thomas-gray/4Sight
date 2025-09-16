@@ -1,7 +1,7 @@
 import { Link } from "expo-router";
 import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 
 export default function Index() {
   return (
@@ -13,7 +13,7 @@ export default function Index() {
 
 function InnerIndexLayout() {
   return (
-    <SafeAreaView className="flex-1 border-2 border-red-50 items-center justify-evenly bg-white">
+    <View className="flex-1 border-2 border-red-50 items-center justify-evenly bg-white">
       <View className="flex-row items-end items-center">
         <Text className="text-black font-bold text-[128px] mb-4">4</Text>
         <Text className="text-black font-bold text-8xl ml-2">Sight</Text>
@@ -32,6 +32,6 @@ function InnerIndexLayout() {
           Test
         </Link>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,7 +1,14 @@
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
+} from "react-native-reanimated";
 
 const WinModal = ({
   onOpen,
@@ -15,11 +22,39 @@ const WinModal = ({
   winner: Team
 }) => {
   const {settings} = useGameContext()
+
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  useEffect(() => {
+    if (visible) {
+      // Start animation sequence when modal becomes visible
+      scale.value = withSequence(
+        withSpring(1.2, { damping: 8, stiffness: 100 }), // Bounce up
+        withSpring(1, { damping: 10, stiffness: 120 }),  // Settle to normal size
+        withDelay(2000, withSpring(0, { damping: 12, stiffness: 150 })) // Shrink after delay
+      );
+
+      opacity.value = withSequence(
+        withSpring(1, { damping: 10, stiffness: 100 }),
+        withDelay(2000, withSpring(0, { damping: 12, stiffness: 150 }))
+      );
+    } else {
+      // Reset values when not visible
+      scale.value = 0;
+      opacity.value = 0;
+    }
+  }, [visible, scale, opacity]);
+
   if (!visible) return null;
 
   let displayText = "";
   let textColor = "#444"
-
 
   if (winner === Team.TeamOne) {
     displayText = "Team One Wins!";
@@ -33,7 +68,9 @@ const WinModal = ({
   }
 return (
     <View style={styles.overlay}>
-      <Text style={[styles.text, { color: textColor }]}>{displayText}</Text>
+      <Animated.View style={animatedStyle}>
+        <Text style={[styles.text, { color: textColor }]}>{displayText}</Text>
+      </Animated.View>
     </View>
   );
 };

@@ -61,14 +61,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const setMIP = ({setting, delay}: {setting: boolean, delay?:number}) => {
     setTimeout(() => setMoveInProgress(setting), delay || 0)
   };
-  console.log(gameState);
-  console.log(turnCount);
-  console.log(playersTurn);
-
-
-  React.useEffect(() => {
-    console.log("moveInProgress:", moveInProgress)
-  }, [moveInProgress]);
 
   const toPieces = (
     team: Team,
@@ -270,7 +262,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     setGameState(GameState.Ready)
 
   }
-console.log(currentTeam);
+
 
   return (
     <LogicContext.Provider value={contextValue}>
