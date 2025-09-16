@@ -1,4 +1,4 @@
-import { scheduleOnRN } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 const setPieceOnBoard = (
   success: boolean,
@@ -8,7 +8,7 @@ const setPieceOnBoard = (
   "worklet";
   if (success) {
     onBoardSV.value = true;
-    scheduleOnRN(setOnBoard)(true);
+    scheduleOnRN(setOnBoard, true);
   }
 };
 

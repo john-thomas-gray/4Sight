@@ -15,7 +15,8 @@ import {
   Gesture,
   GestureDetector,
 } from "react-native-gesture-handler";
-import Animated, { scheduleOnRN } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import Corner from "./Corner";
 import Slot from "./Slot";
 import Space from "./Space";
@@ -102,25 +103,25 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      scheduleOnRN(executePull)(Direction.Left);
+      scheduleOnRN(executePull, Direction.Left);
     });
 
   const pullRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      scheduleOnRN(executePull)(Direction.Right);
+      scheduleOnRN(executePull, Direction.Right);
     });
 
   const pullUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      scheduleOnRN(executePull)(Direction.Up);
+      scheduleOnRN(executePull, Direction.Up);
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      scheduleOnRN(executePull)(Direction.Down);
+      scheduleOnRN(executePull, Direction.Down);
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);

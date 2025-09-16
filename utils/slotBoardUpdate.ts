@@ -1,6 +1,7 @@
 import { GameElements } from "@/constants";
 import { CellProps } from "@/types/board";
-import { scheduleOnRN, SharedValue } from "react-native-reanimated";
+import { SharedValue } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 type SlotBoardUpdate = {
   selectedCell: CellProps;
@@ -73,7 +74,7 @@ const slotBoardUpdate = ({
     return;
   }
 
-  scheduleOnRN(setBPLUI)(finalSpaceId);
+  scheduleOnRN(setBPLUI, finalSpaceId);
 
   return { status: "placed", finalSpaceId, finalSpaceLayout };
 };
