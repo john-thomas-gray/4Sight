@@ -104,7 +104,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   for (let i = 0; i < 48; i++) {
     initialPieceStatusMap[i.toString()] = PieceStatus.inWell;
   }
-  const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>({});
+  const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>(initialPieceStatusMap);
 
   /* Look into logical strategies for implementing two game modes */
   const getNextPlayersTurn = (currentTurn: number): 1 | 2 | 3 | 4 => {
