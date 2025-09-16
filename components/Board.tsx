@@ -15,7 +15,8 @@ import {
   Gesture,
   GestureDetector,
 } from "react-native-gesture-handler";
-import Animated, { runOnJS } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import Corner from "./Corner";
 import Slot from "./Slot";
 import Space from "./Space";
@@ -82,45 +83,46 @@ const Board = ({ className, onRotate }: BoardProps) => {
       timer.current = 0;
     };
   }, [layout.boardPieceLocations]);
-  const isMoving = useRef(false)
+  const isMoving = useRef(false);
   const executePull = (direction: Direction) => {
     if (
       logic.gameState === GameState.Finished ||
-      logic.gameState === GameState.Ready
-      ||
+      logic.gameState === GameState.Ready ||
       isMoving.current
     )
       return;
 
-    isMoving.current = true
+    isMoving.current = true;
 
     pullPieces(direction);
 
-    setTimeout(() => {isMoving.current = false}, 1500)
+    setTimeout(() => {
+      isMoving.current = false;
+    }, 1500);
   };
 
   const pullLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      runOnJS(executePull)(Direction.Left);
+      scheduleOnRN(executePull, Direction.Left);
     });
 
   const pullRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      runOnJS(executePull)(Direction.Right);
+      scheduleOnRN(executePull, Direction.Right);
     });
 
   const pullUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      runOnJS(executePull)(Direction.Up);
+      scheduleOnRN(executePull, Direction.Up);
     });
 
   const pullDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      runOnJS(executePull)(Direction.Down);
+      scheduleOnRN(executePull, Direction.Down);
     });
 
   const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);

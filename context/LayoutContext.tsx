@@ -45,6 +45,11 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
   const [boardPieceLocations, setBoardPieceLocations] = useState<
     Record<string, string>
   >({});
+  console.log("slots:", Object.keys(slots).length > 0);
+  console.log("spaces:", Object.keys(spaces).length > 0);
+  console.log("corners:", Object.keys(corners).length > 0);
+  console.log("wells[TeamOne]:", Object.keys(wells[Team.TeamOne]).length > 0);
+  console.log("wells[TeamTwo]:", Object.keys(wells[Team.TeamTwo]).length > 0);
 
   const layoutReady =
     Object.keys(slots).length > 0 &&
