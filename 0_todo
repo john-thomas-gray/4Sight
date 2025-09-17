@@ -64,7 +64,7 @@ Gestures that affect game state:
   - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
   - Shake phone knocks all the pieces off and they go back to their wells
 
-Win Logic:
+Partial Logic:
 
 - Three pieces in a row with an accessible empty square as the next space are highlighted
 - hightlights three pieces in a row with flashing beacons
@@ -84,37 +84,18 @@ Feedback:
 - Piece placed in unavailable slot bumps the piece that's blocking it
 
 Refactoring:
-
 - Remove game state logic from piece
 - Debounce updates that run a million times
 - Team theme encompasses colorTheme. Add another set of themes that contains teamName to be used in end message
 Tests:
-
 - For everything
-
-
-Sunday:
-
 - loop animation
 - prevent winner intro animation from playing again, unless a new piece is added to the row
-
-Monday:
-
 - Win message
 - Set available gestures
 - Swipe pieces off to restart
-
-Tuesday:
-
 - Menu tab to indicate how to get back to the main menu (nothing fancy)
 - Swipe back and forth to forfeit
 - Can drop pieces while pull is animating
 - Can pull when you pull
-
-Wednesday:
-
 - Async storage saves board state.
-
-
-Bugs
-Piece will be dropped without letting go of it if you hover a droppable location

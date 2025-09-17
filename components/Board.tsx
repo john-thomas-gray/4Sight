@@ -8,6 +8,7 @@ import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction } from "@/types/board";
 import { GameState } from "@/types/logic";
+import { createHandleFling } from "@/utils/flingLogic";
 import React, { useLayoutEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -56,7 +57,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
   useLayoutEffect(() => {
     if (timer.current > 0) return;
     Object.keys(logic.pieces).forEach((pieceId) => {
-      const entry = Object.entries(layout.boardPieceLocations).find(
+      const entry = Object.entries(logic.boardPieceLocations).find(
         ([, value]) => value === pieceId
       );
       if (entry) {
@@ -75,15 +76,15 @@ const Board = ({ className, onRotate }: BoardProps) => {
         firstTurn.current = false;
         return;
       }
-      console.log("checkgamefinished");
-      logic.checkGameFinished(layout.boardPieceLocations);
+      logic.checkGameFinished(logic.boardPieceLocations);
     }, 300);
     return () => {
       clearTimeout(timer.current);
       timer.current = 0;
     };
-  }, [layout.boardPieceLocations]);
+  }, [logic.boardPieceLocations, layout.spaces, logic]);
   const isMoving = useRef(false);
+
   const executePull = (direction: Direction) => {
     if (
       logic.gameState === GameState.Finished ||
@@ -98,35 +99,59 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
     setTimeout(() => {
       isMoving.current = false;
+      // !@# magic number
     }, 1500);
   };
 
-  const pullLeft = Gesture.Fling()
+  const lastFlingDirection = useRef<null | "horizontal" | "vertical">(null);
+  const lastFlingAxis = useRef<null | "x" | "y">(null);
+  const lastFlingSign = useRef<null | number>(null);
+  const flingCount = useRef(0);
+  const lastFlingTime = useRef(0);
+  const PULL_ACTION_DELAY = 500;
+
+  const handleFling = createHandleFling({
+    lastFlingDirection,
+    lastFlingAxis,
+    lastFlingSign,
+    flingCount,
+    lastFlingTime,
+    pullActionDelay: PULL_ACTION_DELAY,
+    executePull,
+  });
+
+  const flingLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Left);
+      scheduleOnRN(handleFling, Direction.Left);
     });
 
-  const pullRight = Gesture.Fling()
+  const flingRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Right);
+      scheduleOnRN(handleFling, Direction.Right);
     });
 
-  const pullUp = Gesture.Fling()
+  const flingUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Up);
+      scheduleOnRN(handleFling, Direction.Up);
     });
 
-  const pullDown = Gesture.Fling()
+  const flingDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Down);
+      scheduleOnRN(handleFling, Direction.Down);
     });
 
-  const pullGestures = Gesture.Exclusive(pullLeft, pullRight, pullUp, pullDown);
-  const boardGestures = Gesture.Exclusive(pullGestures);
+  const flingGestures = Gesture.Exclusive(
+    flingLeft,
+    flingRight,
+    flingUp,
+    flingDown
+  );
+
+  const boardGestures = Gesture.Exclusive(flingGestures);
 
   return (
     <GestureDetector gesture={boardGestures}>

@@ -25,7 +25,7 @@ export const useGravity = () => {
       return;
     }
 
-    const updatedPieceLocations = { ...layout.boardPieceLocations };
+    const updatedPieceLocations = { ...logic.boardPieceLocations };
     let hasMoves = false;
 
     if (direction === Direction.Up) {
@@ -141,7 +141,7 @@ export const useGravity = () => {
     // Set move in progress to prevent other pieces from moving
     logic.setMoveInProgress(true);
 
-    layout.setBoardPieceLocations(updatedPieceLocations);
+    logic.setBoardPieceLocations(updatedPieceLocations);
 
     // Reset move in progress after gravity completes
     logic.setMoveInProgress(false);

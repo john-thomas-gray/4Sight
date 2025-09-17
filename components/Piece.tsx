@@ -4,7 +4,11 @@ import {
   animateToSelectedCell,
 } from "@/animations/animations";
 import { GameElements } from "@/constants";
-import { ANIMATE_MISPLACED_PIECE, ANIMATE_PIECE_DROP, WELL_RETURN } from "@/constants/animations";
+import {
+  ANIMATE_MISPLACED_PIECE,
+  ANIMATE_PIECE_DROP,
+  WELL_RETURN,
+} from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
@@ -56,7 +60,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const getCurrentWellData = () => {
     let CWID = "";
-    const entry = Object.entries(layout.wellPieceLocations).find(
+    const entry = Object.entries(logic.wellPieceLocations).find(
       ([, pieceId]) => pieceId === id
     );
     if (entry) {
@@ -74,19 +78,19 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const currentWellDataSV = useSharedValue(currentWellData);
 
-  const boardPieceLocationsSV = useSharedValue(layout.boardPieceLocations);
+  const boardPieceLocationsSV = useSharedValue(logic.boardPieceLocations);
 
   useEffect(() => {
-    boardPieceLocationsSV.value = layout.boardPieceLocations;
-  }, [layout.boardPieceLocations]);
+    boardPieceLocationsSV.value = logic.boardPieceLocations;
+  }, [logic.boardPieceLocations]);
 
   const setBPLUI = (finalSpaceId: string) => {
-    const updated = { ...layout.boardPieceLocations, [finalSpaceId]: id };
-    layout.setBoardPieceLocations(updated);
+    const updated = { ...logic.boardPieceLocations, [finalSpaceId]: id };
+    logic.setBoardPieceLocations(updated);
   };
 
   const setWPLUI = (wellId: string) => {
-    layout.setWellPieceLocations((prev) => ({
+    logic.setWellPieceLocations((prev) => ({
       ...prev,
       [wellId]: id,
     }));
@@ -101,7 +105,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const deleteWPLUI = () => {
     if (currentWellId) {
-      layout.setWellPieceLocations((prev) => {
+      logic.setWellPieceLocations((prev) => {
         const updated = { ...prev };
         delete updated[currentWellId as string];
         return updated;
@@ -124,12 +128,11 @@ const Piece = ({ team, id }: PieceProps) => {
       Gesture.Pan()
         .enabled(
           logic.gameState !== GameState.Finished &&
-          (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
-          logic.currentTeam === team &&
-          logic.moveInProgress === false
+            (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
+            logic.currentTeam === team &&
+            logic.moveInProgress === false
         )
         .onStart(() => {
-
           scheduleOnRN(deleteWPLUI);
           scheduleOnRN(updateStatus, PieceStatus.isHeld);
         })
@@ -228,7 +231,11 @@ const Piece = ({ team, id }: PieceProps) => {
                   "No free board space near slot. Slot blocked!:",
                   selectedCell.id
                 );
-                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                if (
+                  currentWellDataSV.value &&
+                  typeof currentWellDataSV.value === "object" &&
+                  currentWellDataSV.value.layout
+                ) {
                   animateMisplacedPiece({
                     translateX: animate.translateX,
                     translateY: animate.translateY,
@@ -261,7 +268,11 @@ const Piece = ({ team, id }: PieceProps) => {
               // Check if the space is occupied
               const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
               if (isOccupied) {
-                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                if (
+                  currentWellDataSV.value &&
+                  typeof currentWellDataSV.value === "object" &&
+                  currentWellDataSV.value.layout
+                ) {
                   animateMisplacedPiece({
                     translateX: animate.translateX,
                     translateY: animate.translateY,
@@ -274,14 +285,18 @@ const Piece = ({ team, id }: PieceProps) => {
               }
 
               const dropSlotData = getReachableSlot(
-                layout.boardPieceLocations,
+                logic.boardPieceLocations,
                 id
               );
               const slotData = slots.find(
                 (s) => s.id === dropSlotData.dropSlot.id
               );
               if (!slotData) {
-                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                if (
+                  currentWellDataSV.value &&
+                  typeof currentWellDataSV.value === "object" &&
+                  currentWellDataSV.value.layout
+                ) {
                   animateMisplacedPiece({
                     translateX: animate.translateX,
                     translateY: animate.translateY,
@@ -310,9 +325,13 @@ const Piece = ({ team, id }: PieceProps) => {
             } else if (isWell) {
               console.log("isWell");
               // Check if the well is occupied
-              const isOccupied = layout.wellPieceLocations[id] !== undefined;
+              const isOccupied = logic.wellPieceLocations[id] !== undefined;
               if (isOccupied) {
-                if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+                if (
+                  currentWellDataSV.value &&
+                  typeof currentWellDataSV.value === "object" &&
+                  currentWellDataSV.value.layout
+                ) {
                   animateMisplacedPiece({
                     translateX: animate.translateX,
                     translateY: animate.translateY,
@@ -335,7 +354,11 @@ const Piece = ({ team, id }: PieceProps) => {
             }
           }
 
-          if (currentWellDataSV.value && typeof currentWellDataSV.value === 'object' && currentWellDataSV.value.layout) {
+          if (
+            currentWellDataSV.value &&
+            typeof currentWellDataSV.value === "object" &&
+            currentWellDataSV.value.layout
+          ) {
             animateMisplacedPiece({
               translateX: animate.translateX,
               translateY: animate.translateY,

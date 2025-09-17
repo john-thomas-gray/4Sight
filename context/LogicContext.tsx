@@ -17,6 +17,7 @@ import findPieceRelationships, {
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useRef,
   useState,
@@ -42,6 +43,14 @@ export type LogicContextType = {
   moveInProgress: boolean;
   setMoveInProgress: React.Dispatch<React.SetStateAction<boolean>>;
   setMIP: ({ setting, delay }: { setting: boolean; delay?: number }) => void;
+  wellPieceLocations: Record<string, string>;
+  setWellPieceLocations: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
+  boardPieceLocations: Record<string, string>;
+  setBoardPieceLocations: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -55,12 +64,19 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
-  const { wells, layoutReady, setWellPieceLocations } = useLayout();
+  const { wells, layoutReady } = useLayout();
   const pieceAnimations = usePieceAnimations();
   const [moveInProgress, setMoveInProgress] = useState(false);
-  const setMIP = ({setting, delay}: {setting: boolean, delay?:number}) => {
-    setTimeout(() => setMoveInProgress(setting), delay || 0)
+  const setMIP = ({ setting, delay }: { setting: boolean; delay?: number }) => {
+    setTimeout(() => setMoveInProgress(setting), delay || 0);
   };
+
+  const [wellPieceLocations, setWellPieceLocations] = useState<
+    Record<string, string>
+  >({});
+  const [boardPieceLocations, setBoardPieceLocations] = useState<
+    Record<string, string>
+  >({});
 
   const toPieces = (
     team: Team,
@@ -104,112 +120,117 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   for (let i = 0; i < 48; i++) {
     initialPieceStatusMap[i.toString()] = PieceStatus.inWell;
   }
-  const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>(initialPieceStatusMap);
+  const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>(
+    initialPieceStatusMap
+  );
 
   /* Look into logical strategies for implementing two game modes */
   const getNextPlayersTurn = (currentTurn: number): 1 | 2 | 3 | 4 => {
     return ((currentTurn % 4) + 1) as 1 | 2 | 3 | 4;
   };
 
-  const nextTurn = () => {
-    if(gameState === GameState.Ready){
-      setGameState(GameState.Playing)
-    } else if (gameState === GameState.Finished) return
+  const nextTurn = useCallback(() => {
+    if (gameState === GameState.Ready) {
+      setGameState(GameState.Playing);
+    } else if (gameState === GameState.Finished) return;
     setPlayersTurn(getNextPlayersTurn(playersTurn));
     setTurnCount((prev) => prev + 1);
-    console.log("Next turn ran");
-  };
+  }, [gameState, playersTurn]);
 
   const currentTeam = playersTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne;
 
-  const checkGameFinished = (
-    updatedBoardPieceLocations: Record<string, string>
-  ) => {
-    const pieceRelationships = findPieceRelationships({
-      boardPieceLocations: updatedBoardPieceLocations,
-      winLen: Logic.WIN_LENGTH,
-      allPieces: pieces,
-    });
+  const checkGameFinished = useCallback(
+    (updatedBoardPieceLocations: Record<string, string>) => {
+      const pieceRelationships = findPieceRelationships({
+        boardPieceLocations: updatedBoardPieceLocations,
+        winLen: Logic.WIN_LENGTH,
+        allPieces: pieces,
+      });
 
-    type SetWinningPieces = {
-      partials: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
-      winners: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
-      setPieces: React.Dispatch<
-        React.SetStateAction<Record<string, PieceProps>>
-      >;
-      animations: Record<string, PieceAnimation>;
-    };
-
-    function setWinningPieces({
-      partials,
-      winners,
-      setPieces,
-      animations,
-    }: SetWinningPieces) {
-      const updatePieceStatus = (
-        groups: BoardPieces[],
-        pieceStatus: PieceStatus
-      ) => {
-        const pieceAnims = animations;
-        let baseDelay = WINNER_BASE_DELAY;
-
-        groups.forEach((group) => {
-          group.forEach((boardPiece: BoardPiece, idx) => {
-            const delay = baseDelay + idx * 300; // stagger each piece
-            setTimeout(() => {
-              setPieceStatusMap((prev) => ({
-                ...prev,
-                [boardPiece.pieceId]: pieceStatus,
-              }));
-              animateWinner({
-                ...pieceAnims[boardPiece.pieceId],
-              });
-            }, delay);
-          });
-          baseDelay += group.length * 100; // increment baseDelay for next group
-        });
+      type SetWinningPieces = {
+        partials: Pick<
+          Record<Team, BoardPieces[]>,
+          Team.TeamOne | Team.TeamTwo
+        >;
+        winners: Pick<Record<Team, BoardPieces[]>, Team.TeamOne | Team.TeamTwo>;
+        setPieces: React.Dispatch<
+          React.SetStateAction<Record<string, PieceProps>>
+        >;
+        animations: Record<string, PieceAnimation>;
       };
 
-      const winnersOne = winners.teamOne;
-      const winnersTwo = winners.teamTwo;
-      // const partialsOne = partials.teamOne;
-      // const partialsTwo = partials.teamTwo;
+      function setWinningPieces({
+        partials,
+        winners,
+        setPieces,
+        animations,
+      }: SetWinningPieces) {
+        const updatePieceStatus = (
+          groups: BoardPieces[],
+          pieceStatus: PieceStatus
+        ) => {
+          const pieceAnims = animations;
+          let baseDelay = WINNER_BASE_DELAY;
 
-      updatePieceStatus(winnersOne, PieceStatus.winner);
-      updatePieceStatus(winnersTwo, PieceStatus.winner);
-      // updatePieceStatus(partialsOne, PieceStatus.partial);
-      // updatePieceStatus(partialsTwo, PieceStatus.partial);
-    }
-    // console.log("pieceR", pieceRelationships)
+          groups.forEach((group) => {
+            group.forEach((boardPiece: BoardPiece, idx) => {
+              const delay = baseDelay + idx * 300; // stagger each piece
+              setTimeout(() => {
+                setPieceStatusMap((prev) => ({
+                  ...prev,
+                  [boardPiece.pieceId]: pieceStatus,
+                }));
+                animateWinner({
+                  ...pieceAnims[boardPiece.pieceId],
+                });
+              }, delay);
+            });
+            baseDelay += group.length * 100; // increment baseDelay for next group
+          });
+        };
 
-    setWinningPieces({
-      partials: pieceRelationships.partials,
-      winners: pieceRelationships.winners,
-      setPieces,
-      animations: pieceAnimations,
-    });
+        const winnersOne = winners.teamOne;
+        const winnersTwo = winners.teamTwo;
+        // const partialsOne = partials.teamOne;
+        // const partialsTwo = partials.teamTwo;
 
-    const teamOneWins =
-      Object.keys(pieceRelationships.winners.teamOne).length > 0;
-    const teamTwoWins =
-      Object.keys(pieceRelationships.winners.teamTwo).length > 0;
-    const bothTeamsWin = teamOneWins && teamTwoWins;
+        updatePieceStatus(winnersOne, PieceStatus.winner);
+        updatePieceStatus(winnersTwo, PieceStatus.winner);
+        // updatePieceStatus(partialsOne, PieceStatus.partial);
+        // updatePieceStatus(partialsTwo, PieceStatus.partial);
+      }
+      // console.log("pieceR", pieceRelationships)
 
-    const winnerTeam = bothTeamsWin
-      ? Team.Both
-      : teamOneWins
-      ? Team.TeamOne
-      : teamTwoWins
-      ? Team.TeamTwo
-      : Team.Unassigned;
+      setWinningPieces({
+        partials: pieceRelationships.partials,
+        winners: pieceRelationships.winners,
+        setPieces,
+        animations: pieceAnimations,
+      });
 
-    if (winnerTeam !== Team.Unassigned) {
-      setWinner(winnerTeam);
-      setGameState(GameState.Finished);
-    } else {
-      setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE);
-    }
-  };
+      const teamOneWins =
+        Object.keys(pieceRelationships.winners.teamOne).length > 0;
+      const teamTwoWins =
+        Object.keys(pieceRelationships.winners.teamTwo).length > 0;
+      const bothTeamsWin = teamOneWins && teamTwoWins;
+
+      const winnerTeam = bothTeamsWin
+        ? Team.Both
+        : teamOneWins
+        ? Team.TeamOne
+        : teamTwoWins
+        ? Team.TeamTwo
+        : Team.Unassigned;
+
+      if (winnerTeam !== Team.Unassigned) {
+        setWinner(winnerTeam);
+        setGameState(GameState.Finished);
+      } else {
+        setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE);
+      }
+    },
+    [pieces, pieceAnimations, nextTurn]
+  );
 
   const contextValue = React.useMemo(
     () => ({
@@ -230,7 +251,11 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setPieceStatusMap,
       moveInProgress,
       setMoveInProgress,
-      setMIP
+      setMIP,
+      wellPieceLocations,
+      setWellPieceLocations,
+      boardPieceLocations,
+      setBoardPieceLocations,
     }),
     [
       gameMode,
@@ -241,7 +266,11 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieces,
       pieceAnimations,
       pieceStatusMap,
-      moveInProgress
+      moveInProgress,
+      wellPieceLocations,
+      boardPieceLocations,
+      nextTurn,
+      checkGameFinished,
     ]
   );
 
@@ -252,17 +281,15 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       firstTurn.current = false;
       return clearTimeout(debounce);
     } else if (debounce) {
-      return
+      return;
     }
-      setGameState(GameState.Ready);
+    setGameState(GameState.Ready);
   }, 300);
 
-  const resetGame = () => {
-    setTurnCount(0)
-    setGameState(GameState.Ready)
-
-  }
-
+  // const resetGame = () => {
+  //   setTurnCount(0);
+  //   setGameState(GameState.Ready);
+  // };
 
   return (
     <LogicContext.Provider value={contextValue}>

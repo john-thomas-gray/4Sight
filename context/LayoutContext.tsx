@@ -12,16 +12,8 @@ export type LayoutContextType = {
   spaces: Record<string, CellLayout>;
   slots: Record<string, CellLayout>;
   corners: Record<string, CellLayout>;
-  wellPieceLocations: Record<string, string>;
-  boardPieceLocations: Record<string, string>;
   layoutReady: boolean;
   registerCell: ({ id, type, team, layout }: CellProps) => void;
-  setWellPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
-  setBoardPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
 };
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -38,18 +30,6 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
   const [corners, setCorners] = useState<Record<string, CellLayout>>({});
-
-  const [wellPieceLocations, setWellPieceLocations] = useState<
-    Record<string, string>
-  >({});
-  const [boardPieceLocations, setBoardPieceLocations] = useState<
-    Record<string, string>
-  >({});
-  console.log("slots:", Object.keys(slots).length > 0);
-  console.log("spaces:", Object.keys(spaces).length > 0);
-  console.log("corners:", Object.keys(corners).length > 0);
-  console.log("wells[TeamOne]:", Object.keys(wells[Team.TeamOne]).length > 0);
-  console.log("wells[TeamTwo]:", Object.keys(wells[Team.TeamTwo]).length > 0);
 
   const layoutReady =
     Object.keys(slots).length > 0 &&
@@ -90,10 +70,6 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
         spaces,
         slots,
         corners,
-        wellPieceLocations,
-        setWellPieceLocations,
-        boardPieceLocations,
-        setBoardPieceLocations,
         layoutReady,
         registerCell,
       }}

@@ -19,9 +19,9 @@ const WinModal = ({
   onOpen?: () => void;
   onClose?: () => void;
   visible: boolean;
-  winner: Team
+  winner: Team;
 }) => {
-  const {settings} = useGameContext()
+  const { settings } = useGameContext();
 
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
@@ -36,8 +36,8 @@ const WinModal = ({
       // Start animation sequence when modal becomes visible
       scale.value = withSequence(
         withSpring(1.2, { damping: 8, stiffness: 100 }), // Bounce up
-        withSpring(1, { damping: 10, stiffness: 120 }),  // Settle to normal size
-        withDelay(2000, withSpring(0, { damping: 12, stiffness: 150 })) // Shrink after delay
+        withSpring(0.5, { damping: 10, stiffness: 120 }), // Settle to normal size
+        withDelay(200, withSpring(0, { damping: 12, stiffness: 150 })) // Shrink after delay
       );
 
       opacity.value = withSequence(
@@ -54,7 +54,7 @@ const WinModal = ({
   if (!visible) return null;
 
   let displayText = "";
-  let textColor = "#444"
+  let textColor = "#444";
 
   if (winner === Team.TeamOne) {
     displayText = "Team One Wins!";
@@ -66,7 +66,7 @@ const WinModal = ({
     displayText = "Both Teams Win!";
     textColor = "#FFA500"; // Orange for tie
   }
-return (
+  return (
     <View style={styles.overlay}>
       <Animated.View style={animatedStyle}>
         <Text style={[styles.text, { color: textColor }]}>{displayText}</Text>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1000
+    zIndex: 1000,
   },
   text: {
     fontSize: 64,
