@@ -1,4 +1,4 @@
-import { Direction } from "@/types/board";
+import { Direction, Team } from "@/types/board";
 import { RefObject } from "react";
 import { scheduleOnRN } from "react-native-worklets";
 
@@ -13,6 +13,9 @@ type CreateHandleFlingParams = {
   lastFlingTime: RefObject<number>;
   pullActionDelay: number;
   executePull: (direction: Direction) => void;
+  playersTurn: 1 | 2 | 3 | 4;
+  currentTeam: Team;
+  setWinner: React.Dispatch<React.SetStateAction<Team>>;
 };
 
 export function createHandleFling({
@@ -23,6 +26,9 @@ export function createHandleFling({
   lastFlingTime,
   pullActionDelay,
   executePull,
+  playersTurn,
+  currentTeam,
+  setWinner,
 }: CreateHandleFlingParams) {
   let timeoutId: number | null = null;
 
@@ -85,7 +91,6 @@ export function createHandleFling({
         return;
       }
       if (flingCount.current === 3) {
-        console.log("Forfeit");
         resetFling();
       }
     }

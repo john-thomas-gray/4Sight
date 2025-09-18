@@ -84,10 +84,11 @@ Feedback:
 - Piece placed in unavailable slot bumps the piece that's blocking it
 
 Refactoring:
+
 - Remove game state logic from piece
 - Debounce updates that run a million times
 - Team theme encompasses colorTheme. Add another set of themes that contains teamName to be used in end message
-Tests:
+  Tests:
 - For everything
 - loop animation
 - prevent winner intro animation from playing again, unless a new piece is added to the row
@@ -96,6 +97,4 @@ Tests:
 - Swipe pieces off to restart
 - Menu tab to indicate how to get back to the main menu (nothing fancy)
 - Swipe back and forth to forfeit
-- Can drop pieces while pull is animating
-- Can pull when you pull
 - Async storage saves board state.

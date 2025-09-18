@@ -8,7 +8,6 @@ import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction } from "@/types/board";
 import { GameState } from "@/types/logic";
-import { createHandleFling } from "@/utils/flingLogic";
 import React, { useLayoutEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -82,7 +81,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       clearTimeout(timer.current);
       timer.current = 0;
     };
-  }, [logic.boardPieceLocations, layout.spaces, logic]);
+  }, [logic.boardPieceLocations, layout.spaces]);
   const isMoving = useRef(false);
 
   const executePull = (direction: Direction) => {
@@ -103,45 +102,28 @@ const Board = ({ className, onRotate }: BoardProps) => {
     }, 1500);
   };
 
-  const lastFlingDirection = useRef<null | "horizontal" | "vertical">(null);
-  const lastFlingAxis = useRef<null | "x" | "y">(null);
-  const lastFlingSign = useRef<null | number>(null);
-  const flingCount = useRef(0);
-  const lastFlingTime = useRef(0);
-  const PULL_ACTION_DELAY = 500;
-
-  const handleFling = createHandleFling({
-    lastFlingDirection,
-    lastFlingAxis,
-    lastFlingSign,
-    flingCount,
-    lastFlingTime,
-    pullActionDelay: PULL_ACTION_DELAY,
-    executePull,
-  });
-
   const flingLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Left);
+      scheduleOnRN(executePull, Direction.Left);
     });
 
   const flingRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Right);
+      scheduleOnRN(executePull, Direction.Right);
     });
 
   const flingUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Up);
+      scheduleOnRN(executePull, Direction.Up);
     });
 
   const flingDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Down);
+      scheduleOnRN(executePull, Direction.Down);
     });
 
   const flingGestures = Gesture.Exclusive(

@@ -39,6 +39,7 @@ export type LogicContextType = {
   setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
   pieceAnimations: Record<string, PieceAnimation>;
   pieceStatusMap: PieceStatusMap;
+  playersTurn: 1 | 2 | 3 | 4;
   setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
   moveInProgress: boolean;
   setMoveInProgress: React.Dispatch<React.SetStateAction<boolean>>;
@@ -248,6 +249,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setPieces,
       pieceAnimations,
       pieceStatusMap,
+      playersTurn,
       setPieceStatusMap,
       moveInProgress,
       setMoveInProgress,
@@ -266,6 +268,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieces,
       pieceAnimations,
       pieceStatusMap,
+      playersTurn,
       moveInProgress,
       wellPieceLocations,
       boardPieceLocations,
@@ -290,7 +293,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   //   setTurnCount(0);
   //   setGameState(GameState.Ready);
   // };
-
+  console.log(turnCount);
   return (
     <LogicContext.Provider value={contextValue}>
       {children}
