@@ -102,28 +102,36 @@ const Board = ({ className, onRotate }: BoardProps) => {
     }, 1500);
   };
 
+  const handleFling = (direction: Direction, gameState: GameState) => {
+    if (gameState === GameState.Playing) {
+      executePull(direction);
+    } else if (gameState === GameState.PostGame) {
+      logic.resetGame(logic.playersTurn, false);
+    }
+  };
+
   const flingLeft = Gesture.Fling()
     .direction(Directions.LEFT)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Left);
+      scheduleOnRN(handleFling, Direction.Left, logic.gameState);
     });
 
   const flingRight = Gesture.Fling()
     .direction(Directions.RIGHT)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Right);
+      scheduleOnRN(handleFling, Direction.Right, logic.gameState);
     });
 
   const flingUp = Gesture.Fling()
     .direction(Directions.UP)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Up);
+      scheduleOnRN(handleFling, Direction.Up, logic.gameState);
     });
 
   const flingDown = Gesture.Fling()
     .direction(Directions.DOWN)
     .onStart(() => {
-      scheduleOnRN(executePull, Direction.Down);
+      scheduleOnRN(handleFling, Direction.Down, logic.gameState);
     });
 
   const flingGestures = Gesture.Exclusive(

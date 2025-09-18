@@ -16,6 +16,7 @@ export enum GameState {
   Ready = "ready",
   Playing = "playing",
   Finished = "finished",
+  PostGame = "postGame",
 }
 
 export enum PieceStatus {

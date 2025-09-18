@@ -1,5 +1,5 @@
 import { animateWinner } from "@/animations/pieceAnimations";
-import { Animations, Logic } from "@/constants";
+import { Animations, GameElements, Logic } from "@/constants";
 import { WINNER_BASE_DELAY } from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
@@ -22,6 +22,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { withTiming } from "react-native-reanimated";
 import { useLayout } from "./LayoutContext";
 
 export type LogicContextType = {
@@ -52,6 +53,7 @@ export type LogicContextType = {
   setBoardPieceLocations: React.Dispatch<
     React.SetStateAction<Record<string, string>>
   >;
+  resetGame: (playersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => void;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -232,6 +234,113 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     },
     [pieces, pieceAnimations, nextTurn]
   );
+  console.log(gameState);
+  const resetGame = useCallback(
+    (startingPlayersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => {
+      // Determine the players turn based on forfeit rule
+      const nextPlayersTurn = forfeit
+        ? getNextPlayersTurn(startingPlayersTurn)
+        : startingPlayersTurn;
+
+      // Reset core gameplay state
+      setWinner(Team.Unassigned);
+      setGameState(GameState.Ready);
+      setMoveInProgress(false);
+      setTurnCount(0);
+
+      // Animate on-board pieces back to an empty team well before resetting maps
+      try {
+        const boardSnapshot = { ...boardPieceLocations };
+        const wellSnapshot = { ...wellPieceLocations };
+        const assignedThisReset = new Set<string>();
+
+        Object.values(boardSnapshot).forEach((pieceId) => {
+          const piece = pieces[pieceId];
+          if (!piece) return;
+          const teamWells = wells[piece.team] || {};
+          const targetWellId = Object.keys(teamWells).find(
+            (wid) => !wellSnapshot[wid] && !assignedThisReset.has(wid)
+          );
+          if (!targetWellId) return;
+          const targetLayout = teamWells[targetWellId];
+          const anim = pieceAnimations[pieceId];
+          if (!anim || !targetLayout) return;
+
+          anim.translateX.value = withTiming(
+            targetLayout.pageX +
+              targetLayout.width / 2 -
+              GameElements.PIECE_RADIUS,
+            { duration: 500 }
+          );
+          anim.translateY.value = withTiming(
+            targetLayout.pageY +
+              targetLayout.height / 2 -
+              GameElements.PIECE_RADIUS,
+            { duration: 500 }
+          );
+          assignedThisReset.add(targetWellId);
+        });
+      } catch {
+        // no-op: animation is best-effort during reset
+      }
+
+      // Reset board relationships
+      setBoardPieceLocations({});
+      setWellPieceLocations({});
+
+      // Reset piece status map
+      const freshPieceStatusMap: PieceStatusMap = {};
+      for (let i = 0; i < 48; i++) {
+        freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
+      }
+      setPieceStatusMap(freshPieceStatusMap);
+
+      // Rebuild pieces and well mappings to Ready state if layout is available
+      if (layoutReady) {
+        const rebuiltPieces: Record<string, PieceProps> = {};
+
+        // Build Team One
+        const teamOneWells = Object.keys(wells[Team.TeamOne] || {});
+        teamOneWells.forEach((wellId, idx) => {
+          const id = `${0 + idx}`;
+          rebuiltPieces[id] = { id, team: Team.TeamOne };
+        });
+
+        // Build Team Two
+        const teamTwoWells = Object.keys(wells[Team.TeamTwo] || {});
+        teamTwoWells.forEach((wellId, idx) => {
+          const id = `${24 + idx}`;
+          rebuiltPieces[id] = { id, team: Team.TeamTwo };
+        });
+
+        // Compute well piece mapping in one pass
+        const newWellPieceLocations: Record<string, string> = {};
+        teamOneWells.forEach((wellId, idx) => {
+          newWellPieceLocations[wellId] = `${0 + idx}`;
+        });
+        teamTwoWells.forEach((wellId, idx) => {
+          newWellPieceLocations[wellId] = `${24 + idx}`;
+        });
+
+        setPieces(rebuiltPieces);
+        setWellPieceLocations(newWellPieceLocations);
+      } else {
+        setPieces({});
+      }
+
+      // Apply players turn at the end to ensure derived currentTeam matches
+      setPlayersTurn(nextPlayersTurn);
+      firstTurn.current = true;
+    },
+    [
+      layoutReady,
+      wells,
+      boardPieceLocations,
+      wellPieceLocations,
+      pieces,
+      pieceAnimations,
+    ]
+  );
 
   const contextValue = React.useMemo(
     () => ({
@@ -258,6 +367,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setWellPieceLocations,
       boardPieceLocations,
       setBoardPieceLocations,
+      resetGame,
     }),
     [
       gameMode,
@@ -274,6 +384,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       boardPieceLocations,
       nextTurn,
       checkGameFinished,
+      resetGame,
     ]
   );
 
@@ -289,10 +400,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     setGameState(GameState.Ready);
   }, 300);
 
-  // const resetGame = () => {
-  //   setTurnCount(0);
-  //   setGameState(GameState.Ready);
-  // };
   console.log(turnCount);
   return (
     <LogicContext.Provider value={contextValue}>

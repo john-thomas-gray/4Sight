@@ -1,5 +1,6 @@
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
+import { GameState } from "@/types/logic";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -7,7 +8,7 @@ import Animated, {
   useSharedValue,
   withDelay,
   withSequence,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 
 const WinModal = ({
@@ -21,7 +22,7 @@ const WinModal = ({
   visible: boolean;
   winner: Team;
 }) => {
-  const { settings } = useGameContext();
+  const { settings, logic } = useGameContext();
 
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
@@ -32,24 +33,26 @@ const WinModal = ({
   }));
 
   useEffect(() => {
+    let timer: number | undefined;
     if (visible) {
-      // Start animation sequence when modal becomes visible
+      // Visible immediately; scale up in 1s, hold 2s, shrink to 0 in 1s
+      opacity.value = 1;
       scale.value = withSequence(
-        withSpring(1.2, { damping: 8, stiffness: 100 }), // Bounce up
-        withSpring(0.5, { damping: 10, stiffness: 120 }), // Settle to normal size
-        withDelay(200, withSpring(0, { damping: 12, stiffness: 150 })) // Shrink after delay
+        withTiming(1, { duration: 1000 }),
+        withDelay(2000, withTiming(0, { duration: 1000 }))
       );
-
-      opacity.value = withSequence(
-        withSpring(1, { damping: 10, stiffness: 100 }),
-        withDelay(2000, withSpring(0, { damping: 12, stiffness: 150 }))
-      );
+      timer = setTimeout(() => {
+        logic.setGameState(GameState.PostGame);
+      }, 4000);
     } else {
       // Reset values when not visible
       scale.value = 0;
       opacity.value = 0;
     }
-  }, [visible, scale, opacity]);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [visible, scale, opacity, logic]);
 
   if (!visible) return null;
 

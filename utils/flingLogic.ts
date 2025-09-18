@@ -92,6 +92,7 @@ export function createHandleFling({
       }
       if (flingCount.current === 3) {
         resetFling();
+        console.log("resetFling");
       }
     }
 
