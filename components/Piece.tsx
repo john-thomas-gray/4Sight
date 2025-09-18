@@ -2,7 +2,7 @@ import {
   animateMisplacedPiece,
   animatePieceDrop,
   animateToSelectedCell,
-} from "@/animations/animations";
+} from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
 import {
   ANIMATE_MISPLACED_PIECE,
@@ -46,6 +46,25 @@ const Piece = ({ team, id }: PieceProps) => {
   if (!animate) {
     throw new Error(`No animation found for piece id ${id}`);
   }
+
+  // Initialize colors based on Team when the piece mounts or theme changes
+  useEffect(() => {
+    if (team === Team.TeamOne) {
+      animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
+      animate.winnerColor.value = settings.colorTheme.TEAM_ONE_WINNER_COLOR;
+    } else {
+      animate.color.value = settings.colorTheme.TEAM_TWO_COLOR;
+      animate.winnerColor.value = settings.colorTheme.TEAM_TWO_WINNER_COLOR;
+    }
+  }, [
+    team,
+    animate.color,
+    animate.winnerColor,
+    settings.colorTheme.TEAM_ONE_COLOR,
+    settings.colorTheme.TEAM_ONE_WINNER_COLOR,
+    settings.colorTheme.TEAM_TWO_COLOR,
+    settings.colorTheme.TEAM_TWO_WINNER_COLOR,
+  ]);
 
   useEffect(() => {
     logic.setPieceStatusMap((prev) => ({
@@ -115,13 +134,15 @@ const Piece = ({ team, id }: PieceProps) => {
 
   useEffect(() => {
     if (team === Team.TeamOne) {
-      animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
-      // animate.winnerColor.value = settings.colorTheme.TEAM_ONE_WINNER_COLOR;
+      if (status !== PieceStatus.winner) {
+        animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
+      }
     } else {
-      animate.color.value = settings.colorTheme.TEAM_TWO_COLOR;
-      animate.winnerColor.value = settings.colorTheme.TEAM_TWO_WINNER_COLOR;
+      if (status !== PieceStatus.winner) {
+        animate.color.value = settings.colorTheme.TEAM_TWO_COLOR;
+      }
     }
-  }, []);
+  }, [status]);
 
   const movePiece = useMemo(
     () =>

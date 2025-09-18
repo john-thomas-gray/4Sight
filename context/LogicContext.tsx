@@ -1,5 +1,5 @@
-import { animateWinner } from "@/animations/pieceAnimations";
-import { Animations, GameElements, Logic } from "@/constants";
+import { animatePieceReset, animateWinner } from "@/animations/pieceAnimations";
+import { Animations, Logic } from "@/constants";
 import { WINNER_BASE_DELAY } from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
@@ -22,7 +22,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { withTiming } from "react-native-reanimated";
+// reanimated helpers used in animation helpers module
 import { useLayout } from "./LayoutContext";
 
 export type LogicContextType = {
@@ -250,35 +250,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
       // Animate on-board pieces back to an empty team well before resetting maps
       try {
-        const boardSnapshot = { ...boardPieceLocations };
-        const wellSnapshot = { ...wellPieceLocations };
-        const assignedThisReset = new Set<string>();
-
-        Object.values(boardSnapshot).forEach((pieceId) => {
-          const piece = pieces[pieceId];
-          if (!piece) return;
-          const teamWells = wells[piece.team] || {};
-          const targetWellId = Object.keys(teamWells).find(
-            (wid) => !wellSnapshot[wid] && !assignedThisReset.has(wid)
-          );
-          if (!targetWellId) return;
-          const targetLayout = teamWells[targetWellId];
-          const anim = pieceAnimations[pieceId];
-          if (!anim || !targetLayout) return;
-
-          anim.translateX.value = withTiming(
-            targetLayout.pageX +
-              targetLayout.width / 2 -
-              GameElements.PIECE_RADIUS,
-            { duration: 500 }
-          );
-          anim.translateY.value = withTiming(
-            targetLayout.pageY +
-              targetLayout.height / 2 -
-              GameElements.PIECE_RADIUS,
-            { duration: 500 }
-          );
-          assignedThisReset.add(targetWellId);
+        animatePieceReset({
+          boardPieceLocations,
+          wellPieceLocations,
+          wells,
+          pieces,
+          pieceAnimations,
+          duration: 500,
         });
       } catch {
         // no-op: animation is best-effort during reset

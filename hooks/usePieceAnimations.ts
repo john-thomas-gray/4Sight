@@ -14,7 +14,7 @@ export type PieceAnimation = {
 };
 
 export const usePieceAnimations = (): Record<string, PieceAnimation> => {
-  return {
+  const animations: Record<string, PieceAnimation> = {
     "0": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["0"].x),
       translateY: useSharedValue(INITIAL_PIECE_POSITIONS["0"].y),
@@ -544,4 +544,6 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       rotation: useSharedValue(0),
     },
   };
+
+  return animations;
 };
