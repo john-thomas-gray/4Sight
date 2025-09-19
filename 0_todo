@@ -37,7 +37,7 @@ Menu Tab\*
 
 - On the play screen, pulling brings the homepage back\*
 - Reacts to device orientation so that it is never on the blocked side
-- Makes itself know at the beginning of the game then retracts
+- Makes itself known at the beginning of the game then retracts
 - Its color shares a color that is the border of the menu screen
 
 Tutorial
@@ -49,7 +49,6 @@ Async storage saves board state.\*
 Gestures that affect game state:
 
 - Swipe back and forth three times to forfeit\*
-- Swipe to clear the board and restart the game\*
 - Shaking forfeits
 
 \*Win State
@@ -59,7 +58,6 @@ Gestures that affect game state:
   the other players pieces light up. A little "gotcha".
 - On a tie the corners change 2 red, 2 yellow. Maybe animate in a circle. Or maybe flash
   from yellow to red and back
-- Message. Appears and disappears.\*
 - Disable movements
   - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
   - Shake phone knocks all the pieces off and they go back to their wells
@@ -72,7 +70,7 @@ Partial Logic:
 Previsualizations
 Feedforward:
 
-- over piece over slot shows preview
+- hover piece over slot shows preview
 - pressing the opposite side of the board shows where pushed pieces would go.
   Signifiers
   - Available/unavailable slot visualizations
@@ -92,9 +90,6 @@ Refactoring:
 - For everything
 - loop animation
 - prevent winner intro animation from playing again, unless a new piece is added to the row
-- Win message
-- Set available gestures
-- Swipe pieces off to restart
 - Menu tab to indicate how to get back to the main menu (nothing fancy)
-- Swipe back and forth to forfeit
+- Drag finger across Well to forfeit
 - Async storage saves board state.
