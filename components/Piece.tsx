@@ -13,7 +13,7 @@ import {
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
-import { GameMode, GameState, PieceProps, PieceStatus } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import React, { useEffect, useMemo } from "react";
@@ -160,39 +160,60 @@ const Piece = ({ team, id }: PieceProps) => {
           console.log(logic.playersTurn);
         })
         .onUpdate((event) => {
-          if (logic.gameMode === GameMode.TwoPlayer) {
-            if (logic.playersTurn % 2 === 1) {
-              animate.translateX.value =
-                event.absoluteX - GameElements.PIECE_RADIUS;
-              animate.translateY.value =
-                event.absoluteY - GameElements.PIECE_RADIUS - 40;
-            } else if (logic.playersTurn % 2 === 0) {
-              animate.translateX.value =
-                event.absoluteX - GameElements.PIECE_RADIUS;
-              animate.translateY.value =
-                event.absoluteY - GameElements.PIECE_RADIUS + 40;
-            }
-          } else {
-            if (logic.playersTurn === 1) {
-              animate.translateX.value =
-                event.absoluteX - GameElements.PIECE_RADIUS;
-              animate.translateY.value =
-                event.absoluteY - GameElements.PIECE_RADIUS - 40;
-            } else if (logic.playersTurn === 2) {
-              animate.translateX.value =
-                event.absoluteX - GameElements.PIECE_RADIUS - 40;
-              animate.translateY.value =
-                event.absoluteY - GameElements.PIECE_RADIUS;
-            } else if (logic.playersTurn === 3) {
-              animate.translateX.value =
-                event.absoluteX - GameElements.PIECE_RADIUS;
-              animate.translateY.value =
-                event.absoluteY - GameElements.PIECE_RADIUS + 40;
-            } else {
-              animate.translateX.value =
-                event.absoluteX - GameElements.PIECE_RADIUS + 40;
-              animate.translateY.value =
-                event.absoluteY - GameElements.PIECE_RADIUS;
+          // if (logic.gameMode === GameMode.TwoPlayer) {
+          //   if (logic.playersTurn % 2 === 1) {
+          //     animate.translateX.value =
+          //       event.absoluteX - GameElements.PIECE_RADIUS;
+          //     animate.translateY.value =
+          //       event.absoluteY - GameElements.PIECE_RADIUS - 40;
+          //   } else if (logic.playersTurn % 2 === 0) {
+          //     animate.translateX.value =
+          //       event.absoluteX - GameElements.PIECE_RADIUS;
+          //     animate.translateY.value =
+          //       event.absoluteY - GameElements.PIECE_RADIUS + 40;
+          //   }
+          // } else {
+          //   if (logic.playersTurn === 1) {
+          //     animate.translateX.value =
+          //       event.absoluteX - GameElements.PIECE_RADIUS;
+          //     animate.translateY.value =
+          //       event.absoluteY - GameElements.PIECE_RADIUS - 40;
+          //   } else if (logic.playersTurn === 2) {
+          //     animate.translateX.value =
+          //       event.absoluteX - GameElements.PIECE_RADIUS - 40;
+          //     animate.translateY.value =
+          //       event.absoluteY - GameElements.PIECE_RADIUS;
+          //   } else if (logic.playersTurn === 3) {
+          //     animate.translateX.value =
+          //       event.absoluteX - GameElements.PIECE_RADIUS;
+          //     animate.translateY.value =
+          //       event.absoluteY - GameElements.PIECE_RADIUS + 40;
+          //   } else {
+          //     animate.translateX.value =
+          //       event.absoluteX - GameElements.PIECE_RADIUS + 40;
+          //     animate.translateY.value =
+          //       event.absoluteY - GameElements.PIECE_RADIUS;
+          //   }
+          // }
+          animate.translateX.value =
+            event.absoluteX - GameElements.PIECE_RADIUS;
+          animate.translateY.value =
+            event.absoluteY - GameElements.PIECE_RADIUS;
+
+          // Log hover when held piece is over a slot
+          if (status === PieceStatus.isHeld) {
+            for (const cell of allCells) {
+              if (!cell.layout) continue;
+              const { pageX, pageY, width, height } = cell.layout;
+              const inside =
+                event.absoluteX >= pageX &&
+                event.absoluteX <= pageX + width &&
+                event.absoluteY >= pageY &&
+                event.absoluteY <= pageY + height;
+              if (inside && cell.id in layout.slots) {
+                console.log("hover");
+                break;
+              }
             }
           }
         })
