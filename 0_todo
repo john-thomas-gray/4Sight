@@ -47,10 +47,6 @@ Tutorial
 
 Async storage saves board state.\*
 
-Gestures that affect game state:
-
-- Swipe back and forth three times to forfeit\*
-
 \*Win State
 
 - Animation? Pieces fill in gold jump and jiggle in a cascade\*
@@ -78,12 +74,10 @@ Feedforward:
 Feedback:
 
 - Piece dropped on inaccessible space bounces off glass.
-- Grabbing piece raises z index above all other pieces
 - Piece placed in unavailable slot bumps the piece that's blocking it
 
 Refactoring:
 
-- Remove game state logic from piece
 - Debounce updates that run a million times
 - Team theme encompasses colorTheme. Add another set of themes that contains teamName to be used in end message
   Tests:

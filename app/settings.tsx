@@ -2,6 +2,7 @@ import { CLASSIC, SCHOOLHOUSE } from "@/constants/colorThemes";
 import { useGameContext } from "@/context/GameContext";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
   const { settings } = useGameContext();
@@ -13,18 +14,18 @@ const Settings = () => {
   const isSchoolhouseSelected = isSameTheme(settings.colorTheme, SCHOOLHOUSE);
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="pl-20 pr-20 pt-20 pb-8">
-        <Text className="text-7xl font-bold text-gray-900">Settings</Text>
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="px-6 pt-6 pb-4">
+        <Text className="text-4xl font-bold text-gray-900">Settings</Text>
       </View>
 
-      <View className="pl-20 pr-20">
-        <Text className="text-5xl font-semibold text-gray-800 mb-3">
+      <View className="px-6">
+        <Text className="text-2xl font-semibold text-gray-800 mb-3">
           Themes
         </Text>
-        <View className="flex-row gap-4">
+        <View className="flex-col gap-4">
           <Pressable
-            className={`w-1/4 self-left items-left justify-left rounded-lg p-4 border ${
+            className={`w-full items-start justify-start rounded-lg p-4 border ${
               isClassicSelected
                 ? "border-black bg-gray-100"
                 : "border-gray-300 bg-gray-50"
@@ -38,7 +39,7 @@ const Settings = () => {
               },
             ]}
           >
-            <Text className="text-gray-900 text-3xl">Classic</Text>
+            <Text className="text-gray-900 text-2xl">Classic</Text>
             <View className="flex-row gap-2 mt-3">
               <View
                 className="h-4 w-4 rounded-full"
@@ -56,7 +57,7 @@ const Settings = () => {
           </Pressable>
 
           <Pressable
-            className={`w-1/4 self-left items-left justify-left rounded-lg p-4 border ${
+            className={`w-full items-start justify-start rounded-lg p-4 border ${
               isSchoolhouseSelected
                 ? "border-black bg-gray-100"
                 : "border-gray-300 bg-gray-50"
@@ -70,7 +71,7 @@ const Settings = () => {
               },
             ]}
           >
-            <Text className="text-gray-900 text-3xl">Schoolhouse</Text>
+            <Text className="text-gray-900 text-2xl">Schoolhouse</Text>
             <View className="flex-row gap-2 mt-3">
               <View
                 className="h-4 w-4 rounded-full"
@@ -88,7 +89,7 @@ const Settings = () => {
           </Pressable>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

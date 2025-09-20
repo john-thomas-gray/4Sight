@@ -1,6 +1,7 @@
 import BackButton from "@/components/BackButton";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const HowToPlay = () => {
   const [isTwoPlayer, setIsTwoPlayer] = useState(true);
@@ -10,18 +11,27 @@ const HowToPlay = () => {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <ScrollView contentContainerStyle={{ padding: 24 }}>
+    <SafeAreaView className="flex-1 bg-white">
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 32,
+        }}
+      >
         <BackButton />
 
-        <Text className="text-black font-bold text-5xl text-center mb-8">
+        <Text className="text-black font-bold text-4xl text-center mb-6">
           How to Play
         </Text>
 
-        <View className="flex-row justify-evenly mb-8">
-          <Pressable onPress={() => handleSelectGameType(true)}>
+        <View className="flex-row justify-center gap-8 mb-6">
+          <Pressable
+            className="px-4 py-2 rounded-lg border border-gray-300"
+            onPress={() => handleSelectGameType(true)}
+          >
             <Text
-              className={`text-2xl font-bold ${
+              className={`text-xl font-bold ${
                 isTwoPlayer ? "text-black" : "text-gray-500"
               }`}
             >
@@ -29,9 +39,12 @@ const HowToPlay = () => {
             </Text>
           </Pressable>
 
-          <Pressable onPress={() => handleSelectGameType(false)}>
+          <Pressable
+            className="px-4 py-2 rounded-lg border border-gray-300"
+            onPress={() => handleSelectGameType(false)}
+          >
             <Text
-              className={`text-2xl font-bold ${
+              className={`text-xl font-bold ${
                 !isTwoPlayer ? "text-black" : "text-gray-500"
               }`}
             >
@@ -42,7 +55,7 @@ const HowToPlay = () => {
 
         <View className="w-full">
           {isTwoPlayer ? (
-            <Text className=" text-lg text-black pl-20 pr-20 ">
+            <Text className="text-base leading-6 text-black">
               Each player takes a turn dropping a piece into the board.{"\n"}
               Pieces are dropped into any side of the board and fall to the
               opposite edge or to another piece.{"\n"}
@@ -53,7 +66,7 @@ const HowToPlay = () => {
               pull all pieces to one side of the board!
             </Text>
           ) : (
-            <Text className="text-lg text-black pl-20 pr-20">
+            <Text className="text-base leading-6 text-black">
               Players are on teams of two. Your partner is the person seated
               across the board from you.{"\n"}
               Each turn, a player drops a piece into their side of the board.{" "}
@@ -67,13 +80,13 @@ const HowToPlay = () => {
               to their side or rotate the board 90°!
             </Text>
           )}
-          <Text className="text-lg font-bold pl-20 pr-20">
+          <Text className="text-base font-bold mt-6">
             Needs to have all of the moves you can make, along with graphics
             demonstrating them.
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

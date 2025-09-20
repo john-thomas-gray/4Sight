@@ -9,8 +9,8 @@ type TeamWellGridProps = {
   team: Team;
 };
 
-const COLS = 3;
-const ROWS = 8;
+const COLS = 8;
+const ROWS = 3;
 
 const TeamWellGrid = ({ team }: TeamWellGridProps) => {
   const { settings } = useGameContext();
@@ -38,11 +38,11 @@ const TeamWellGrid = ({ team }: TeamWellGridProps) => {
 const styles = StyleSheet.create({
   container: {
     position: "relative",
-    width: COLS * 47,
-    height: 352,
+    width: (COLS - 0.5) * 47,
+    height: ROWS * 47,
     borderWidth: 4,
-    paddingHorizontal: 4,
-    paddingTop: 5,
+    paddingHorizontal: 5,
+    paddingTop: 4,
     paddingBottom: 5,
     backgroundColor: "#031e16ff",
     borderRadius: 8,

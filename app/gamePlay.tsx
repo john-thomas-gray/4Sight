@@ -28,17 +28,17 @@ const GamePlay = () => {
   });
   return (
     <View
-      className="flex-1 flex-row items-center justify-center mt-90"
+      className="flex-1 flex-col items-center justify-center"
       style={{ backgroundColor: settings.colorTheme.FELT_TOP }}
     >
       <WinModal
         visible={logic.gameState === GameState.Finished}
         winner={logic.winner}
       />
-      <View className="flex-row justify-between">
-        <TeamWellGrid team={Team.TeamOne} />
-        <Board className="mx-10" />
+      <View className="flex-col">
         <TeamWellGrid team={Team.TeamTwo} />
+        <Board className="mt-7 mb-7 " />
+        <TeamWellGrid team={Team.TeamOne} />
       </View>
 
       {layout.layoutReady &&

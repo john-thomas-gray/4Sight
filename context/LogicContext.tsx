@@ -1,5 +1,5 @@
 import { animatePieceReset, animateWinner } from "@/animations/pieceAnimations";
-import { Animations, Logic } from "@/constants";
+import { Animations, GameElements, Logic } from "@/constants";
 import { WINNER_BASE_DELAY } from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
@@ -81,42 +81,66 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     Record<string, string>
   >({});
 
-  const toPieces = (
-    team: Team,
-    startIdx: number,
-    layout: Record<
-      string,
-      { pageX: number; pageY: number; width: number; height: number }
-    >
-  ): Record<string, PieceProps> => {
-    const pieces: Record<string, PieceProps> = {};
+  const buildTeamPieces = React.useCallback(
+    (
+      team: Team,
+      startIdx: number,
+      teamWells: Record<
+        string,
+        { pageX: number; pageY: number; width: number; height: number }
+      >
+    ): {
+      pieces: Record<string, PieceProps>;
+      wellMap: Record<string, string>;
+    } => {
+      const pieces: Record<string, PieceProps> = {};
+      const wellMap: Record<string, string> = {};
 
-    Object.entries(layout).forEach(([wellId], idx) => {
-      const id = `${startIdx + idx}`;
+      // Sort wells by numeric row, then col parsed from id like "row-col"
+      const sortedWellIds = Object.keys(teamWells).sort((a, b) => {
+        const [ar, ac] = a.split("-").map(Number);
+        const [br, bc] = b.split("-").map(Number);
+        if (ar !== br) return ar - br;
+        return ac - bc;
+      });
 
-      pieces[id] = {
-        id,
-        team,
-      };
+      sortedWellIds.forEach((wellId, idx) => {
+        const id = String(startIdx + idx);
+        pieces[id] = { id, team };
+        wellMap[wellId] = id;
 
-      setWellPieceLocations((prev) => ({
-        ...prev,
-        [wellId]: id,
-      }));
-    });
+        const layout = teamWells[wellId];
+        const anim = pieceAnimations[id];
+        if (layout && anim) {
+          anim.translateX.value =
+            layout.pageX + layout.width / 2 - GameElements.PIECE_RADIUS;
+          anim.translateY.value =
+            layout.pageY + layout.height / 2 - GameElements.PIECE_RADIUS;
+        }
+      });
 
-    return pieces;
-  };
+      return { pieces, wellMap };
+    },
+    [pieceAnimations]
+  );
 
   React.useEffect(() => {
     if (!layoutReady) return;
 
-    const built = {
-      ...toPieces(Team.TeamOne, 0, wells[Team.TeamOne]),
-      ...toPieces(Team.TeamTwo, 24, wells[Team.TeamTwo]),
-    };
+    // Build deterministic mappings and initial positions per team
+    const { pieces: teamOnePieces, wellMap: teamOneWellMap } = buildTeamPieces(
+      Team.TeamOne,
+      0,
+      wells[Team.TeamOne]
+    );
+    const { pieces: teamTwoPieces, wellMap: teamTwoWellMap } = buildTeamPieces(
+      Team.TeamTwo,
+      24,
+      wells[Team.TeamTwo]
+    );
 
-    setPieces(built);
+    setPieces({ ...teamOnePieces, ...teamTwoPieces });
+    setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
   }, [layoutReady, wells]);
 
   const initialPieceStatusMap: PieceStatusMap = {};

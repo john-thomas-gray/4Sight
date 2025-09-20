@@ -13,7 +13,7 @@ import {
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Team } from "@/types/board";
-import { GameState, PieceProps, PieceStatus } from "@/types/logic";
+import { GameMode, GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import React, { useEffect, useMemo } from "react";
@@ -110,13 +110,6 @@ const Piece = ({ team, id }: PieceProps) => {
     logic.setBoardPieceLocations(updated);
   };
 
-  const setWPLUI = (wellId: string) => {
-    logic.setWellPieceLocations((prev) => ({
-      ...prev,
-      [wellId]: id,
-    }));
-  };
-
   const updateStatus = (status: PieceStatus) => {
     logic.setPieceStatusMap((prev) => ({
       ...prev,
@@ -155,6 +148,7 @@ const Piece = ({ team, id }: PieceProps) => {
             logic.currentTeam === team &&
             logic.moveInProgress === false
         )
+        .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           animatePiecePickup({
             scaleX: animate.scaleX,
@@ -166,26 +160,40 @@ const Piece = ({ team, id }: PieceProps) => {
           console.log(logic.playersTurn);
         })
         .onUpdate((event) => {
-          if (logic.playersTurn === 1) {
-            animate.translateX.value =
-              event.absoluteX - GameElements.PIECE_RADIUS + 40;
-            animate.translateY.value =
-              event.absoluteY - GameElements.PIECE_RADIUS;
-          } else if (logic.playersTurn === 2) {
-            animate.translateX.value =
-              event.absoluteX - GameElements.PIECE_RADIUS;
-            animate.translateY.value =
-              event.absoluteY - GameElements.PIECE_RADIUS + 40;
-          } else if (logic.playersTurn === 3) {
-            animate.translateX.value =
-              event.absoluteX - GameElements.PIECE_RADIUS - 40;
-            animate.translateY.value =
-              event.absoluteY - GameElements.PIECE_RADIUS;
+          if (logic.gameMode === GameMode.TwoPlayer) {
+            if (logic.playersTurn % 2 === 1) {
+              animate.translateX.value =
+                event.absoluteX - GameElements.PIECE_RADIUS;
+              animate.translateY.value =
+                event.absoluteY - GameElements.PIECE_RADIUS - 40;
+            } else if (logic.playersTurn % 2 === 0) {
+              animate.translateX.value =
+                event.absoluteX - GameElements.PIECE_RADIUS;
+              animate.translateY.value =
+                event.absoluteY - GameElements.PIECE_RADIUS + 40;
+            }
           } else {
-            animate.translateX.value =
-              event.absoluteX - GameElements.PIECE_RADIUS;
-            animate.translateY.value =
-              event.absoluteY - GameElements.PIECE_RADIUS - 40;
+            if (logic.playersTurn === 1) {
+              animate.translateX.value =
+                event.absoluteX - GameElements.PIECE_RADIUS;
+              animate.translateY.value =
+                event.absoluteY - GameElements.PIECE_RADIUS - 40;
+            } else if (logic.playersTurn === 2) {
+              animate.translateX.value =
+                event.absoluteX - GameElements.PIECE_RADIUS - 40;
+              animate.translateY.value =
+                event.absoluteY - GameElements.PIECE_RADIUS;
+            } else if (logic.playersTurn === 3) {
+              animate.translateX.value =
+                event.absoluteX - GameElements.PIECE_RADIUS;
+              animate.translateY.value =
+                event.absoluteY - GameElements.PIECE_RADIUS + 40;
+            } else {
+              animate.translateX.value =
+                event.absoluteX - GameElements.PIECE_RADIUS + 40;
+              animate.translateY.value =
+                event.absoluteY - GameElements.PIECE_RADIUS;
+            }
           }
         })
         .onEnd(() => {
