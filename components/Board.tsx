@@ -141,11 +141,161 @@ const Board = ({ className, onRotate }: BoardProps) => {
     flingDown
   );
 
-  const boardGestures = Gesture.Exclusive(flingGestures);
+  const gravityPreview = (side: "up" | "down" | "left" | "right") => {
+    const opposite =
+      side === "up"
+        ? "down"
+        : side === "down"
+        ? "up"
+        : side === "left"
+        ? "right"
+        : "left";
+    console.log(opposite);
+  };
+
+  const lpUp = Gesture.LongPress().onEnd((e, success) => {
+    "worklet";
+    if (!success) return;
+    const targets: [number, number][] = [
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [0, 4],
+      [0, 5],
+      [0, 6],
+      [0, 7],
+      [1, 2],
+      [1, 3],
+      [1, 4],
+      [1, 5],
+      [1, 6],
+      [2, 3],
+      [2, 4],
+      [2, 5],
+      [3, 4],
+    ];
+    const { x, y } = e;
+    for (const [row, col] of targets) {
+      const top = row * BASE_CELL_SIZE;
+      const left = col * BASE_CELL_SIZE;
+      const bottom = top + BASE_CELL_SIZE;
+      const right = left + BASE_CELL_SIZE;
+      if (x >= left && x <= right && y >= top && y <= bottom) {
+        scheduleOnRN(gravityPreview, "up");
+        break;
+      }
+    }
+  });
+
+  const lpDown = Gesture.LongPress().onEnd((e, success) => {
+    "worklet";
+    if (!success) return;
+    const targets: [number, number][] = [
+      [8, 1],
+      [8, 2],
+      [8, 3],
+      [8, 4],
+      [8, 5],
+      [8, 6],
+      [8, 7],
+      [7, 2],
+      [7, 3],
+      [7, 4],
+      [7, 5],
+      [7, 6],
+      [6, 3],
+      [6, 4],
+      [6, 5],
+      [5, 4],
+    ];
+    const { x, y } = e;
+    for (const [row, col] of targets) {
+      const top = row * BASE_CELL_SIZE;
+      const left = col * BASE_CELL_SIZE;
+      const bottom = top + BASE_CELL_SIZE;
+      const right = left + BASE_CELL_SIZE;
+      if (x >= left && x <= right && y >= top && y <= bottom) {
+        scheduleOnRN(gravityPreview, "down");
+        break;
+      }
+    }
+  });
+
+  const lpLeft = Gesture.LongPress().onEnd((e, success) => {
+    "worklet";
+    if (!success) return;
+    const targets: [number, number][] = [
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [4, 0],
+      [5, 0],
+      [6, 0],
+      [7, 0],
+      [2, 1],
+      [3, 1],
+      [4, 1],
+      [5, 1],
+      [6, 1],
+      [3, 2],
+      [4, 2],
+      [5, 2],
+      [4, 3],
+    ];
+    const { x, y } = e;
+    for (const [row, col] of targets) {
+      const top = row * BASE_CELL_SIZE;
+      const left = col * BASE_CELL_SIZE;
+      const bottom = top + BASE_CELL_SIZE;
+      const right = left + BASE_CELL_SIZE;
+      if (x >= left && x <= right && y >= top && y <= bottom) {
+        scheduleOnRN(gravityPreview, "left");
+        break;
+      }
+    }
+  });
+
+  const lpRight = Gesture.LongPress().onEnd((e, success) => {
+    "worklet";
+    if (!success) return;
+    const targets: [number, number][] = [
+      [1, 8],
+      [2, 8],
+      [3, 8],
+      [4, 8],
+      [5, 8],
+      [6, 8],
+      [7, 8],
+      [2, 7],
+      [3, 7],
+      [4, 7],
+      [5, 7],
+      [6, 7],
+      [3, 6],
+      [4, 6],
+      [5, 6],
+      [4, 5],
+    ];
+    const { x, y } = e;
+    for (const [row, col] of targets) {
+      const top = row * BASE_CELL_SIZE;
+      const left = col * BASE_CELL_SIZE;
+      const bottom = top + BASE_CELL_SIZE;
+      const right = left + BASE_CELL_SIZE;
+      if (x >= left && x <= right && y >= top && y <= bottom) {
+        scheduleOnRN(gravityPreview, "right");
+        break;
+      }
+    }
+  });
+
+  const longPressGestures = Gesture.Simultaneous(lpUp, lpDown, lpLeft, lpRight);
+  const boardGestures = Gesture.Exclusive(longPressGestures, flingGestures);
 
   return (
     <GestureDetector gesture={boardGestures}>
-      <Animated.View className={className}>
+      <Animated.View className={className} style={{ position: "relative" }}>
+        {/* Long-press capture zones on each side */}
         {Array.from({ length: BOARD_SIZE }).map((_, row) => (
           <View key={row} style={styles.row}>
             {Array.from({ length: BOARD_SIZE }).map((_, col) => {
