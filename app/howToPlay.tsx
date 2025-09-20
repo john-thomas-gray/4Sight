@@ -2,7 +2,6 @@ import BackButton from "@/components/BackButton";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
-
 const HowToPlay = () => {
   const [isTwoPlayer, setIsTwoPlayer] = useState(true);
 
@@ -43,7 +42,7 @@ const HowToPlay = () => {
 
         <View className="w-full">
           {isTwoPlayer ? (
-            <Text className="leading-8 text-lg text-black">
+            <Text className=" text-lg text-black pl-20 pr-20 ">
               Each player takes a turn dropping a piece into the board.{"\n"}
               Pieces are dropped into any side of the board and fall to the
               opposite edge or to another piece.{"\n"}
@@ -54,7 +53,7 @@ const HowToPlay = () => {
               pull all pieces to one side of the board!
             </Text>
           ) : (
-            <Text className="leading-8 text-lg text-black">
+            <Text className="text-lg text-black pl-20 pr-20">
               Players are on teams of two. Your partner is the person seated
               across the board from you.{"\n"}
               Each turn, a player drops a piece into their side of the board.{" "}
@@ -68,6 +67,10 @@ const HowToPlay = () => {
               to their side or rotate the board 90°!
             </Text>
           )}
+          <Text className="text-lg font-bold pl-20 pr-20">
+            Needs to have all of the moves you can make, along with graphics
+            demonstrating them.
+          </Text>
         </View>
       </ScrollView>
     </View>
