@@ -5,9 +5,19 @@ import React from "react";
 import { ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 
-type PiecePreviewProps = { spaceId: string; team: Team };
+type PiecePreviewProps = {
+  spaceId: string;
+  team: Team;
+  offsetX?: number;
+  offsetY?: number;
+};
 
-const PiecePreview = ({ spaceId, team }: PiecePreviewProps) => {
+const PiecePreview = ({
+  spaceId,
+  team,
+  offsetX = 0,
+  offsetY = 0,
+}: PiecePreviewProps) => {
   const { layout, settings } = useGameContext();
   const space = layout.spaces[spaceId];
   if (!space) return null;
@@ -22,8 +32,8 @@ const PiecePreview = ({ spaceId, team }: PiecePreviewProps) => {
     alignItems: "center",
     justifyContent: "center",
     position: "absolute",
-    top: space.pageY + space.height / 2 - GameElements.PIECE_RADIUS,
-    left: space.pageX + space.width / 2 - GameElements.PIECE_RADIUS,
+    top: space.pageY - offsetY + space.height / 2 - GameElements.PIECE_RADIUS,
+    left: space.pageX - offsetX + space.width / 2 - GameElements.PIECE_RADIUS,
     backgroundColor:
       team === Team.TeamOne
         ? settings.colorTheme.TEAM_ONE_COLOR
