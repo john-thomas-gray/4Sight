@@ -115,7 +115,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
     }
   };
 
-  // Pan-based fling with velocity threshold to mimic Gesture.Fling
   const VELOCITY_THRESHOLD = 800;
   const panFling = Gesture.Pan().onEnd((e) => {
     "worklet";
