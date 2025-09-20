@@ -545,7 +545,13 @@ const Piece = ({ team, id }: PieceProps) => {
   return (
     <>
       <GestureDetector gesture={movePiece}>
-        <Animated.View style={[baseStyle, animatedStyles]}>
+        <Animated.View
+          style={[
+            baseStyle,
+            animatedStyles,
+            logic.previewHiddenPieces[id] ? { opacity: 0 } : null,
+          ]}
+        >
           <Highlight pieceId={id} />
         </Animated.View>
       </GestureDetector>

@@ -54,6 +54,10 @@ export type LogicContextType = {
     React.SetStateAction<Record<string, string>>
   >;
   resetGame: (playersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => void;
+  previewHiddenPieces: Record<string, boolean>;
+  setPreviewHiddenPieces: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -79,6 +83,10 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   >({});
   const [boardPieceLocations, setBoardPieceLocations] = useState<
     Record<string, string>
+  >({});
+
+  const [previewHiddenPieces, setPreviewHiddenPieces] = useState<
+    Record<string, boolean>
   >({});
 
   const buildTeamPieces = React.useCallback(
@@ -370,6 +378,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       boardPieceLocations,
       setBoardPieceLocations,
       resetGame,
+      previewHiddenPieces,
+      setPreviewHiddenPieces,
     }),
     [
       gameMode,
@@ -387,6 +397,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       nextTurn,
       checkGameFinished,
       resetGame,
+      previewHiddenPieces,
     ]
   );
 

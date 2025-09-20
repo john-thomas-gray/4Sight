@@ -10,11 +10,7 @@ import { CellType, Direction, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import React, { useLayoutEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  Directions,
-  Gesture,
-  GestureDetector,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import Corner from "./Corner";
@@ -119,36 +115,22 @@ const Board = ({ className, onRotate }: BoardProps) => {
     }
   };
 
-  const flingLeft = Gesture.Fling()
-    .direction(Directions.LEFT)
-    .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Left, logic.gameState);
-    });
+  // Pan-based fling with velocity threshold to mimic Gesture.Fling
+  const VELOCITY_THRESHOLD = 800;
+  const panFling = Gesture.Pan().onEnd((e) => {
+    "worklet";
+    const absVX = Math.abs(e.velocityX);
+    const absVY = Math.abs(e.velocityY);
+    if (absVX < VELOCITY_THRESHOLD && absVY < VELOCITY_THRESHOLD) return;
 
-  const flingRight = Gesture.Fling()
-    .direction(Directions.RIGHT)
-    .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Right, logic.gameState);
-    });
-
-  const flingUp = Gesture.Fling()
-    .direction(Directions.UP)
-    .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Up, logic.gameState);
-    });
-
-  const flingDown = Gesture.Fling()
-    .direction(Directions.DOWN)
-    .onStart(() => {
-      scheduleOnRN(handleFling, Direction.Down, logic.gameState);
-    });
-
-  const flingGestures = Gesture.Exclusive(
-    flingLeft,
-    flingRight,
-    flingUp,
-    flingDown
-  );
+    let dir: Direction;
+    if (absVX >= absVY) {
+      dir = e.velocityX > 0 ? Direction.Right : Direction.Left;
+    } else {
+      dir = e.velocityY > 0 ? Direction.Down : Direction.Up;
+    }
+    scheduleOnRN(handleFling, dir, logic.gameState);
+  });
 
   const [gravityPreviewPieces, setGravityPreviewPieces] = React.useState<
     { spaceId: string; team: Team }[] | null
@@ -156,6 +138,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
   const computePreview = (direction: Direction) => {
     const updated = { ...logic.boardPieceLocations } as Record<string, string>;
+    let hasMoves = false;
 
     if (direction === Direction.Up) {
       for (let row = 2; row <= 7; row++) {
@@ -168,6 +151,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
             }
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               updated[targetSpaceId] = updated[currentSpaceId];
               delete updated[currentSpaceId];
             }
@@ -185,6 +169,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
             }
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               updated[targetSpaceId] = updated[currentSpaceId];
               delete updated[currentSpaceId];
             }
@@ -202,6 +187,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
             }
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               updated[targetSpaceId] = updated[currentSpaceId];
               delete updated[currentSpaceId];
             }
@@ -219,6 +205,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
             }
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
+              hasMoves = true;
               updated[targetSpaceId] = updated[currentSpaceId];
               delete updated[currentSpaceId];
             }
@@ -232,7 +219,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       const team = logic.pieces[pieceId]?.team ?? Team.Unassigned;
       result.push({ spaceId, team });
     });
-    return result;
+    return { previews: result, hasMoves };
   };
 
   const gravityPreview = (side: "up" | "down" | "left" | "right") => {
@@ -244,8 +231,21 @@ const Board = ({ className, onRotate }: BoardProps) => {
         : side === "left"
         ? Direction.Right
         : Direction.Left;
-    const previews = computePreview(opposite);
+    const { previews, hasMoves } = computePreview(opposite);
+    if (!hasMoves) {
+      setGravityPreviewPieces(null);
+      logic.setPreviewHiddenPieces({});
+      return;
+    }
+    const toHide: Record<string, boolean> = {};
+    Object.keys(logic.boardPieceLocations).forEach((spaceId) => {
+      const pieceId = logic.boardPieceLocations[spaceId];
+      if (previews.find((p) => p.spaceId === spaceId)) {
+        toHide[pieceId] = true;
+      }
+    });
     setGravityPreviewPieces(previews);
+    logic.setPreviewHiddenPieces(toHide);
   };
 
   const lpUp = Gesture.LongPress()
@@ -284,6 +284,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
+      scheduleOnRN(logic.setPreviewHiddenPieces, {});
     });
 
   const lpDown = Gesture.LongPress()
@@ -322,6 +323,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
+      scheduleOnRN(logic.setPreviewHiddenPieces, {});
     });
 
   const lpLeft = Gesture.LongPress()
@@ -360,6 +362,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
+      scheduleOnRN(logic.setPreviewHiddenPieces, {});
     });
 
   const lpRight = Gesture.LongPress()
@@ -398,10 +401,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
+      scheduleOnRN(logic.setPreviewHiddenPieces, {});
     });
 
   const longPressGestures = Gesture.Simultaneous(lpUp, lpDown, lpLeft, lpRight);
-  const boardGestures = Gesture.Exclusive(longPressGestures, flingGestures);
+  const boardGestures = Gesture.Simultaneous(longPressGestures, panFling);
 
   return (
     <GestureDetector gesture={boardGestures}>
