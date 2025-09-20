@@ -1,6 +1,8 @@
 import {
   animateMisplacedPiece,
   animatePieceDrop,
+  animatePiecePickup,
+  animatePieceRelease,
   animateToSelectedCell,
 } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
@@ -154,16 +156,44 @@ const Piece = ({ team, id }: PieceProps) => {
             logic.moveInProgress === false
         )
         .onStart(() => {
+          animatePiecePickup({
+            scaleX: animate.scaleX,
+            scaleY: animate.scaleY,
+            zIndex: animate.zIndex,
+          });
           scheduleOnRN(deleteWPLUI);
           scheduleOnRN(updateStatus, PieceStatus.isHeld);
+          console.log(logic.playersTurn);
         })
         .onUpdate((event) => {
-          animate.translateX.value =
-            event.absoluteX - GameElements.PIECE_RADIUS;
-          animate.translateY.value =
-            event.absoluteY - GameElements.PIECE_RADIUS;
+          if (logic.playersTurn === 1) {
+            animate.translateX.value =
+              event.absoluteX - GameElements.PIECE_RADIUS + 40;
+            animate.translateY.value =
+              event.absoluteY - GameElements.PIECE_RADIUS;
+          } else if (logic.playersTurn === 2) {
+            animate.translateX.value =
+              event.absoluteX - GameElements.PIECE_RADIUS;
+            animate.translateY.value =
+              event.absoluteY - GameElements.PIECE_RADIUS + 40;
+          } else if (logic.playersTurn === 3) {
+            animate.translateX.value =
+              event.absoluteX - GameElements.PIECE_RADIUS - 40;
+            animate.translateY.value =
+              event.absoluteY - GameElements.PIECE_RADIUS;
+          } else {
+            animate.translateX.value =
+              event.absoluteX - GameElements.PIECE_RADIUS;
+            animate.translateY.value =
+              event.absoluteY - GameElements.PIECE_RADIUS - 40;
+          }
         })
         .onEnd(() => {
+          animatePieceRelease({
+            scaleX: animate.scaleX,
+            scaleY: animate.scaleY,
+            zIndex: animate.zIndex,
+          });
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,

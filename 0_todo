@@ -3,6 +3,7 @@ Zoom on board
 4 player logic:
 
 - Board lifts up when you hold down on a corner
+- Split wells
 
 Graphics
 
@@ -20,7 +21,7 @@ Graphics
 
 Near Win State
 
-REMOVE GAME STATE LOGIC FROM PIECE
+Purchaseable skins
 
 win transition:
 wait until slotDropAnim completes.
@@ -49,7 +50,6 @@ Async storage saves board state.\*
 Gestures that affect game state:
 
 - Swipe back and forth three times to forfeit\*
-- Shaking forfeits
 
 \*Win State
 
@@ -93,3 +93,5 @@ Refactoring:
 - Menu tab to indicate how to get back to the main menu (nothing fancy)
 - Drag finger across Well to forfeit
 - Async storage saves board state.
+- Need to switch to landscape
+- Turn logic is messed up in reset. Also nextTurn runs on reset

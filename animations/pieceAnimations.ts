@@ -295,3 +295,33 @@ export const animatePieceReset = ({
     assignedThisReset.add(targetWellId);
   });
 };
+
+export const animatePiecePickup = ({
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+}) => {
+  "worklet";
+  scaleX.value = withTiming(1.5, { duration: 100 });
+  scaleY.value = withTiming(1.5, { duration: 100 });
+  zIndex.value = withTiming(5000, { duration: 100 });
+};
+
+export const animatePieceRelease = ({
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+}) => {
+  "worklet";
+  scaleX.value = withTiming(1, { duration: 100 });
+  scaleY.value = withTiming(1, { duration: 100 });
+  zIndex.value = withTiming(500, { duration: 100 });
+};

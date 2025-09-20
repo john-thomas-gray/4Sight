@@ -11,6 +11,7 @@ export type PieceAnimation = {
   color: SharedValue<string>;
   winnerColor: SharedValue<string>;
   rotation: SharedValue<number>;
+  zIndex: SharedValue<number>;
 };
 
 export const usePieceAnimations = (): Record<string, PieceAnimation> => {
@@ -25,6 +26,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "1": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["1"].x),
@@ -36,6 +38,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "2": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["2"].x),
@@ -47,6 +50,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "3": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["3"].x),
@@ -58,6 +62,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "4": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["4"].x),
@@ -69,6 +74,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "5": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["5"].x),
@@ -80,6 +86,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "6": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["6"].x),
@@ -91,6 +98,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "7": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["7"].x),
@@ -102,6 +110,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "8": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["8"].x),
@@ -113,6 +122,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "9": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["9"].x),
@@ -124,6 +134,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "10": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["10"].x),
@@ -135,6 +146,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "11": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["11"].x),
@@ -146,6 +158,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "12": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["12"].x),
@@ -157,6 +170,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "13": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["13"].x),
@@ -168,6 +182,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "14": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["14"].x),
@@ -179,6 +194,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "15": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["15"].x),
@@ -190,6 +206,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "16": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["16"].x),
@@ -201,6 +218,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "17": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["17"].x),
@@ -212,6 +230,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "18": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["18"].x),
@@ -223,6 +242,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "19": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["19"].x),
@@ -234,6 +254,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "20": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["20"].x),
@@ -245,6 +266,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "21": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["21"].x),
@@ -256,6 +278,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "22": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["22"].x),
@@ -267,6 +290,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "23": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["23"].x),
@@ -278,6 +302,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "24": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["24"].x),
@@ -289,6 +314,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "25": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["25"].x),
@@ -300,6 +326,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "26": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["26"].x),
@@ -311,6 +338,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "27": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["27"].x),
@@ -322,6 +350,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "28": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["28"].x),
@@ -333,6 +362,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "29": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["29"].x),
@@ -344,6 +374,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "30": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["30"].x),
@@ -355,6 +386,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "31": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["31"].x),
@@ -366,6 +398,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "32": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["32"].x),
@@ -377,6 +410,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "33": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["33"].x),
@@ -388,6 +422,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "34": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["34"].x),
@@ -399,6 +434,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "35": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["35"].x),
@@ -410,6 +446,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "36": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["36"].x),
@@ -421,6 +458,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "37": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["37"].x),
@@ -432,6 +470,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "38": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["38"].x),
@@ -443,6 +482,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "39": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["39"].x),
@@ -454,6 +494,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "40": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["40"].x),
@@ -465,6 +506,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "41": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["41"].x),
@@ -476,6 +518,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "42": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["42"].x),
@@ -487,6 +530,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "43": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["43"].x),
@@ -498,6 +542,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "44": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["44"].x),
@@ -509,6 +554,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "45": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["45"].x),
@@ -520,6 +566,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "46": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["46"].x),
@@ -531,6 +578,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
     "47": {
       translateX: useSharedValue(INITIAL_PIECE_POSITIONS["47"].x),
@@ -542,6 +590,7 @@ export const usePieceAnimations = (): Record<string, PieceAnimation> => {
       color: useSharedValue("#ffffff"),
       winnerColor: useSharedValue("#fdffd0ff"),
       rotation: useSharedValue(0),
+      zIndex: useSharedValue(500),
     },
   };
 
