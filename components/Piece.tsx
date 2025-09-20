@@ -139,6 +139,11 @@ const Piece = ({ team, id }: PieceProps) => {
     }
   }, [status]);
 
+  const [hoverSpaceId, setHoverSpaceId] = React.useState<string | null>(null);
+  const setHover = (spaceId: string | null) => {
+    setHoverSpaceId(spaceId);
+  };
+
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
@@ -211,13 +216,66 @@ const Piece = ({ team, id }: PieceProps) => {
                 event.absoluteY >= pageY &&
                 event.absoluteY <= pageY + height;
               if (inside && cell.id in layout.slots) {
-                console.log("hover");
+                let [nextRow, nextCol] = cell.id.split("-").map(Number) as [
+                  number,
+                  number
+                ];
+                const slotDirection =
+                  nextRow === 8
+                    ? "N"
+                    : nextRow === 0
+                    ? "S"
+                    : nextCol === 0
+                    ? "E"
+                    : "W";
+                const deltas: Record<string, { dr: number; dc: number }> = {
+                  N: { dr: -1, dc: 0 },
+                  S: { dr: 1, dc: 0 },
+                  E: { dr: 0, dc: 1 },
+                  W: { dr: 0, dc: -1 },
+                };
+                nextRow += deltas[slotDirection].dr;
+                nextCol += deltas[slotDirection].dc;
+
+                let prevRow: number | null = null;
+                let prevCol: number | null = null;
+
+                while (true) {
+                  const nextSpaceId = `${nextRow}-${nextCol}`;
+                  const nextSpace = layout.spaces[nextSpaceId];
+                  const isOccupied =
+                    boardPieceLocationsSV.value[nextSpaceId] !== undefined;
+
+                  if (
+                    nextRow < 0 ||
+                    nextRow >= GameElements.BOARD_SIZE ||
+                    nextCol < 0 ||
+                    nextCol >= GameElements.BOARD_SIZE
+                  )
+                    break;
+
+                  if (!nextSpace) break;
+                  if (isOccupied) break;
+
+                  prevRow = nextRow;
+                  prevCol = nextCol;
+                  nextRow += deltas[slotDirection].dr;
+                  nextCol += deltas[slotDirection].dc;
+                }
+
+                if (prevRow !== null && prevCol !== null) {
+                  const finalSpaceId = `${prevRow}-${prevCol}`;
+                  scheduleOnRN(setHover, finalSpaceId);
+                } else {
+                  scheduleOnRN(setHover, null);
+                }
                 break;
               }
             }
           }
         })
         .onEnd(() => {
+          scheduleOnRN(setHover, null);
           animatePieceRelease({
             scaleX: animate.scaleX,
             scaleY: animate.scaleY,
@@ -491,6 +549,32 @@ const Piece = ({ team, id }: PieceProps) => {
           <Highlight pieceId={id} />
         </Animated.View>
       </GestureDetector>
+      {hoverSpaceId && (
+        <Animated.View
+          style={{
+            position: "absolute",
+            height: GameElements.PIECE_SIZE,
+            width: GameElements.PIECE_SIZE,
+            borderRadius: GameElements.PIECE_RADIUS,
+            borderWidth: 2,
+            borderColor: "#9CA3AF",
+            zIndex: 2000,
+            backgroundColor:
+              team === Team.TeamOne
+                ? settings.colorTheme.TEAM_ONE_COLOR
+                : settings.colorTheme.TEAM_TWO_COLOR,
+            opacity: 0.35,
+            left:
+              layout.spaces[hoverSpaceId].pageX +
+              layout.spaces[hoverSpaceId].width / 2 -
+              GameElements.PIECE_RADIUS,
+            top:
+              layout.spaces[hoverSpaceId].pageY +
+              layout.spaces[hoverSpaceId].height / 2 -
+              GameElements.PIECE_RADIUS,
+          }}
+        />
+      )}
     </>
   );
 };
