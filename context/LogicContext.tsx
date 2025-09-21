@@ -23,12 +23,14 @@ import React, {
   useState,
 } from "react";
 // reanimated helpers used in animation helpers module
+import { PersistedAppState } from "@/utils/useAsyncStorage";
 import { useLayout } from "./LayoutContext";
 
 export type LogicContextType = {
   gameMode: GameMode;
   setGameMode: React.Dispatch<React.SetStateAction<GameMode>>;
   turnCount: number;
+  setTurnCount: React.Dispatch<React.SetStateAction<number>>;
   currentTeam: Team;
   nextTurn: () => void;
   checkGameFinished: (updatedBoard: Record<string, string>) => void;
@@ -41,6 +43,7 @@ export type LogicContextType = {
   pieceAnimations: Record<string, PieceAnimation>;
   pieceStatusMap: PieceStatusMap;
   playersTurn: 1 | 2 | 3 | 4;
+  setPlayersTurn: React.Dispatch<React.SetStateAction<1 | 2 | 3 | 4>>;
   setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
   moveInProgress: boolean;
   setMoveInProgress: React.Dispatch<React.SetStateAction<boolean>>;
@@ -58,6 +61,7 @@ export type LogicContextType = {
   setPreviewHiddenPieces: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
+  rehydrateFromSavedState: (state: PersistedAppState) => void;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -88,6 +92,66 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [previewHiddenPieces, setPreviewHiddenPieces] = useState<
     Record<string, boolean>
   >({});
+
+  // Tracks whether we rehydrated from saved state to avoid overwriting
+  const rehydratedRef = useRef(false);
+  const { spaces } = useLayout();
+  // Ensure we only snap positions once after rehydration
+  const rehydrationPositionsAppliedRef = useRef(false);
+
+  // Ensure animations match saved locations once layout is ready
+  React.useEffect(() => {
+    if (!layoutReady) return;
+    if (!rehydratedRef.current) return;
+    if (rehydrationPositionsAppliedRef.current) return;
+
+    try {
+      Object.entries(pieces).forEach(([pieceId, p]) => {
+        const anim = pieceAnimations[pieceId];
+        if (!anim) return;
+
+        // On-board position
+        const onBoardEntry = Object.entries(boardPieceLocations).find(
+          ([, id]) => id === pieceId
+        );
+        if (onBoardEntry) {
+          const [spaceId] = onBoardEntry;
+          const spaceLayout = spaces[spaceId];
+          if (spaceLayout) {
+            anim.translateX.value =
+              spaceLayout.pageX +
+              spaceLayout.width / 2 -
+              GameElements.PIECE_RADIUS;
+            anim.translateY.value =
+              spaceLayout.pageY +
+              spaceLayout.height / 2 -
+              GameElements.PIECE_RADIUS;
+          }
+          return;
+        }
+
+        // In-well position
+        const inWellEntry = Object.entries(wellPieceLocations).find(
+          ([, id]) => id === pieceId
+        );
+        if (inWellEntry) {
+          const [wellId] = inWellEntry;
+          const wellLayout = wells[p.team]?.[wellId];
+          if (wellLayout) {
+            anim.translateX.value =
+              wellLayout.pageX +
+              wellLayout.width / 2 -
+              GameElements.PIECE_RADIUS;
+            anim.translateY.value =
+              wellLayout.pageY +
+              wellLayout.height / 2 -
+              GameElements.PIECE_RADIUS;
+          }
+        }
+      });
+      rehydrationPositionsAppliedRef.current = true;
+    } catch {}
+  }, [layoutReady, spaces, wells, pieces, pieceAnimations]);
 
   const buildTeamPieces = React.useCallback(
     (
@@ -134,6 +198,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   React.useEffect(() => {
     if (!layoutReady) return;
+    if (rehydratedRef.current) return;
 
     // Build deterministic mappings and initial positions per team
     const { pieces: teamOnePieces, wellMap: teamOneWellMap } = buildTeamPieces(
@@ -357,6 +422,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       gameMode,
       setGameMode,
       turnCount,
+      setTurnCount,
       currentTeam,
       nextTurn,
       checkGameFinished,
@@ -369,6 +435,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieceAnimations,
       pieceStatusMap,
       playersTurn,
+      setPlayersTurn,
       setPieceStatusMap,
       moveInProgress,
       setMoveInProgress,
@@ -380,6 +447,21 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       resetGame,
       previewHiddenPieces,
       setPreviewHiddenPieces,
+      rehydrateFromSavedState: (state: PersistedAppState) => {
+        rehydratedRef.current = true;
+        if (state.gameMode !== undefined) setGameMode(state.gameMode);
+        if (state.pieces !== undefined) setPieces(state.pieces);
+        if (state.pieceStatusMap !== undefined)
+          setPieceStatusMap(state.pieceStatusMap);
+        if (state.wellPieceLocations !== undefined)
+          setWellPieceLocations(state.wellPieceLocations);
+        if (state.boardPieceLocations !== undefined)
+          setBoardPieceLocations(state.boardPieceLocations);
+        if (state.winner !== undefined) setWinner(state.winner);
+        if (state.gameState !== undefined) setGameState(state.gameState);
+        if (state.playersTurn !== undefined) setPlayersTurn(state.playersTurn);
+        if (state.turnCount !== undefined) setTurnCount(state.turnCount);
+      },
     }),
     [
       gameMode,
@@ -404,6 +486,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const firstTurn = useRef(true);
 
   const debounce = setTimeout(() => {
+    if (rehydratedRef.current) {
+      return clearTimeout(debounce);
+    }
     if (firstTurn.current) {
       firstTurn.current = false;
       return clearTimeout(debounce);

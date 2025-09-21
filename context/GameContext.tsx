@@ -16,11 +16,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   return (
-    <SettingsProvider>
-      <LayoutProvider>
-        <LogicProvider>{children}</LogicProvider>
-      </LayoutProvider>
-    </SettingsProvider>
+    <LayoutProvider>
+      <LogicProvider>
+        <SettingsProvider>{children}</SettingsProvider>
+      </LogicProvider>
+    </LayoutProvider>
   );
 };
 

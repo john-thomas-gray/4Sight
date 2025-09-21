@@ -207,6 +207,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
           // Log hover when held piece is over a slot
           if (status === PieceStatus.isHeld) {
+            let overAnySlot = false;
             for (const cell of allCells) {
               if (!cell.layout) continue;
               const { pageX, pageY, width, height } = cell.layout;
@@ -216,6 +217,7 @@ const Piece = ({ team, id }: PieceProps) => {
                 event.absoluteY >= pageY &&
                 event.absoluteY <= pageY + height;
               if (inside && cell.id in layout.slots) {
+                overAnySlot = true;
                 let [nextRow, nextCol] = cell.id.split("-").map(Number) as [
                   number,
                   number
@@ -271,6 +273,9 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
                 break;
               }
+            }
+            if (!overAnySlot) {
+              scheduleOnRN(setHover, null);
             }
           }
         })
@@ -520,6 +525,7 @@ const Piece = ({ team, id }: PieceProps) => {
       { skewY: `${animate.skewY.value}deg` },
       { rotate: `${animate.rotation.value}deg` },
     ],
+    // zIndex: animate.zIndex.value,
     backgroundColor: animate.color.value,
     // shadows: [
     //   { shadowOpacity: shadowOpacity.value },
@@ -546,6 +552,7 @@ const Piece = ({ team, id }: PieceProps) => {
     <>
       <GestureDetector gesture={movePiece}>
         <Animated.View
+          pointerEvents={status === PieceStatus.onBoard ? "none" : "auto"}
           style={[
             baseStyle,
             animatedStyles,

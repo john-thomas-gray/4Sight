@@ -62,12 +62,6 @@ Partial Logic:
 
 - Three pieces in a row with an accessible empty square as the next space are highlighted
 - hightlights three pieces in a row with flashing beacons
-
-Previsualizations
-Feedforward:
-
-- hover piece over slot shows preview
-- pressing the opposite side of the board shows where pushed pieces would go.
   Signifiers
   - Available/unavailable slot visualizations
 

@@ -12,7 +12,9 @@ const animateGravity = ({
   spaceLayout: CellLayout;
 }) => {
   "worklet";
-
+  if (!spaceLayout) {
+    return;
+  }
   translateX.value = withTiming(
     spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
     {

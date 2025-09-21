@@ -59,6 +59,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const timer = useRef(0);
   // !@# Should only fire when we actually pull gravity
   useLayoutEffect(() => {
+    if (!layout.layoutReady) return;
     if (timer.current > 0) return;
     Object.keys(logic.pieces).forEach((pieceId) => {
       const entry = Object.entries(logic.boardPieceLocations).find(
@@ -67,6 +68,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
       if (entry) {
         const [spaceId] = entry;
         const animate = logic.pieceAnimations[pieceId];
+        const spaceLayout = layout.spaces[spaceId];
+        if (!animate || !spaceLayout) return;
         animateGravity({
           translateX: animate.translateX,
           translateY: animate.translateY,
@@ -86,7 +89,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       clearTimeout(timer.current);
       timer.current = 0;
     };
-  }, [logic.boardPieceLocations, layout.spaces]);
+  }, [logic.boardPieceLocations, layout.spaces, layout.layoutReady]);
   const isMoving = useRef(false);
 
   const executePull = (direction: Direction) => {

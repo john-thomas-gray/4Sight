@@ -1,5 +1,9 @@
 import { CLASSIC, ColorThemeType } from "@/constants/colorThemes";
-import { loadAppState, saveAppState } from "@/utils/useAsyncStorage";
+import {
+  loadAppState,
+  PersistedAppState,
+  saveAppState,
+} from "@/utils/useAsyncStorage";
 import React, {
   createContext,
   ReactNode,
@@ -7,6 +11,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { useLogic } from "./LogicContext";
 
 type SettingsContextType = {
   colorTheme: ColorThemeType;
@@ -23,35 +28,68 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [colorTheme, setColorTheme] = useState<ColorThemeType>(CLASSIC);
   // const [teamTheme, setTeamTheme] = useState<TeamThemeType>(CLASSIC);
+  const logic = useLogic();
 
-  // Load saved theme on mount
+  // Load saved theme and game state on mount
   useEffect(() => {
-    const loadTheme = async () => {
+    const loadPersistedState = async () => {
       const saved = await loadAppState();
       if (saved?.theme) {
         setColorTheme(saved.theme);
-        // setTeamTheme(saved.theme)
       }
-      // if (saved.boardPieceLocations) {
-      //   setBoardPieceLocations(saved.boardPieceLocations);
-      // }
-
-      // if (saved.wellPieceLocations) {
-      //   setWellPieceLocations(saved.wellPieceLocations);
-      // }
-      // useEffect(() => {
-      //   console.log("turn changed");
-      //   saveAppState({ boardPieceLocations });
-      //   saveAppState({ wellPieceLocations });
-      // }, [turnCount]);
+      const keysToCheck: (keyof PersistedAppState)[] = [
+        "gameMode",
+        "turnCount",
+        "currentTeam",
+        "gameState",
+        "winner",
+        "pieces",
+        "pieceStatusMap",
+        "playersTurn",
+        "wellPieceLocations",
+        "boardPieceLocations",
+      ];
+      const hasGameState = keysToCheck.some((k) => saved[k] !== undefined);
+      if (hasGameState) {
+        logic.rehydrateFromSavedState(saved);
+      }
     };
-    loadTheme();
+    loadPersistedState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist theme whenever it changes
   useEffect(() => {
     saveAppState({ theme: colorTheme });
   }, [colorTheme]);
+
+  // Persist game state whenever it changes
+  useEffect(() => {
+    const state: PersistedAppState = {
+      gameMode: logic.gameMode,
+      turnCount: logic.turnCount,
+      currentTeam: logic.currentTeam,
+      gameState: logic.gameState,
+      winner: logic.winner,
+      pieces: logic.pieces,
+      pieceStatusMap: logic.pieceStatusMap,
+      playersTurn: logic.playersTurn,
+      wellPieceLocations: logic.wellPieceLocations,
+      boardPieceLocations: logic.boardPieceLocations,
+    };
+    saveAppState(state);
+  }, [
+    logic.gameMode,
+    logic.turnCount,
+    logic.currentTeam,
+    logic.gameState,
+    logic.winner,
+    logic.pieces,
+    logic.pieceStatusMap,
+    logic.playersTurn,
+    logic.wellPieceLocations,
+    logic.boardPieceLocations,
+  ]);
 
   return (
     <SettingsContext.Provider value={{ colorTheme, setColorTheme }}>

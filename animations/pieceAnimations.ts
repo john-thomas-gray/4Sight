@@ -7,7 +7,6 @@ import type { PieceProps } from "@/types/logic";
 import {
   Easing,
   SharedValue,
-  withDelay,
   withSequence,
   withTiming,
 } from "react-native-reanimated";
@@ -215,19 +214,17 @@ export const animatePieceDrop = ({
     withTiming(
       slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS,
       {
-        duration: Animations.SLOT_INSERT,
+        duration: SLOT_INSERT,
         easing: Easing.inOut(Easing.quad),
       }
     ),
-    withDelay(
-      SLOT_INSERT,
-      withTiming(
-        spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
-        {
-          duration: Animations.SLOT_TO_SPACE,
-          easing: Easing.bounce,
-        }
-      )
+
+    withTiming(
+      spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_TO_SPACE,
+        easing: Easing.bounce,
+      }
     )
   );
 
@@ -239,15 +236,13 @@ export const animatePieceDrop = ({
         easing: Easing.inOut(Easing.quad),
       }
     ),
-    withDelay(
-      SLOT_INSERT,
-      withTiming(
-        spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
-        {
-          duration: Animations.SLOT_TO_SPACE,
-          easing: Easing.bounce,
-        }
-      )
+
+    withTiming(
+      spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS,
+      {
+        duration: Animations.SLOT_TO_SPACE,
+        easing: Easing.bounce,
+      }
     )
   );
 };
