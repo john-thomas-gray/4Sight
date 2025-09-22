@@ -80,6 +80,3 @@ Refactoring:
 - prevent winner intro animation from playing again, unless a new piece is added to the row
 - Menu tab to indicate how to get back to the main menu (nothing fancy)
 - Drag finger across Well to forfeit
-- Async storage saves board state.
-- Need to switch to landscape
-- Turn logic is messed up in reset. Also nextTurn runs on reset
