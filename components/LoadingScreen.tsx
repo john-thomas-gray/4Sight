@@ -1,35 +1,91 @@
+import { useLoadingTextAnimations } from "@/animations/loadingAnimations";
+import { useGameContext } from "@/context/GameContext";
+import { Team } from "@/types/board";
 import React from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
+import PieceLoading from "./PieceLoading";
 
 const LoadingScreen = () => {
-  {
-    /* Piece dropping anim. */
-  }
+  const { settings } = useGameContext();
+  const [xStart, yStart] = [0, 0];
+  const [translateX, translateY] = [
+    useSharedValue(xStart),
+    useSharedValue(yStart),
+  ];
+  const fontSize = useSharedValue(76);
+  useLoadingTextAnimations({ translateX, translateY, fontSize });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+    ],
+    fontSize: fontSize.value,
+  }));
   return (
-    <View style={styles.loadingOverlay}>
-      <ActivityIndicator size="large" color="#fff" />
-      <Text style={styles.loadingText}>Loading game board…</Text>
+    <View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 90,
+        backgroundColor: settings.colorTheme.FELT_TOP || "#222",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 9999,
+        flexDirection: "row",
+      }}
+    >
+      <Animated.Text
+        style={[
+          animatedStyle,
+          {
+            marginTop: 12,
+            color: settings.colorTheme.ODD_SPACE_COLOR,
+            fontWeight: "bold",
+          },
+        ]}
+      >
+        Loading
+      </Animated.Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          height: 100,
+        }}
+      >
+        <PieceLoading
+          team={Team.TeamOne}
+          xStart={100}
+          yStart={50}
+          xEnd={-43}
+          yEnd={0}
+          durationOffset={0}
+        />
+        <PieceLoading
+          team={Team.TeamTwo}
+          xStart={150}
+          yStart={50}
+          xEnd={-15}
+          yEnd={0}
+          durationOffset={100}
+        />
+        <PieceLoading
+          team={Team.TeamOne}
+          xStart={200}
+          yStart={5}
+          xEnd={13}
+          yEnd={0}
+          durationOffset={200}
+        />
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 9999,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: "#fff",
-    fontSize: 16,
-  },
-});
-
 export default LoadingScreen;

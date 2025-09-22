@@ -51,7 +51,9 @@ const GamePlay = () => {
           <Piece key={id} id={id} team={p.team} />
         ))}
 
-      {!layout.layoutReady && <LoadingScreen />}
+      {/* {!layout.layoutReady &&  */}
+      <LoadingScreen />
+      {/* // } */}
     </View>
   );
 };

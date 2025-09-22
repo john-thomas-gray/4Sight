@@ -45,8 +45,6 @@ Tutorial
 
 - Interactive introduction that runs the first time you play
 
-Async storage saves board state.\*
-
 \*Win State
 
 - Animation? Pieces fill in gold jump and jiggle in a cascade\*
@@ -54,9 +52,7 @@ Async storage saves board state.\*
   the other players pieces light up. A little "gotcha".
 - On a tie the corners change 2 red, 2 yellow. Maybe animate in a circle. Or maybe flash
   from yellow to red and back
-- Disable movements
   - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions.
-  - Shake phone knocks all the pieces off and they go back to their wells
 
 Partial Logic:
 
@@ -80,3 +76,6 @@ Refactoring:
 - prevent winner intro animation from playing again, unless a new piece is added to the row
 - Menu tab to indicate how to get back to the main menu (nothing fancy)
 - Drag finger across Well to forfeit
+- Don't make winner text appear for forfeit?
+- Make continue button disappear when no game is saved
+- Add font and teamName to Theme
