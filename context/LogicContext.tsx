@@ -198,6 +198,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   React.useEffect(() => {
     if (!layoutReady) return;
+    // If user pressed Play (no saved board/wells), allow initial build
+    // If we rehydrated (Continue), skip build to preserve saved state
     if (rehydratedRef.current) return;
 
     // Build deterministic mappings and initial positions per team
@@ -334,6 +336,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   console.log(gameState);
   const resetGame = useCallback(
     (startingPlayersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => {
+      // Ensure a fresh start (not treated as rehydration)
+      rehydratedRef.current = false;
+      rehydrationPositionsAppliedRef.current = false;
       // Determine the players turn based on forfeit rule
       const nextPlayersTurn = forfeit
         ? getNextPlayersTurn(startingPlayersTurn)

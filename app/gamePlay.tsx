@@ -26,6 +26,11 @@ const GamePlay = () => {
     enabled: logic.gameState === GameState.PostGame,
     onShake: () => logic.resetGame(logic.playersTurn, false),
   });
+  const piecesToRender = React.useMemo(
+    () => (layout.layoutReady ? Object.entries(logic.pieces) : []),
+    [layout.layoutReady, logic.pieces]
+  );
+
   return (
     <View
       className="flex-1 flex-col items-center justify-center"
@@ -35,14 +40,14 @@ const GamePlay = () => {
         visible={logic.gameState === GameState.Finished}
         winner={logic.winner}
       />
-      <View className="flex-col">
+      <View className="flex-col items-center justify-center">
         <TeamWellGrid team={Team.TeamTwo} />
-        <Board className="mt-7 mb-7 " />
+        <Board className="mt-7 mb-7" />
         <TeamWellGrid team={Team.TeamOne} />
       </View>
 
       {layout.layoutReady &&
-        Object.entries(logic.pieces).map(([id, p]) => (
+        piecesToRender.map(([id, p]) => (
           <Piece key={id} id={id} team={p.team} />
         ))}
 

@@ -1,7 +1,7 @@
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { CellType, Team } from "@/types/board";
-import React from "react";
+import React, { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import Well from "./Well";
 
@@ -54,4 +54,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TeamWellGrid;
+export default memo(TeamWellGrid);

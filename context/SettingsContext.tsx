@@ -37,20 +37,13 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
       if (saved?.theme) {
         setColorTheme(saved.theme);
       }
-      const keysToCheck: (keyof PersistedAppState)[] = [
-        "gameMode",
-        "turnCount",
-        "currentTeam",
-        "gameState",
-        "winner",
-        "pieces",
-        "pieceStatusMap",
-        "playersTurn",
-        "wellPieceLocations",
-        "boardPieceLocations",
-      ];
-      const hasGameState = keysToCheck.some((k) => saved[k] !== undefined);
-      if (hasGameState) {
+      const hasBoard =
+        saved.boardPieceLocations &&
+        Object.keys(saved.boardPieceLocations).length > 0;
+      const hasWells =
+        saved.wellPieceLocations &&
+        Object.keys(saved.wellPieceLocations).length > 0;
+      if (hasBoard || hasWells) {
         logic.rehydrateFromSavedState(saved);
       }
     };

@@ -27,7 +27,6 @@ export const useGravity = () => {
 
     const updatedPieceLocations = { ...logic.boardPieceLocations };
     let hasMoves = false;
-
     if (direction === Direction.Up) {
       for (let row = 2; row <= 7; row++) {
         for (let col = 1; col <= 7; col++) {

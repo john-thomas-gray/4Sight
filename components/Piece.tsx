@@ -16,7 +16,7 @@ import { Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
-import React, { useEffect, useMemo } from "react";
+import React, { memo, useEffect, useMemo } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -592,4 +592,4 @@ const Piece = ({ team, id }: PieceProps) => {
   );
 };
 
-export default Piece;
+export default memo(Piece);

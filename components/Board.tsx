@@ -8,7 +8,7 @@ import { useGameContext } from "@/context/GameContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
-import React, { useLayoutEffect, useRef } from "react";
+import React, { memo, useLayoutEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
@@ -79,11 +79,17 @@ const Board = ({ className, onRotate }: BoardProps) => {
     });
     timer.current = setTimeout(() => {
       if (firstTurn.current) {
-        logic.setGameState(GameState.Ready);
+        // Don't downgrade Playing to Ready when continuing a game
+        if (logic.gameState !== GameState.Playing) {
+          logic.setGameState(GameState.Ready);
+        }
         firstTurn.current = false;
         return;
       }
-      logic.checkGameFinished(logic.boardPieceLocations);
+      // Advance turns after gravity or a piece placement drop
+      if (isMoving.current || logic.moveInProgress) {
+        logic.checkGameFinished(logic.boardPieceLocations);
+      }
     }, 300);
     return () => {
       clearTimeout(timer.current);
@@ -112,13 +118,14 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
   const handleFling = (direction: Direction, gameState: GameState) => {
     if (gameState === GameState.Playing) {
+      console.log("pull");
       executePull(direction);
     } else if (gameState === GameState.PostGame) {
       logic.resetGame(logic.playersTurn, false);
     }
   };
 
-  const VELOCITY_THRESHOLD = 800;
+  const VELOCITY_THRESHOLD = 600;
   const panFling = Gesture.Pan().onEnd((e) => {
     "worklet";
     const absVX = Math.abs(e.velocityX);
@@ -254,6 +261,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onStart((e) => {
       "worklet";
       const targets: [number, number][] = [
+        // [0, 0], /* * */ !@#
         [0, 1],
         [0, 2],
         [0, 3],
@@ -261,15 +269,20 @@ const Board = ({ className, onRotate }: BoardProps) => {
         [0, 5],
         [0, 6],
         [0, 7],
+        // [1, 1] /* * */,
         [1, 2],
         [1, 3],
         [1, 4],
         [1, 5],
         [1, 6],
+        // [1, 7] /* * */,
+        // [2, 2] /* * */,
         [2, 3],
         [2, 4],
         [2, 5],
+        // [2, 6] /* * */,
         [3, 4],
+        // [4,4] /* one quarter */
       ];
       const { x, y } = e;
       for (const [row, col] of targets) {
@@ -453,4 +466,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Board;
+export default memo(Board);
