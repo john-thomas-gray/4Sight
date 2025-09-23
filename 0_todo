@@ -1,4 +1,4 @@
-Zoom on board
+'Zoom on board
 
 4 player logic:
 
@@ -79,3 +79,4 @@ Refactoring:
 - Don't make winner text appear for forfeit?
 - Make continue button disappear when no game is saved
 - Add font and teamName to Theme
+- Make isAnimating state for pieces so they can't be grabbed during animation

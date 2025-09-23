@@ -1,4 +1,5 @@
 import {
+  animateBlockedPiece,
   animateMisplacedPiece,
   animatePieceDrop,
   animatePiecePickup,
@@ -12,7 +13,7 @@ import {
   WELL_RETURN,
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
-import { Team } from "@/types/board";
+import { Direction, Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
@@ -379,10 +380,12 @@ const Piece = ({ team, id }: PieceProps) => {
                   typeof currentWellDataSV.value === "object" &&
                   currentWellDataSV.value.layout
                 ) {
-                  animateMisplacedPiece({
+                  animateBlockedPiece({
                     translateX: animate.translateX,
                     translateY: animate.translateY,
+                    slotLayout: selectedCell.layout,
                     currentWellLayout: currentWellDataSV.value.layout,
+                    direction: Direction.Left
                   });
                 }
                 scheduleOnRN(unset);

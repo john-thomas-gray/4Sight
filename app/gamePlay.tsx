@@ -1,5 +1,4 @@
 import Board from "@/components/Board";
-import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinModal from "@/components/WinModal";
@@ -52,7 +51,7 @@ const GamePlay = () => {
         ))}
 
       {/* {!layout.layoutReady &&  */}
-      <LoadingScreen />
+      {/* <LoadingScreen /> */}
       {/* // } */}
     </View>
   );
