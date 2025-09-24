@@ -225,17 +225,17 @@ const Piece = ({ team, id }: PieceProps) => {
                 ];
                 const slotDirection =
                   nextRow === 8
-                    ? "N"
+                    ? Direction.Up
                     : nextRow === 0
-                    ? "S"
+                    ? Direction.Down
                     : nextCol === 0
-                    ? "E"
-                    : "W";
-                const deltas: Record<string, { dr: number; dc: number }> = {
-                  N: { dr: -1, dc: 0 },
-                  S: { dr: 1, dc: 0 },
-                  E: { dr: 0, dc: 1 },
-                  W: { dr: 0, dc: -1 },
+                    ? Direction.Right
+                    : Direction.Left;
+                const deltas: Record<Direction, { dr: number; dc: number }> = {
+                  [Direction.Up]: { dr: -1, dc: 0 },
+                  [Direction.Down]: { dr: 1, dc: 0 },
+                  [Direction.Right]: { dr: 0, dc: 1 },
+                  [Direction.Left]: { dr: 0, dc: -1 },
                 };
                 nextRow += deltas[slotDirection].dr;
                 nextCol += deltas[slotDirection].dc;
@@ -327,18 +327,18 @@ const Piece = ({ team, id }: PieceProps) => {
               console.log("isSlot");
               const slotDirection =
                 nextRow === 8
-                  ? "N"
+                  ? Direction.Up
                   : nextRow === 0
-                  ? "S"
+                  ? Direction.Down
                   : nextCol === 0
-                  ? "E"
-                  : "W";
+                  ? Direction.Right
+                  : Direction.Left;
 
-              const deltas: Record<string, { dr: number; dc: number }> = {
-                N: { dr: -1, dc: 0 },
-                S: { dr: 1, dc: 0 },
-                E: { dr: 0, dc: 1 },
-                W: { dr: 0, dc: -1 },
+              const deltas: Record<Direction, { dr: number; dc: number }> = {
+                [Direction.Up]: { dr: -1, dc: 0 },
+                [Direction.Down]: { dr: 1, dc: 0 },
+                [Direction.Right]: { dr: 0, dc: 1 },
+                [Direction.Left]: { dr: 0, dc: -1 },
               };
 
               nextRow += deltas[slotDirection].dr;
@@ -385,7 +385,7 @@ const Piece = ({ team, id }: PieceProps) => {
                     translateY: animate.translateY,
                     slotLayout: selectedCell.layout,
                     currentWellLayout: currentWellDataSV.value.layout,
-                    direction: Direction.Left
+                    direction: slotDirection,
                   });
                 }
                 scheduleOnRN(unset);

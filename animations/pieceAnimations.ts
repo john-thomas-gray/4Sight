@@ -9,7 +9,7 @@ import {
   SharedValue,
   withDelay,
   withSequence,
-  withTiming
+  withTiming,
 } from "react-native-reanimated";
 
 type AnimateWinner = {
@@ -340,33 +340,61 @@ export const animateBlockedPiece = ({
   const slotCenterX =
     slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS;
   const slotCenterY =
-    slotLayout.pageY +slotLayout.height / 2 - GameElements.PIECE_RADIUS;
+    slotLayout.pageY + slotLayout.height / 2 - GameElements.PIECE_RADIUS;
   const well = currentWellLayout;
   const wellCenterX = well.pageX + well.width / 2 - GameElements.PIECE_RADIUS;
   const wellCenterY = well.pageY + well.height / 2 - GameElements.PIECE_RADIUS;
+
+  let bounceOffsetX = 0;
+  let bounceOffsetY = 0;
+
+  switch (direction) {
+    case Direction.Left:
+      bounceOffsetX = -10;
+      break;
+    case Direction.Right:
+      bounceOffsetX = 10;
+      break;
+    case Direction.Up:
+      bounceOffsetY = -10;
+      break;
+    case Direction.Down:
+      bounceOffsetY = 10;
+      break;
+  }
+
   translateX.value = withSequence(
     withTiming(slotCenterX, {
       duration: 300,
       easing: Easing.inOut(Easing.quad),
     }),
-    withTiming(slotCenterX - 10, {
+    withTiming(slotCenterX + bounceOffsetX, {
       duration: 200,
     }),
     withTiming(slotCenterX, {
       duration: 200,
     }),
-    withDelay(300, withTiming(wellCenterX, {
-      duration: 300,
-      easing: Easing.inOut(Easing.quad),
-    }))
+    withDelay(
+      300,
+      withTiming(wellCenterX, {
+        duration: 300,
+        easing: Easing.inOut(Easing.quad),
+      })
+    )
   );
   translateY.value = withSequence(
     withTiming(slotCenterY, {
       duration: 300,
       easing: Easing.inOut(Easing.quad),
     }),
+    withTiming(slotCenterY + bounceOffsetY, {
+      duration: 200,
+    }),
+    withTiming(slotCenterY, {
+      duration: 200,
+    }),
     withDelay(
-      600,
+      300,
       withTiming(wellCenterY, {
         duration: 300,
         easing: Easing.inOut(Easing.quad),
@@ -379,17 +407,20 @@ export const animateBlockingPiece = ({
   translateX,
   translateY,
   blockedSpaceLayout,
-  direction
-}: {translateX: SharedValue<number>;
-    translateY: SharedValue<number>;
-    blockedSpaceLayout: CellLayout;
-    direction: Direction}) => {
+  direction,
+}: {
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  blockedSpaceLayout: CellLayout;
+  direction: Direction;
+}) => {
   "worklet";
-  translateX.value = withTiming(translateX.value - 10, {
-    duration: 200,
-    easing: Easing.inOut(Easing.quad),
-  }
-  translateY.value =
-
-  )
-}
+  translateX.value = withTiming(
+    translateX.value - 10,
+    {
+      duration: 200,
+      easing: Easing.inOut(Easing.quad),
+    }
+    // translateY.value =
+  );
+};
