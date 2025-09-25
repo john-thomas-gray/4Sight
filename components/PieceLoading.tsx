@@ -30,7 +30,6 @@ const PieceLoading = ({
   durationOffset,
   direction = "right",
   rotation = 0,
-  duration = 1000,
 }: PieceLoadingProps) => {
   const { settings } = useGameContext();
 
@@ -40,9 +39,13 @@ const PieceLoading = ({
   usePieceLoadingAnimation({
     translateX,
     translateY,
+    xStart,
+    yStart,
+    xEnd,
+    yEnd,
     direction,
     rotation,
-    duration,
+    startOffset: durationOffset,
   });
 
   const animatedStyle = useAnimatedStyle(() => ({

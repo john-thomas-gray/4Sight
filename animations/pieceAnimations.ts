@@ -444,7 +444,7 @@ export const animateBlockingPiece = ({
   }
 
   translateX.value = withDelay(
-    1300,
+    totalTime * 0.38,
     withSequence(
       withTiming(spaceCenterX + bounceOffsetX, {
         duration: totalTime * 0.15,
@@ -455,7 +455,7 @@ export const animateBlockingPiece = ({
     )
   );
   translateY.value = withDelay(
-    1300,
+    totalTime * 0.38,
     withSequence(
       withTiming(spaceCenterY + bounceOffsetY, {
         duration: totalTime * 0.15,

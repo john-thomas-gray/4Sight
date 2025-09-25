@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   SharedValue,
   withDelay,
@@ -20,21 +19,19 @@ export const useLoadingMoveTextAnimation = ({
   translateY,
   fontSize,
 }: LoadingTextAnimation) => {
-  useEffect(() => {
-    translateX.value = withRepeat(
-      withDelay(
-        animationLoopDuration * 0.2,
-        withSequence(
-          withTiming(-45, { duration: animationLoopDuration * 0.1 }),
-          withDelay(
-            animationLoopDuration * 0.5,
-            withTiming(0, { duration: animationLoopDuration * 0.2 })
-          )
+  translateX.value = withRepeat(
+    withDelay(
+      animationLoopDuration * 0.2,
+      withSequence(
+        withTiming(-45, { duration: animationLoopDuration * 0.1 }),
+        withDelay(
+          animationLoopDuration * 0.5,
+          withTiming(0, { duration: animationLoopDuration * 0.2 })
         )
-      ),
-      -1
-    );
-  }, [translateX]);
+      )
+    ),
+    -1
+  );
 };
 
 export const useLoadingFontSizeAnimation = ({
@@ -72,26 +69,47 @@ export const useLoadingTextAnimations = ({
 export const usePieceLoadingAnimation = ({
   translateX,
   translateY,
+  xStart,
+  yStart,
+  xEnd,
+  yEnd,
   direction,
   rotation,
-  duration,
+  startOffset,
 }: {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
+  xStart: number;
+  yStart: number;
+  xEnd: number;
+  yEnd: number;
   direction: "left" | "right" | "up" | "down";
   rotation: number;
-  duration: number;
+  startOffset: number;
 }) => {
-  useEffect(() => {
-    const screenWidth = 400; // Approximate screen width
-    const offScreenX = direction === "right" ? screenWidth + 200 : -200;
+  translateX.value = withRepeat(
+    withDelay(
+      startOffset,
+      withSequence(
+        withTiming(xEnd, {
+          duration: 1000,
+        }),
+        withDelay(3000 - startOffset, withTiming(100, { duration: 0 }))
+      )
+    ),
+    -1
+  );
 
-    // Start from off-screen
-    translateX.value = offScreenX;
-    translateY.value = 0;
-
-    // Animate to center
-    translateX.value = withTiming(0, { duration });
-    translateY.value = withTiming(0, { duration });
-  }, [translateX, translateY, direction, rotation, duration]);
+  translateY.value = withRepeat(
+    withDelay(
+      startOffset + animationLoopDuration * 0.3,
+      withSequence(
+        withTiming(yEnd, {
+          duration: 1500,
+        }),
+        withDelay(3000 - startOffset, withTiming(yStart, { duration: 0 }))
+      )
+    ),
+    -1
+  );
 };

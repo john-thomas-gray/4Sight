@@ -62,6 +62,8 @@ Polish:
 
 - Debounces
 - Make isAnimating state for pieces so they can't be grabbed during animation
+- held piece should be above all others
+- Layer slot visuals so piece "goes in"
 
 Sync:
 

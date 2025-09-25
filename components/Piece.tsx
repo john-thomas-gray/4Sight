@@ -1,5 +1,6 @@
 import {
   animateBlockedPiece,
+  animateBlockingPiece,
   animateMisplacedPiece,
   animatePieceDrop,
   animatePiecePickup,
@@ -51,7 +52,6 @@ const Piece = ({ team, id }: PieceProps) => {
     throw new Error(`No animation found for piece id ${id}`);
   }
 
-  // Initialize colors based on Team when the piece mounts or theme changes
   useEffect(() => {
     if (team === Team.TeamOne) {
       animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
@@ -274,7 +274,6 @@ const Piece = ({ team, id }: PieceProps) => {
           };
 
           for (const selectedCell of allCells) {
-            // Add null check for layout
             if (!selectedCell.layout) continue;
 
             const {
@@ -368,6 +367,24 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                     direction: slotDirection,
                   });
+
+                  // Find and animate the blocking piece
+                  const blockingSpaceId = `${nextRow}-${nextCol}`;
+                  const blockingPieceId =
+                    boardPieceLocationsSV.value[blockingSpaceId];
+                  if (blockingPieceId) {
+                    const blockingPieceAnimation =
+                      logic.pieceAnimations[blockingPieceId];
+                    const blockingSpaceLayout = layout.spaces[blockingSpaceId];
+                    if (blockingPieceAnimation && blockingSpaceLayout) {
+                      animateBlockingPiece({
+                        translateX: blockingPieceAnimation.translateX,
+                        translateY: blockingPieceAnimation.translateY,
+                        blockedSpaceLayout: blockingSpaceLayout,
+                        direction: slotDirection,
+                      });
+                    }
+                  }
                 }
                 scheduleOnRN(unset);
                 return;

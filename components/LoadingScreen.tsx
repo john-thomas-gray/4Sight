@@ -63,27 +63,27 @@ const LoadingScreen = () => {
         <PieceLoading
           team={Team.TeamOne}
           xStart={100}
-          yStart={50}
+          yStart={0}
           xEnd={-43}
-          yEnd={0}
+          yEnd={500}
           durationOffset={0}
         />
-        <PieceLoading
+        {/* <PieceLoading
           team={Team.TeamTwo}
-          xStart={150}
-          yStart={50}
+          xStart={100}
+          yStart={0}
           xEnd={-15}
-          yEnd={0}
-          durationOffset={100}
+          yEnd={-500}
+          durationOffset={500}
         />
         <PieceLoading
           team={Team.TeamOne}
-          xStart={200}
-          yStart={5}
+          xStart={100}
+          yStart={0}
           xEnd={13}
           yEnd={0}
-          durationOffset={200}
-        />
+          durationOffset={1000} */}
+        {/* /> */}
       </View>
     </View>
   );
