@@ -257,7 +257,10 @@ const Board = ({ className, onRotate }: BoardProps) => {
     logic.setPreviewHiddenPieces(toHide);
   };
 
+  const longPressDurationMS = 0;
+
   const lpUp = Gesture.LongPress()
+    .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
       const targets: [number, number][] = [
@@ -303,6 +306,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     });
 
   const lpDown = Gesture.LongPress()
+    .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
       const targets: [number, number][] = [
@@ -342,6 +346,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     });
 
   const lpLeft = Gesture.LongPress()
+    .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
       const targets: [number, number][] = [
@@ -381,6 +386,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     });
 
   const lpRight = Gesture.LongPress()
+    .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
       const targets: [number, number][] = [
