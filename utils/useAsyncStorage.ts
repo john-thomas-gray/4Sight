@@ -1,6 +1,6 @@
-import { ColorThemeType } from "@/constants/colorThemes";
 import { Team } from "@/types/board";
 import { GameMode, GameState, PieceProps, PieceStatusMap } from "@/types/logic";
+import { ColorThemeType } from "@/types/themes/colorTheme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const APP_STATE_KEY = "app_state_yeehaw";

@@ -1,4 +1,5 @@
-import { CLASSIC, SCHOOLHOUSE } from "@/constants/colorThemes";
+import { CLASSIC } from "@/constants/themes/classic/colorTheme";
+import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse/colorTheme";
 import { useGameContext } from "@/context/GameContext";
 import React from "react";
 import { Pressable, Text, View } from "react-native";

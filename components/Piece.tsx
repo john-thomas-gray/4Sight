@@ -17,6 +17,7 @@ import { Direction, Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
+import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
 import React, { memo, useEffect, useMemo } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -166,57 +167,37 @@ const Piece = ({ team, id }: PieceProps) => {
           console.log(logic.playersTurn);
         })
         .onUpdate((event) => {
-          // if (logic.gameMode === GameMode.TwoPlayer) {
-          //   if (logic.playersTurn % 2 === 1) {
-          //     animate.translateX.value =
-          //       event.absoluteX - GameElements.PIECE_RADIUS;
-          //     animate.translateY.value =
-          //       event.absoluteY - GameElements.PIECE_RADIUS - 40;
-          //   } else if (logic.playersTurn % 2 === 0) {
-          //     animate.translateX.value =
-          //       event.absoluteX - GameElements.PIECE_RADIUS;
-          //     animate.translateY.value =
-          //       event.absoluteY - GameElements.PIECE_RADIUS + 40;
-          //   }
-          // } else {
-          //   if (logic.playersTurn === 1) {
-          //     animate.translateX.value =
-          //       event.absoluteX - GameElements.PIECE_RADIUS;
-          //     animate.translateY.value =
-          //       event.absoluteY - GameElements.PIECE_RADIUS - 40;
-          //   } else if (logic.playersTurn === 2) {
-          //     animate.translateX.value =
-          //       event.absoluteX - GameElements.PIECE_RADIUS - 40;
-          //     animate.translateY.value =
-          //       event.absoluteY - GameElements.PIECE_RADIUS;
-          //   } else if (logic.playersTurn === 3) {
-          //     animate.translateX.value =
-          //       event.absoluteX - GameElements.PIECE_RADIUS;
-          //     animate.translateY.value =
-          //       event.absoluteY - GameElements.PIECE_RADIUS + 40;
-          //   } else {
-          //     animate.translateX.value =
-          //       event.absoluteX - GameElements.PIECE_RADIUS + 40;
-          //     animate.translateY.value =
-          //       event.absoluteY - GameElements.PIECE_RADIUS;
-          //   }
-          // }
-          animate.translateX.value =
-            event.absoluteX - GameElements.PIECE_RADIUS;
-          animate.translateY.value =
-            event.absoluteY - GameElements.PIECE_RADIUS;
+          pieceHoldOffset(
+            logic.gameMode,
+            logic.playersTurn,
+            animate.translateX,
+            animate.translateY,
+            event.absoluteX,
+            event.absoluteY,
+            GameElements.PIECE_RADIUS,
+            true
+          );
 
           // Log hover when held piece is over a slot
           if (status === PieceStatus.isHeld) {
             let overAnySlot = false;
+
+            // Apply the same offset logic as pieceHoldOffset to the mouse position
+            const { adjustedX, adjustedY } = pointerHoverOffset(
+              logic.gameMode,
+              logic.playersTurn,
+              event.absoluteX,
+              event.absoluteY
+            );
+
             for (const cell of allCells) {
               if (!cell.layout) continue;
               const { pageX, pageY, width, height } = cell.layout;
               const inside =
-                event.absoluteX >= pageX &&
-                event.absoluteX <= pageX + width &&
-                event.absoluteY >= pageY &&
-                event.absoluteY <= pageY + height;
+                adjustedX >= pageX &&
+                adjustedX <= pageX + width &&
+                adjustedY >= pageY &&
+                adjustedY <= pageY + height;
               if (inside && cell.id in layout.slots) {
                 overAnySlot = true;
                 let [nextRow, nextCol] = cell.id.split("-").map(Number) as [

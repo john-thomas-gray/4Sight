@@ -1,4 +1,5 @@
-import { CLASSIC, ColorThemeType } from "@/constants/colorThemes";
+import { CLASSIC } from "@/constants/themes/classic/colorTheme";
+import { ColorThemeType } from "@/types/themes/colorTheme";
 import {
   loadAppState,
   PersistedAppState,
