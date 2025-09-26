@@ -22,11 +22,9 @@ Win State:
 - Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
   slight pulsing. Highlight undulates and shimmers.
 - loop animation
-- prevent winner intro animation from playing again, unless a new piece is added to the row
 
 Signifiers:
 
-- Available/unavailable slot visualizations
 - Three pieces in a row with an accessible empty square as the next space are highlighted
 - hightlights three pieces in a row with flashing beacons
 
@@ -45,7 +43,6 @@ Sync:
 Bugs!:
 
 - loading back into the game breaks the timing of the turn changes
-- Diagonal win checks don't work
 
 Polish:
 
@@ -59,5 +56,14 @@ Polish:
 - Slow down reset animation for shake
 - Animated screen transitions
 - Settings page animates when theme changes
+- Available/unavailable slot visualizations
+- prevent winner intro animation from playing again, unless a new piece is added to the row
 
 Tests
+
+---
+
+zIndex Problems:
+
+- held piece should be above all others
+- Layer slot visuals so piece "goes in"

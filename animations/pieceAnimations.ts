@@ -8,6 +8,7 @@ import {
   Easing,
   SharedValue,
   withDelay,
+  withRepeat,
   withSequence,
   withTiming,
 } from "react-native-reanimated";
@@ -93,6 +94,35 @@ AnimateWinner) {
     duration: WINNER_V1,
     easing: Easing.inOut(Easing.exp),
   });
+
+  scaleX.value = withDelay(
+    WINNER_V1 + WINNER_V0,
+    withRepeat(
+      withSequence(
+        withTiming(1.15, {
+          duration: 2000,
+        }),
+        withTiming(1, {
+          duration: 2000,
+        })
+      ),
+      -1
+    )
+  );
+  scaleY.value = withDelay(
+    WINNER_V1 + WINNER_V0,
+    withRepeat(
+      withSequence(
+        withTiming(1.15, {
+          duration: 2000,
+        }),
+        withTiming(1, {
+          duration: 2000,
+        })
+      ),
+      -1
+    )
+  );
   // type PointSkew = { x: string; y: string };
   // type AnimationSkew = {
   //   svx: SharedValue<string>;
