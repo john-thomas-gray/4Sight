@@ -92,10 +92,7 @@ function InnerIndexLayout() {
           <Text className="text-lg">Settings</Text>
         </Pressable>
         <Pressable onPress={onPressHowTo}>
-          <Text className="text-lg">Instructions</Text>
-        </Pressable>
-        <Pressable onPress={onPressTest}>
-          <Text className="text-lg">Test</Text>
+          <Text className="text-lg">How to Play</Text>
         </Pressable>
       </View>
     </View>

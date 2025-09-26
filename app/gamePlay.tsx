@@ -1,4 +1,5 @@
 import Board from "@/components/Board";
+import HamburgerMenu from "@/components/HamburgerMenu";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinModal from "@/components/WinModal";
@@ -6,11 +7,13 @@ import { useGameContext } from "@/context/GameContext";
 import { useShake } from "@/hooks/useShake";
 import { Team } from "@/types/board";
 import { GameState } from "@/types/logic";
+import { useRouter } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 
 const GamePlay = () => {
   const { layout, logic, settings } = useGameContext();
+  const router = useRouter();
   const forfeit = React.useCallback(() => {
     const winningTeam =
       logic.currentTeam === Team.TeamOne ? Team.TeamTwo : Team.TeamOne;
@@ -19,7 +22,8 @@ const GamePlay = () => {
   }, [logic]);
   useShake({
     enabled: logic.gameState === GameState.Playing,
-    onShake: forfeit,
+    // onShake: forfeit,
+    onShake: () => logic.resetGame(logic.playersTurn, true),
   });
   useShake({
     enabled: logic.gameState === GameState.PostGame,
@@ -49,6 +53,11 @@ const GamePlay = () => {
         piecesToRender.map(([id, p]) => (
           <Piece key={id} id={id} team={p.team} />
         ))}
+
+      <HamburgerMenu
+        onPress={() => router.push("/")}
+        className="absolute bottom-6 right-6"
+      />
 
       {/* {!layout.layoutReady &&  */}
       {/* <LoadingScreen /> */}

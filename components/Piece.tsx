@@ -178,11 +178,9 @@ const Piece = ({ team, id }: PieceProps) => {
             true
           );
 
-          // Log hover when held piece is over a slot
           if (status === PieceStatus.isHeld) {
             let overAnySlot = false;
 
-            // Apply the same offset logic as pieceHoldOffset to the mouse position
             const { adjustedX, adjustedY } = pointerHoverOffset(
               logic.gameMode,
               logic.playersTurn,
@@ -368,7 +366,6 @@ const Piece = ({ team, id }: PieceProps) => {
                     direction: slotDirection,
                   });
 
-                  // Find and animate the blocking piece
                   const blockingSpaceId = `${nextRow}-${nextCol}`;
                   const blockingPieceId =
                     boardPieceLocationsSV.value[blockingSpaceId];
@@ -467,8 +464,6 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
               return;
             } else if (isWell) {
-              console.log("isWell");
-              // Check if the well is occupied
               const isOccupied = logic.wellPieceLocations[id] !== undefined;
               if (isOccupied) {
                 if (

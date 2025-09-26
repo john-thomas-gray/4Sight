@@ -95,9 +95,9 @@ const findPieceRelationships = ({
 
   function crawlAllLines() {
     // Columns
-    for (let y = 1; y <= SIZE; y++) {
+    for (let x = 1; x <= SIZE; x++) {
       const col = [];
-      for (let x = 1; x <= SIZE; x++) {
+      for (let y = 1; y <= SIZE; y++) {
         const spaceId = formatSpaceId({ x, y });
         const pieceId = boardPieceLocations[spaceId] || "unassigned";
         col.push([spaceId, pieceId]);
@@ -106,9 +106,9 @@ const findPieceRelationships = ({
     }
 
     // Rows
-    for (let x = 1; x <= SIZE; x++) {
+    for (let y = 1; y <= SIZE; y++) {
       const row = [];
-      for (let y = 1; y <= SIZE; y++) {
+      for (let x = 1; x <= SIZE; x++) {
         const spaceId = formatSpaceId({ x, y });
         const pieceId = boardPieceLocations[spaceId] || "unassigned";
         row.push([spaceId, pieceId]);
@@ -116,12 +116,12 @@ const findPieceRelationships = ({
       scanLine(row);
     }
 
-    // Diagonals (down-right)
-    for (let startY = 1; startY <= SIZE; startY++) {
-      let x = 1;
-      let y = startY;
+    // Diagonals (down-right): start from top row and left column
+    for (let startX = 1; startX <= SIZE; startX++) {
+      let x = startX;
+      let y = 1;
       const diag = [];
-      while (x <= SIZE && y >= 1) {
+      while (x <= SIZE && y <= SIZE) {
         const spaceId = formatSpaceId({ x, y });
         const pieceId = boardPieceLocations[spaceId] || "unassigned";
         diag.push([spaceId, pieceId]);
@@ -130,10 +130,39 @@ const findPieceRelationships = ({
       }
       scanLine(diag);
     }
-    // Diagonals (up-right)
+
+    for (let startY = 2; startY <= SIZE; startY++) {
+      let x = 1;
+      let y = startY;
+      const diag = [];
+      while (x <= SIZE && y <= SIZE) {
+        const spaceId = formatSpaceId({ x, y });
+        const pieceId = boardPieceLocations[spaceId] || "unassigned";
+        diag.push([spaceId, pieceId]);
+        x++;
+        y++;
+      }
+      scanLine(diag);
+    }
+
+    // Diagonals (up-right): start from top row and right column
     for (let startX = SIZE; startX >= 1; startX--) {
       let x = startX;
       let y = 1;
+      const diag = [];
+      while (x >= 1 && y <= SIZE) {
+        const spaceId = formatSpaceId({ x, y });
+        const pieceId = boardPieceLocations[spaceId] || "unassigned";
+        diag.push([spaceId, pieceId]);
+        x--;
+        y++;
+      }
+      scanLine(diag);
+    }
+
+    for (let startY = 2; startY <= SIZE; startY++) {
+      let x = SIZE;
+      let y = startY;
       const diag = [];
       while (x >= 1 && y <= SIZE) {
         const spaceId = formatSpaceId({ x, y });

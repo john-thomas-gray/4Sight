@@ -9,14 +9,6 @@
 - Board lifts up when you hold down on a corner
 - Split wells so each player is near one
 
-Menu Tab:
-
-- On the play screen, pulling brings the homepage back\*
-- Reacts to device orientation so that it is never on the blocked side
-- Makes itself known at the beginning of the game then retracts
-- Its color shares a color that is the border of the menu screen
-- Maybe just a tiny icon?
-
 Tutorial:
 
 - Interactive introduction that runs the first time you play
@@ -38,37 +30,34 @@ Signifiers:
 - Three pieces in a row with an accessible empty square as the next space are highlighted
 - hightlights three pieces in a row with flashing beacons
 
-Feedback:
-
-- Piece dropped on inaccessible space bounces off glass.
-- Piece placed in unavailable slot bumps the piece that's blocking it
-
-Maybe:
-
-- Drag finger across Well to forfeit
-- Don't make winner text appear for forfeit?
-  Slow down reset animation for shake
-
-Tests:
-
 Theme:
 
 - Overarching theme
 - TeamName
 - Font
 - Purchasable theme
-
-Polish:
-
-- Debounces
-- Make isAnimating state for pieces so they can't be grabbed during animation
-- held piece should be above all others
-- Layer slot visuals so piece "goes in"
+- Entire app is styled by Theme
 
 Sync:
 
 - Make continue button disappear when no game is saved
 
-Graphics:
+Bugs!:
 
-- all slot arrows turn the direction of the pull
+- loading back into the game breaks the timing of the turn changes
+- Diagonal win checks don't work
+
+Polish:
+
+- held piece should be above all others
+- Layer slot visuals so piece "goes in"
+- Debounces
+- Make isAnimating state for pieces so they can't be grabbed during animation
+- onePiecePlaced prevents you from placing two pieces in one turn in case timer fails
+- all slot arrows turn the direction of the pull (make a feed forward?)
+- Piece dropped on inaccessible space bounces off glass.
+- Slow down reset animation for shake
+- Animated screen transitions
+- Settings page animates when theme changes
+
+Tests

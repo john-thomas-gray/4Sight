@@ -430,16 +430,16 @@ export const animateBlockingPiece = ({
 
   switch (direction) {
     case Direction.Left:
-      bounceOffsetX = -10;
+      bounceOffsetX = -4;
       break;
     case Direction.Right:
-      bounceOffsetX = 10;
+      bounceOffsetX = 4;
       break;
     case Direction.Up:
-      bounceOffsetY = -10;
+      bounceOffsetY = -4;
       break;
     case Direction.Down:
-      bounceOffsetY = 10;
+      bounceOffsetY = 4;
       break;
   }
 
