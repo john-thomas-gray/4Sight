@@ -60,6 +60,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
   // !@# Should only fire when we actually pull gravity
   useLayoutEffect(() => {
     if (!layout.layoutReady) return;
+    console.log("timer", timer.current);
     if (timer.current > 0) return;
     Object.keys(logic.pieces).forEach((pieceId) => {
       const entry = Object.entries(logic.boardPieceLocations).find(
@@ -89,6 +90,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       // Advance turns after gravity or a piece placement drop
       if (isMoving.current || logic.moveInProgress) {
         logic.checkGameFinished(logic.boardPieceLocations);
+        console.log("giggity giggity goo");
       }
     }, 300);
     return () => {

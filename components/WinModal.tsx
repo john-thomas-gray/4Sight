@@ -60,11 +60,15 @@ const WinModal = ({
   let textColor = "#444";
 
   if (winner === Team.TeamOne) {
-    displayText = `${settings.theme.textAndFontTheme.teamOneName} Wins!`;
-    textColor = settings.theme.colorTheme.TEAM_ONE_COLOR;
+    displayText = `${
+      settings.theme?.textAndFontTheme?.teamOneName || "Team One"
+    } Wins!`;
+    textColor = settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff";
   } else if (winner === Team.TeamTwo) {
-    displayText = `${settings.theme.textAndFontTheme.teamTwoName} Wins!`;
-    textColor = settings.theme.colorTheme.TEAM_TWO_COLOR;
+    displayText = `${
+      settings.theme?.textAndFontTheme?.teamTwoName || "Team Two"
+    } Wins!`;
+    textColor = settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000";
   } else if (winner === Team.Both) {
     displayText = "It's a Tie!";
     textColor = "#FFA500"; // Orange for tie

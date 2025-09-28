@@ -37,7 +37,9 @@ const GamePlay = () => {
   return (
     <View
       className="flex-1 flex-col items-center justify-center"
-      style={{ backgroundColor: settings.colorTheme.FELT_TOP }}
+      style={{
+        backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#065f46",
+      }}
     >
       <WinModal
         visible={logic.gameState === GameState.Finished}
@@ -55,7 +57,7 @@ const GamePlay = () => {
         ))}
 
       <HamburgerMenu
-        onPress={() => router.push("/")}
+        onPress={() => router.replace("/")}
         className="absolute bottom-6 right-6"
       />
 

@@ -1,3 +1,4 @@
+import BackButton from "@/components/BackButton";
 import { CLASSIC } from "@/constants/themes/classic";
 import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse";
 import { useGameContext } from "@/context/GameContext";
@@ -7,10 +8,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
   const { settings } = useGameContext();
-  const isSameTheme = (a: typeof CLASSIC, b: typeof CLASSIC) =>
-    a.colorTheme.TEAM_ONE_COLOR === b.colorTheme.TEAM_ONE_COLOR &&
-    a.colorTheme.TEAM_TWO_COLOR === b.colorTheme.TEAM_TWO_COLOR &&
-    a.colorTheme.FELT_TOP === b.colorTheme.FELT_TOP;
+  const isSameTheme = (a: typeof CLASSIC | undefined, b: typeof CLASSIC) => {
+    if (!a || !a.colorTheme) return false;
+    return (
+      a.colorTheme.TEAM_ONE_COLOR === b.colorTheme.TEAM_ONE_COLOR &&
+      a.colorTheme.TEAM_TWO_COLOR === b.colorTheme.TEAM_TWO_COLOR &&
+      a.colorTheme.FELT_TOP === b.colorTheme.FELT_TOP
+    );
+  };
   const isClassicSelected = isSameTheme(settings.theme, CLASSIC);
   const isSchoolhouseSelected = isSameTheme(settings.theme, SCHOOLHOUSE);
 
@@ -100,6 +105,7 @@ const Settings = () => {
           </Pressable>
         </View>
       </View>
+      <BackButton />
     </SafeAreaView>
   );
 };

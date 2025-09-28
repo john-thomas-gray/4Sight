@@ -33,8 +33,8 @@ const Space = ({ id }: CellProps) => {
   const style: ViewStyle = {
     ...GameElements.SPACE_STYLE,
     backgroundColor: isEven
-      ? settings.colorTheme.EVEN_SPACE_COLOR
-      : settings.colorTheme.ODD_SPACE_COLOR,
+      ? settings.theme?.colorTheme?.EVEN_SPACE_COLOR || "#d1fae5"
+      : settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
   };
 
   return <View ref={viewRef} onLayout={reportLayout} style={style} />;

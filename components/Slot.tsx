@@ -41,8 +41,8 @@ const Slot = ({ id, team }: CellProps) => {
   const direction = checkDirection(id);
   const currentTeamColor =
     team === Team.TeamOne
-      ? settings.colorTheme.TEAM_ONE_COLOR
-      : settings.colorTheme.TEAM_TWO_COLOR;
+      ? settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff"
+      : settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000";
 
   const rotation =
     direction === "S"
@@ -60,8 +60,9 @@ const Slot = ({ id, team }: CellProps) => {
       ref={viewRef}
       style={{
         ...GameElements.SLOT_STYLE,
-        borderColor: settings.colorTheme.SLOT_BORDER_COLOR,
-        backgroundColor: settings.colorTheme.SLOT_BACKGROUND_COLOR,
+        borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#C0C0C0",
+        backgroundColor:
+          settings.theme?.colorTheme?.SLOT_BACKGROUND_COLOR || "#6E2C00",
         transform: [{ rotate: rotation }],
       }}
     >
@@ -71,7 +72,8 @@ const Slot = ({ id, team }: CellProps) => {
           width: 28,
           height: 28,
           borderRadius: 14,
-          backgroundColor: settings.colorTheme.SLOT_INSERT_COLOR,
+          backgroundColor:
+            settings.theme?.colorTheme?.SLOT_INSERT_COLOR || "#C0C0C0",
           zIndex: 0,
         }}
       />

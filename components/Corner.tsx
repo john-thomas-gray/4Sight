@@ -14,8 +14,8 @@ const Corner = ({ id }: CellProps) => {
   const viewRef = useRef<View>(null);
   const cornerColor =
     logic.currentTeam === Team.TeamOne
-      ? settings.colorTheme.CORNER_COLOR_ONE
-      : settings.colorTheme.CORNER_COLOR_TWO;
+      ? settings.theme?.colorTheme?.CORNER_COLOR_ONE || "#ffffff"
+      : settings.theme?.colorTheme?.CORNER_COLOR_TWO || "#000000";
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {

@@ -16,8 +16,8 @@ const TeamWellGrid = ({ team }: TeamWellGridProps) => {
   const { settings } = useGameContext();
   const borderColor =
     team === Team.TeamOne
-      ? settings.colorTheme.TEAM_ONE_COLOR
-      : settings.colorTheme.TEAM_TWO_COLOR;
+      ? settings.theme?.colorTheme?.TEAM_ONE_COLOR
+      : settings.theme?.colorTheme?.TEAM_TWO_COLOR;
   const idNumOffset =
     team === Team.TeamOne ? { row: 9, col: 9 } : { row: 17, col: 12 };
 

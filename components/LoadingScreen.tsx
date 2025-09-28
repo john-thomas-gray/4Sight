@@ -33,7 +33,7 @@ const LoadingScreen = () => {
         left: 0,
         right: 0,
         bottom: 90,
-        backgroundColor: settings.colorTheme.FELT_TOP || "#222",
+        backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
         justifyContent: "center",
         alignItems: "center",
         zIndex: 9999,
@@ -45,7 +45,7 @@ const LoadingScreen = () => {
           animatedStyle,
           {
             marginTop: 12,
-            color: settings.colorTheme.ODD_SPACE_COLOR,
+            color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
             fontWeight: "bold",
           },
         ]}

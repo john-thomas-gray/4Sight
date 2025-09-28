@@ -69,8 +69,8 @@ const PieceLoading = ({
     left: 0,
     backgroundColor:
       team === Team.TeamOne
-        ? settings.colorTheme.TEAM_ONE_COLOR
-        : settings.colorTheme.TEAM_TWO_COLOR,
+        ? settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff"
+        : settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000",
   };
 
   return <Animated.View style={[style, animatedStyle]} />;

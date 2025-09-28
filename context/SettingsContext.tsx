@@ -17,7 +17,6 @@ import { useLogic } from "./LogicContext";
 type SettingsContextType = {
   theme: ThemeType;
   setTheme: React.Dispatch<React.SetStateAction<ThemeType>>;
-  // teamTheme:
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -55,7 +54,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
     saveAppState({ theme });
   }, [theme]);
 
-  // Persist game state whenever it changes
+  // Persist game state every turn
   useEffect(() => {
     const state: PersistedAppState = {
       gameMode: logic.gameMode,
@@ -70,18 +69,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
       boardPieceLocations: logic.boardPieceLocations,
     };
     saveAppState(state);
-  }, [
-    logic.gameMode,
-    logic.turnCount,
-    logic.currentTeam,
-    logic.gameState,
-    logic.winner,
-    logic.pieces,
-    logic.pieceStatusMap,
-    logic.playersTurn,
-    logic.wellPieceLocations,
-    logic.boardPieceLocations,
-  ]);
+  }, [logic.turnCount, logic.winner]);
 
   return (
     <SettingsContext.Provider value={{ theme, setTheme }}>

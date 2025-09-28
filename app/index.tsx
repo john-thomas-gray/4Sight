@@ -62,7 +62,9 @@ function InnerIndexLayout() {
     router.push("/gamePlay");
   }, [logic]);
 
-  const handleContinue = React.useCallback(() => {
+  const handleContinue = React.useCallback(async () => {
+    const saved = await loadAppState();
+    logic.rehydrateFromSavedState(saved);
     logic.setGameState(GameState.Playing);
     router.push("/gamePlay");
   }, [logic]);

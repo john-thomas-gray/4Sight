@@ -13,7 +13,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   size = 24,
   className,
 }) => {
-  const { colorTheme } = useSettings();
+  const { theme } = useSettings();
 
   return (
     <Pressable
@@ -22,7 +22,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
       accessibilityRole="button"
       accessibilityLabel="Menu"
       className={`p-2.5 rounded-full border-2 ${className || ""}`}
-      style={{ borderColor: colorTheme.ODD_SPACE_COLOR }}
+      style={{ borderColor: theme.colorTheme.ODD_SPACE_COLOR }}
     >
       <View
         style={{
@@ -36,7 +36,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           style={{
             width: "100%",
             height: 3,
-            backgroundColor: colorTheme.ODD_SPACE_COLOR,
+            backgroundColor: theme.colorTheme.ODD_SPACE_COLOR,
             borderRadius: 1.5,
           }}
         />
@@ -45,7 +45,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           style={{
             width: "100%",
             height: 3,
-            backgroundColor: colorTheme.ODD_SPACE_COLOR,
+            backgroundColor: theme.colorTheme.ODD_SPACE_COLOR,
             borderRadius: 1.5,
           }}
         />
@@ -54,7 +54,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           style={{
             width: "100%",
             height: 3,
-            backgroundColor: colorTheme.ODD_SPACE_COLOR,
+            backgroundColor: theme.colorTheme.ODD_SPACE_COLOR,
             borderRadius: 1.5,
           }}
         />

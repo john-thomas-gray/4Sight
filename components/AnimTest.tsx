@@ -31,8 +31,8 @@ const AnimTest = ({ team }: { team: Team }) => {
     borderRadius: GameElements.PIECE_RADIUS,
     backgroundColor:
       team === Team.TeamOne
-        ? settings.colorTheme.TEAM_ONE_COLOR
-        : settings.colorTheme.TEAM_TWO_COLOR,
+        ? settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff"
+        : settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000",
     borderWidth: 2,
     borderColor: "#9CA3AF",
     zIndex: 1000,

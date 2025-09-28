@@ -1,5 +1,5 @@
 import { animatePieceReset, animateWinner } from "@/animations/pieceAnimations";
-import { Animations, GameElements, Logic } from "@/constants";
+import { GameElements, Logic } from "@/constants";
 import { WINNER_BASE_DELAY } from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
@@ -77,6 +77,10 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
   const { wells, layoutReady } = useLayout();
   const pieceAnimations = usePieceAnimations();
+  const pieceAnimationsRef = useRef(pieceAnimations);
+  React.useEffect(() => {
+    pieceAnimationsRef.current = pieceAnimations;
+  }, [pieceAnimations]);
   const [moveInProgress, setMoveInProgress] = useState(false);
   const setMIP = ({ setting, delay }: { setting: boolean; delay?: number }) => {
     setTimeout(() => setMoveInProgress(setting), delay || 0);
@@ -182,7 +186,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         wellMap[wellId] = id;
 
         const layout = teamWells[wellId];
-        const anim = pieceAnimations[id];
+        const anim = pieceAnimationsRef.current[id];
         if (layout && anim) {
           anim.translateX.value =
             layout.pageX + layout.width / 2 - GameElements.PIECE_RADIUS;
@@ -193,30 +197,28 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
       return { pieces, wellMap };
     },
-    [pieceAnimations]
+    []
   );
 
   React.useEffect(() => {
     if (!layoutReady) return;
     // If user pressed Play (no saved board/wells), allow initial build
     // If we rehydrated (Continue), skip build to preserve saved state
-    if (rehydratedRef.current) return;
+    // Defer one tick so Settings rehydration can run first and set rehydratedRef
+    const timeoutId = setTimeout(() => {
+      if (rehydratedRef.current) return;
 
-    // Build deterministic mappings and initial positions per team
-    const { pieces: teamOnePieces, wellMap: teamOneWellMap } = buildTeamPieces(
-      Team.TeamOne,
-      0,
-      wells[Team.TeamOne]
-    );
-    const { pieces: teamTwoPieces, wellMap: teamTwoWellMap } = buildTeamPieces(
-      Team.TeamTwo,
-      24,
-      wells[Team.TeamTwo]
-    );
+      // Build deterministic mappings and initial positions per team
+      const { pieces: teamOnePieces, wellMap: teamOneWellMap } =
+        buildTeamPieces(Team.TeamOne, 0, wells[Team.TeamOne]);
+      const { pieces: teamTwoPieces, wellMap: teamTwoWellMap } =
+        buildTeamPieces(Team.TeamTwo, 24, wells[Team.TeamTwo]);
 
-    setPieces({ ...teamOnePieces, ...teamTwoPieces });
-    setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
-  }, [layoutReady, wells]);
+      setPieces({ ...teamOnePieces, ...teamTwoPieces });
+      setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
+    }, 0);
+    return () => clearTimeout(timeoutId);
+  }, [layoutReady, wells, buildTeamPieces]);
 
   const initialPieceStatusMap: PieceStatusMap = {};
   for (let i = 0; i < 48; i++) {
@@ -328,7 +330,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         setWinner(winnerTeam);
         setGameState(GameState.Finished);
       } else {
-        setTimeout(() => nextTurn(), Animations.BOARD_COLOR_CHANGE);
+        nextTurn();
       }
     },
     [pieces, pieceAnimations, nextTurn]
@@ -454,6 +456,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setPreviewHiddenPieces,
       rehydrateFromSavedState: (state: PersistedAppState) => {
         rehydratedRef.current = true;
+        rehydrationPositionsAppliedRef.current = false;
         if (state.gameMode !== undefined) setGameMode(state.gameMode);
         if (state.pieces !== undefined) setPieces(state.pieces);
         if (state.pieceStatusMap !== undefined)
@@ -489,21 +492,20 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const firstTurn = useRef(true);
-
-  const debounce = setTimeout(() => {
-    if (rehydratedRef.current) {
-      return clearTimeout(debounce);
-    }
+  React.useEffect(() => {
+    if (!layoutReady) return;
+    if (rehydratedRef.current) return;
     if (firstTurn.current) {
       firstTurn.current = false;
-      return clearTimeout(debounce);
-    } else if (debounce) {
       return;
     }
-    setGameState(GameState.Ready);
-  }, 300);
+    const t = setTimeout(() => {
+      setGameState(GameState.Ready);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [layoutReady]);
 
-  console.log(turnCount);
+  console.log("Turn", turnCount);
   return (
     <LogicContext.Provider value={contextValue}>
       {children}

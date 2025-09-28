@@ -54,20 +54,24 @@ const Piece = ({ team, id }: PieceProps) => {
 
   useEffect(() => {
     if (team === Team.TeamOne) {
-      animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
-      animate.winnerColor.value = settings.colorTheme.TEAM_ONE_WINNER_COLOR;
+      animate.color.value =
+        settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff";
+      animate.winnerColor.value =
+        settings.theme?.colorTheme?.TEAM_ONE_WINNER_COLOR || "#fdffd0ff";
     } else {
-      animate.color.value = settings.colorTheme.TEAM_TWO_COLOR;
-      animate.winnerColor.value = settings.colorTheme.TEAM_TWO_WINNER_COLOR;
+      animate.color.value =
+        settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000";
+      animate.winnerColor.value =
+        settings.theme?.colorTheme?.TEAM_TWO_WINNER_COLOR || "#967d00ff";
     }
   }, [
     team,
     animate.color,
     animate.winnerColor,
-    settings.colorTheme.TEAM_ONE_COLOR,
-    settings.colorTheme.TEAM_ONE_WINNER_COLOR,
-    settings.colorTheme.TEAM_TWO_COLOR,
-    settings.colorTheme.TEAM_TWO_WINNER_COLOR,
+    settings.theme?.colorTheme?.TEAM_ONE_COLOR,
+    settings.theme?.colorTheme?.TEAM_ONE_WINNER_COLOR,
+    settings.theme?.colorTheme?.TEAM_TWO_COLOR,
+    settings.theme?.colorTheme?.TEAM_TWO_WINNER_COLOR,
   ]);
 
   useEffect(() => {
@@ -132,11 +136,13 @@ const Piece = ({ team, id }: PieceProps) => {
   useEffect(() => {
     if (team === Team.TeamOne) {
       if (status !== PieceStatus.winner) {
-        animate.color.value = settings.colorTheme.TEAM_ONE_COLOR;
+        animate.color.value =
+          settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff";
       }
     } else {
       if (status !== PieceStatus.winner) {
-        animate.color.value = settings.colorTheme.TEAM_TWO_COLOR;
+        animate.color.value =
+          settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000";
       }
     }
   }, [status]);
@@ -584,8 +590,8 @@ const Piece = ({ team, id }: PieceProps) => {
             zIndex: 2000,
             backgroundColor:
               team === Team.TeamOne
-                ? settings.colorTheme.TEAM_ONE_COLOR
-                : settings.colorTheme.TEAM_TWO_COLOR,
+                ? settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff"
+                : settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000",
             opacity: 0.35,
             left:
               layout.spaces[hoverSpaceId].pageX +

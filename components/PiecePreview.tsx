@@ -36,8 +36,8 @@ const PiecePreview = ({
     left: space.pageX - offsetX + space.width / 2 - GameElements.PIECE_RADIUS,
     backgroundColor:
       team === Team.TeamOne
-        ? settings.colorTheme.TEAM_ONE_COLOR
-        : settings.colorTheme.TEAM_TWO_COLOR,
+        ? settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff"
+        : settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000",
     opacity: 0.5,
   };
 

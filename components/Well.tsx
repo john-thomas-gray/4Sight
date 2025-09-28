@@ -31,8 +31,8 @@ const Well = ({ id, team }: CellProps) => {
         ...WELL_STYLE,
         backgroundColor:
           team === Team.TeamOne
-            ? settings.colorTheme.WELL_BG_COLOR_ONE
-            : settings.colorTheme.WELL_BG_COLOR_TWO,
+            ? settings.theme?.colorTheme?.WELL_BG_COLOR_ONE || "#377a67ff"
+            : settings.theme?.colorTheme?.WELL_BG_COLOR_TWO || "#377a67ff",
       }}
     />
   );
