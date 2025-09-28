@@ -38,19 +38,12 @@ Signifiers:
 
 Theme:
 
-- Overarching theme
-- TeamName
-- Font
 - Purchasable theme
 - Entire app is styled by Theme
 
 Sync:
 
 - Make continue button disappear when no game is saved
-
-Bugs!:
-
-- loading back into the game breaks the timing of the turn changes
 
 Polish:
 
@@ -73,6 +66,7 @@ Polish:
 Settings:
 
 - Turn off previews
+- Turn off shake to forfeit
 
 Tests
 
@@ -82,16 +76,3 @@ zIndex Problems:
 
 - held piece should be above all others
 - Layer slot visuals so piece "goes in"
-
-Stored Data:
-Theme:
-
-- Overarching theme
-- TeamName
-- Font
-- Purchasable theme
-- Entire app is styled by Theme
-
-Sync:
-
-- Make continue button disappear when no game is saved

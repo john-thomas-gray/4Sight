@@ -25,11 +25,9 @@ function InnerIndexLayout() {
       saved.boardPieceLocations &&
         Object.keys(saved.boardPieceLocations).length > 0
     );
-    const hasWells = Boolean(
-      saved.wellPieceLocations &&
-        Object.keys(saved.wellPieceLocations).length > 0
-    );
-    return hasBoard || hasWells;
+    console.log("boardpieces", saved.boardPieceLocations);
+    console.log(hasBoard);
+    return hasBoard;
   }, []);
 
   React.useEffect(() => {
@@ -37,6 +35,7 @@ function InnerIndexLayout() {
     (async () => {
       const saved = await loadAppState();
       const has = computeHasSavedGame(saved as PersistedAppState);
+      console.log("has", has);
       if (mounted) setHasSavedGame(has);
     })();
     return () => {
@@ -62,14 +61,14 @@ function InnerIndexLayout() {
   const handlePlay = React.useCallback(async () => {
     logic.resetGame(1, false);
     await clearSavedGame();
-    router.push("/gamePlay");
+    router.replace("/gamePlay");
   }, [logic]);
 
   const handleContinue = React.useCallback(async () => {
     const saved = await loadAppState();
     logic.rehydrateFromSavedState(saved);
     logic.setGameState(GameState.Playing);
-    router.push("/gamePlay");
+    router.replace("/gamePlay");
   }, [logic]);
 
   const onPressPlay = useDebouncedPress(handlePlay);
