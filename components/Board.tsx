@@ -90,7 +90,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
       // Advance turns after gravity or a piece placement drop
       if (isMoving.current || logic.moveInProgress) {
         logic.checkGameFinished(logic.boardPieceLocations);
-        console.log("giggity giggity goo");
       }
     }, 300);
     return () => {
@@ -234,6 +233,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
   };
 
   const gravityPreview = (side: "up" | "down" | "left" | "right") => {
+    if (logic.gameState !== GameState.Playing || logic.moveInProgress) {
+      setGravityPreviewPieces(null);
+      logic.setPreviewHiddenPieces({});
+      return;
+    }
     const opposite: Direction =
       side === "up"
         ? Direction.Down

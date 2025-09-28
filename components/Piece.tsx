@@ -15,7 +15,7 @@ import {
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction, Team } from "@/types/board";
-import { PieceProps, PieceStatus } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
@@ -23,10 +23,8 @@ import React, { memo, useEffect, useMemo } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import Highlight from "./Highlight";
@@ -157,12 +155,13 @@ const Piece = ({ team, id }: PieceProps) => {
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
-        // .enabled(
-        //   logic.gameState !== GameState.Finished &&
-        //     (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
-        //     logic.currentTeam === team &&
-        //     logic.moveInProgress === false
-        // )
+        .enabled(
+          logic.gameState !== GameState.Finished &&
+            logic.gameState !== GameState.PostGame &&
+            (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
+            logic.currentTeam === team &&
+            logic.moveInProgress === false
+        )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           animatePiecePickup({
@@ -361,11 +360,6 @@ const Piece = ({ team, id }: PieceProps) => {
                   "No free board space near slot. Slot blocked!:",
                   selectedCell.id
                 );
-                // stop any repeating animations (e.g., winner pulse) when returning to well
-                cancelAnimation(animate.scaleX);
-                cancelAnimation(animate.scaleY);
-                animate.scaleX.value = withTiming(1, { duration: 150 });
-                animate.scaleY.value = withTiming(1, { duration: 150 });
                 if (
                   currentWellDataSV.value &&
                   typeof currentWellDataSV.value === "object" &&
@@ -422,11 +416,6 @@ const Piece = ({ team, id }: PieceProps) => {
               // Check if the space is occupied
               const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
               if (isOccupied) {
-                // stop any repeating animations (e.g., winner pulse) when returning to well
-                cancelAnimation(animate.scaleX);
-                cancelAnimation(animate.scaleY);
-                animate.scaleX.value = withTiming(1, { duration: 150 });
-                animate.scaleY.value = withTiming(1, { duration: 150 });
                 if (
                   currentWellDataSV.value &&
                   typeof currentWellDataSV.value === "object" &&
@@ -451,11 +440,6 @@ const Piece = ({ team, id }: PieceProps) => {
                 (s) => s.id === dropSlotData.dropSlot.id
               );
               if (!slotData) {
-                // stop any repeating animations (e.g., winner pulse) when returning to well
-                cancelAnimation(animate.scaleX);
-                cancelAnimation(animate.scaleY);
-                animate.scaleX.value = withTiming(1, { duration: 150 });
-                animate.scaleY.value = withTiming(1, { duration: 150 });
                 if (
                   currentWellDataSV.value &&
                   typeof currentWellDataSV.value === "object" &&
@@ -489,11 +473,6 @@ const Piece = ({ team, id }: PieceProps) => {
             } else if (isWell) {
               const isOccupied = logic.wellPieceLocations[id] !== undefined;
               if (isOccupied) {
-                // stop any repeating animations (e.g., winner pulse) when returning to well
-                cancelAnimation(animate.scaleX);
-                cancelAnimation(animate.scaleY);
-                animate.scaleX.value = withTiming(1, { duration: 150 });
-                animate.scaleY.value = withTiming(1, { duration: 150 });
                 if (
                   currentWellDataSV.value &&
                   typeof currentWellDataSV.value === "object" &&
@@ -510,11 +489,6 @@ const Piece = ({ team, id }: PieceProps) => {
                 return;
               }
 
-              // stop any repeating animations (e.g., winner pulse) when returning to well
-              cancelAnimation(animate.scaleX);
-              cancelAnimation(animate.scaleY);
-              animate.scaleX.value = withTiming(1, { duration: 150 });
-              animate.scaleY.value = withTiming(1, { duration: 150 });
               animateToSelectedCell({
                 translateX: animate.translateX,
                 translateY: animate.translateY,
@@ -531,11 +505,6 @@ const Piece = ({ team, id }: PieceProps) => {
             typeof currentWellDataSV.value === "object" &&
             currentWellDataSV.value.layout
           ) {
-            // stop any repeating animations (e.g., winner pulse) when returning to well
-            cancelAnimation(animate.scaleX);
-            cancelAnimation(animate.scaleY);
-            animate.scaleX.value = withTiming(1, { duration: 150 });
-            animate.scaleY.value = withTiming(1, { duration: 150 });
             animateMisplacedPiece({
               translateX: animate.translateX,
               translateY: animate.translateY,

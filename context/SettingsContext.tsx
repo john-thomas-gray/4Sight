@@ -30,11 +30,36 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
 
   const logic = useLogic();
 
+  const normalizeTheme = (input?: Partial<ThemeType>): ThemeType => {
+    return {
+      colorTheme: {
+        ...CLASSIC.colorTheme,
+        ...(input?.colorTheme || {}),
+      },
+      textAndFontTheme: {
+        ...CLASSIC.textAndFontTheme,
+        ...(input?.textAndFontTheme || {}),
+      },
+    };
+  };
+
+  const setAndPersistTheme: React.Dispatch<React.SetStateAction<ThemeType>> = (
+    updater
+  ) => {
+    setTheme((prev) => {
+      const next =
+        typeof updater === "function"
+          ? (updater as (prevState: ThemeType) => ThemeType)(prev)
+          : updater;
+      return normalizeTheme(next);
+    });
+  };
+
   useEffect(() => {
     const loadPersistedState = async () => {
       const saved = await loadAppState();
       if (saved?.theme) {
-        setTheme(saved.theme);
+        setTheme(normalizeTheme(saved.theme));
       }
       const hasBoard =
         saved.boardPieceLocations &&
@@ -72,7 +97,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   }, [logic.turnCount, logic.winner]);
 
   return (
-    <SettingsContext.Provider value={{ theme, setTheme }}>
+    <SettingsContext.Provider value={{ theme, setTheme: setAndPersistTheme }}>
       {children}
     </SettingsContext.Provider>
   );

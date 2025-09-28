@@ -12,7 +12,7 @@ export const useShake = ({
   onShake,
   enabled = true,
   minIntervalMs = 1200,
-  threshold = 6,
+  threshold = 4,
 }: UseShakeOptions) => {
   const lastFireRef = useRef(0);
 
