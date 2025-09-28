@@ -1,6 +1,6 @@
 import { ColorThemeType } from "@/types/themes/colorTheme";
 
-export const CLASSIC: ColorThemeType = {
+export const CLASSIC_COLOR: ColorThemeType = {
   TEAM_ONE_COLOR: "#ffffff",
   TEAM_TWO_COLOR: "#000000",
   TEAM_ONE_WINNER_COLOR: "#fdffd0ff",

@@ -60,13 +60,13 @@ const WinModal = ({
   let textColor = "#444";
 
   if (winner === Team.TeamOne) {
-    displayText = "Team One Wins!";
-    textColor = settings.colorTheme.TEAM_ONE_COLOR;
+    displayText = `${settings.theme.textAndFontTheme.teamOneName} Wins!`;
+    textColor = settings.theme.colorTheme.TEAM_ONE_COLOR;
   } else if (winner === Team.TeamTwo) {
-    displayText = "Team Two Wins!";
-    textColor = settings.colorTheme.TEAM_TWO_COLOR;
+    displayText = `${settings.theme.textAndFontTheme.teamTwoName} Wins!`;
+    textColor = settings.theme.colorTheme.TEAM_TWO_COLOR;
   } else if (winner === Team.Both) {
-    displayText = "Both Teams Win!";
+    displayText = "It's a Tie!";
     textColor = "#FFA500"; // Orange for tie
   }
   return (

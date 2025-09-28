@@ -1,5 +1,5 @@
-import { CLASSIC } from "@/constants/themes/classic/colorTheme";
-import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse/colorTheme";
+import { CLASSIC } from "@/constants/themes/classic";
+import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse";
 import { useGameContext } from "@/context/GameContext";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -8,11 +8,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Settings = () => {
   const { settings } = useGameContext();
   const isSameTheme = (a: typeof CLASSIC, b: typeof CLASSIC) =>
-    a.TEAM_ONE_COLOR === b.TEAM_ONE_COLOR &&
-    a.TEAM_TWO_COLOR === b.TEAM_TWO_COLOR &&
-    a.FELT_TOP === b.FELT_TOP;
-  const isClassicSelected = isSameTheme(settings.colorTheme, CLASSIC);
-  const isSchoolhouseSelected = isSameTheme(settings.colorTheme, SCHOOLHOUSE);
+    a.colorTheme.TEAM_ONE_COLOR === b.colorTheme.TEAM_ONE_COLOR &&
+    a.colorTheme.TEAM_TWO_COLOR === b.colorTheme.TEAM_TWO_COLOR &&
+    a.colorTheme.FELT_TOP === b.colorTheme.FELT_TOP;
+  const isClassicSelected = isSameTheme(settings.theme, CLASSIC);
+  const isSchoolhouseSelected = isSameTheme(settings.theme, SCHOOLHOUSE);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -31,7 +31,7 @@ const Settings = () => {
                 ? "border-black bg-gray-100"
                 : "border-gray-300 bg-gray-50"
             }`}
-            onPress={() => settings.setColorTheme(CLASSIC)}
+            onPress={() => settings.setTheme(CLASSIC)}
             android_ripple={{ color: "#D1D5DB" }}
             style={({ pressed }) => [
               {
@@ -44,15 +44,18 @@ const Settings = () => {
             <View className="flex-row gap-2 mt-3">
               <View
                 className="h-4 w-4 rounded-full"
-                style={{ backgroundColor: CLASSIC.TEAM_ONE_COLOR }}
+                style={{ backgroundColor: CLASSIC.colorTheme.TEAM_ONE_COLOR }}
               />
               <View
                 className="h-4 w-4 rounded-full"
-                style={{ backgroundColor: CLASSIC.TEAM_TWO_COLOR }}
+                style={{ backgroundColor: CLASSIC.colorTheme.TEAM_TWO_COLOR }}
               />
               <View
                 className="h-4 w-4 rounded"
-                style={{ backgroundColor: CLASSIC.FELT_TOP, width: 24 }}
+                style={{
+                  backgroundColor: CLASSIC.colorTheme.FELT_TOP,
+                  width: 24,
+                }}
               />
             </View>
           </Pressable>
@@ -63,7 +66,7 @@ const Settings = () => {
                 ? "border-black bg-gray-100"
                 : "border-gray-300 bg-gray-50"
             }`}
-            onPress={() => settings.setColorTheme(SCHOOLHOUSE)}
+            onPress={() => settings.setTheme(SCHOOLHOUSE)}
             android_ripple={{ color: "#D1D5DB" }}
             style={({ pressed }) => [
               {
@@ -76,15 +79,22 @@ const Settings = () => {
             <View className="flex-row gap-2 mt-3">
               <View
                 className="h-4 w-4 rounded-full"
-                style={{ backgroundColor: SCHOOLHOUSE.TEAM_ONE_COLOR }}
+                style={{
+                  backgroundColor: SCHOOLHOUSE.colorTheme.TEAM_ONE_COLOR,
+                }}
               />
               <View
                 className="h-4 w-4 rounded-full"
-                style={{ backgroundColor: SCHOOLHOUSE.TEAM_TWO_COLOR }}
+                style={{
+                  backgroundColor: SCHOOLHOUSE.colorTheme.TEAM_TWO_COLOR,
+                }}
               />
               <View
                 className="h-4 w-4 rounded"
-                style={{ backgroundColor: SCHOOLHOUSE.FELT_TOP, width: 24 }}
+                style={{
+                  backgroundColor: SCHOOLHOUSE.colorTheme.FELT_TOP,
+                  width: 24,
+                }}
               />
             </View>
           </Pressable>

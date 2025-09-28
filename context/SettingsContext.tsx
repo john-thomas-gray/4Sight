@@ -1,5 +1,5 @@
-import { CLASSIC } from "@/constants/themes/classic/colorTheme";
-import { ColorThemeType } from "@/types/themes/colorTheme";
+import { CLASSIC } from "@/constants/themes/classic";
+import { ThemeType } from "@/types/themes/theme";
 import {
   loadAppState,
   PersistedAppState,
@@ -15,8 +15,8 @@ import React, {
 import { useLogic } from "./LogicContext";
 
 type SettingsContextType = {
-  colorTheme: ColorThemeType;
-  setColorTheme: React.Dispatch<React.SetStateAction<ColorThemeType>>;
+  theme: ThemeType;
+  setTheme: React.Dispatch<React.SetStateAction<ThemeType>>;
   // teamTheme:
 };
 
@@ -27,16 +27,15 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [colorTheme, setColorTheme] = useState<ColorThemeType>(CLASSIC);
-  // const [teamTheme, setTeamTheme] = useState<TeamThemeType>(CLASSIC);
+  const [theme, setTheme] = useState<ThemeType>(CLASSIC);
+
   const logic = useLogic();
 
-  // Load saved theme and game state on mount
   useEffect(() => {
     const loadPersistedState = async () => {
       const saved = await loadAppState();
       if (saved?.theme) {
-        setColorTheme(saved.theme);
+        setTheme(saved.theme);
       }
       const hasBoard =
         saved.boardPieceLocations &&
@@ -49,13 +48,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
       }
     };
     loadPersistedState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist theme whenever it changes
   useEffect(() => {
-    saveAppState({ theme: colorTheme });
-  }, [colorTheme]);
+    saveAppState({ theme });
+  }, [theme]);
 
   // Persist game state whenever it changes
   useEffect(() => {
@@ -86,13 +84,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   ]);
 
   return (
-    <SettingsContext.Provider value={{ colorTheme, setColorTheme }}>
+    <SettingsContext.Provider value={{ theme, setTheme }}>
       {children}
     </SettingsContext.Provider>
   );
 };
 
-// Hook for consuming the context
 export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (!context) {

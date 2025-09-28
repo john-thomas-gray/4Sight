@@ -14,14 +14,22 @@ Tutorial:
 - Interactive introduction that runs the first time you play
 - Animations of transparent hands demonstrate gestures
 
+1. Drage a piece to a slot to drop it into the board.
+2. Pieces can be dropped from any side of the board
+
+- Demonstrate 2 by automatically dropping pieces to
+  advance the position \*
+
+3. If a space is available, you may place a piece on it directly.
+4. Swipe to shift gravity in that direction.
+5. The first player to get four in a row horizontally, vertically or
+   diagonally wins the game!.
+6. Shake your device at any time to restart the game.
+
 Win State:
 
 - Pieces fill in gold jump and jiggle in a cascade
 - If it's a tie, the person who shifted gravity's pieces light up first, then the other players pieces light up. A little "gotcha". Only then do the corners change to alternating / both colors
-- Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
-- Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
-  slight pulsing. Highlight undulates and shimmers.
-- loop animation
 
 Signifiers:
 
@@ -58,6 +66,13 @@ Polish:
 - Settings page animates when theme changes
 - Available/unavailable slot visualizations
 - prevent winner intro animation from playing again, unless a new piece is added to the row
+- Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
+- Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
+  slight pulsing. Highlight undulates and shimmers.
+
+Settings:
+
+- Turn off previews
 
 Tests
 
@@ -67,3 +82,16 @@ zIndex Problems:
 
 - held piece should be above all others
 - Layer slot visuals so piece "goes in"
+
+Stored Data:
+Theme:
+
+- Overarching theme
+- TeamName
+- Font
+- Purchasable theme
+- Entire app is styled by Theme
+
+Sync:
+
+- Make continue button disappear when no game is saved

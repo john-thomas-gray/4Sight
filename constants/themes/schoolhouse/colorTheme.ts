@@ -1,6 +1,6 @@
 import { ColorThemeType } from "@/types/themes/colorTheme";
 
-export const SCHOOLHOUSE: ColorThemeType = {
+export const SCHOOLHOUSE_COLOR: ColorThemeType = {
   TEAM_ONE_COLOR: "#d8c744ff",
   TEAM_TWO_COLOR: "#d84444ff",
   TEAM_ONE_WINNER_COLOR: "#fdffd0ff",

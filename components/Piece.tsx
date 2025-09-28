@@ -556,6 +556,20 @@ const Piece = ({ team, id }: PieceProps) => {
           ]}
         >
           <Highlight pieceId={id} />
+          {/* Shine accent following the curve of the piece's edge */}
+          <Animated.View
+            style={{
+              position: "absolute",
+              top: GameElements.PIECE_SIZE * 0.2,
+              right: GameElements.PIECE_SIZE * 0.1,
+              width: GameElements.PIECE_SIZE * 0.4,
+              height: GameElements.PIECE_SIZE * 0.2,
+              borderRadius: GameElements.PIECE_RADIUS,
+              backgroundColor: "rgba(200, 200, 200, 0.6)",
+              transform: [{ rotate: "40deg" }],
+              zIndex: 1,
+            }}
+          />
         </Animated.View>
       </GestureDetector>
       {hoverSpaceId && (

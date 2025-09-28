@@ -100,10 +100,10 @@ AnimateWinner) {
     withRepeat(
       withSequence(
         withTiming(1.15, {
-          duration: 2000,
+          duration: 1500,
         }),
         withTiming(1, {
-          duration: 2000,
+          duration: 1500,
         })
       ),
       -1
@@ -114,10 +114,10 @@ AnimateWinner) {
     withRepeat(
       withSequence(
         withTiming(1.15, {
-          duration: 2000,
+          duration: 1500,
         }),
         withTiming(1, {
-          duration: 2000,
+          duration: 1500,
         })
       ),
       -1
