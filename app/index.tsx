@@ -1,6 +1,7 @@
 import { useGameContext } from "@/context/GameContext";
 import { useDebouncedPress } from "@/hooks/useDebouncedPress";
 import { GameState } from "@/types/logic";
+import type { PersistedAppState } from "@/utils/useAsyncStorage";
 import { clearSavedGame, loadAppState } from "@/utils/useAsyncStorage";
 import { router, useFocusEffect } from "expo-router";
 import React from "react";
@@ -19,22 +20,29 @@ function InnerIndexLayout() {
   const { logic } = useGameContext();
   const [hasSavedGame, setHasSavedGame] = React.useState(false);
 
+  const computeHasSavedGame = React.useCallback((saved: PersistedAppState) => {
+    const hasBoard = Boolean(
+      saved.boardPieceLocations &&
+        Object.keys(saved.boardPieceLocations).length > 0
+    );
+    const hasWells = Boolean(
+      saved.wellPieceLocations &&
+        Object.keys(saved.wellPieceLocations).length > 0
+    );
+    return hasBoard || hasWells;
+  }, []);
+
   React.useEffect(() => {
     let mounted = true;
     (async () => {
       const saved = await loadAppState();
-      const has = Boolean(
-        (saved.boardPieceLocations &&
-          Object.keys(saved.boardPieceLocations).length > 0) ||
-          (saved.wellPieceLocations &&
-            Object.keys(saved.wellPieceLocations).length > 0)
-      );
+      const has = computeHasSavedGame(saved as PersistedAppState);
       if (mounted) setHasSavedGame(has);
     })();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [computeHasSavedGame]);
 
   // Refresh saved-game visibility whenever this screen gains focus
   useFocusEffect(
@@ -42,18 +50,13 @@ function InnerIndexLayout() {
       let active = true;
       (async () => {
         const saved = await loadAppState();
-        const has = Boolean(
-          (saved.boardPieceLocations &&
-            Object.keys(saved.boardPieceLocations).length > 0) ||
-            (saved.wellPieceLocations &&
-              Object.keys(saved.wellPieceLocations).length > 0)
-        );
+        const has = computeHasSavedGame(saved as PersistedAppState);
         if (active) setHasSavedGame(has);
       })();
       return () => {
         active = false;
       };
-    }, [])
+    }, [computeHasSavedGame])
   );
 
   const handlePlay = React.useCallback(async () => {
@@ -73,7 +76,6 @@ function InnerIndexLayout() {
   const onPressContinue = useDebouncedPress(handleContinue);
   const onPressSettings = useDebouncedPress(() => router.push("/settings"));
   const onPressHowTo = useDebouncedPress(() => router.push("/howToPlay"));
-  const onPressTest = useDebouncedPress(() => router.push("/testGround"));
 
   return (
     <View className="flex-1 border-2 border-red-50 items-center justify-evenly bg-white">
@@ -83,7 +85,7 @@ function InnerIndexLayout() {
       </View>
       <View className="flex-col items-center space-y-4">
         <Pressable onPress={onPressPlay}>
-          <Text className="text-3xl">Play</Text>
+          <Text className="text-3xl">New Game</Text>
         </Pressable>
         {hasSavedGame && (
           <Pressable onPress={onPressContinue}>

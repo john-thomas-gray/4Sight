@@ -5,6 +5,7 @@ import { Board } from "@/types";
 import { CellLayout, Direction, EachCellType, Team } from "@/types/board";
 import type { PieceProps } from "@/types/logic";
 import {
+  cancelAnimation,
   Easing,
   SharedValue,
   withDelay,
@@ -309,6 +310,12 @@ export const animatePieceReset = ({
     const targetLayout = teamWells[targetWellId];
     const anim = pieceAnimations[pieceId];
     if (!anim || !targetLayout) return;
+
+    // stop any repeating animations (e.g., winner pulse) before resetting to well
+    cancelAnimation(anim.scaleX);
+    cancelAnimation(anim.scaleY);
+    anim.scaleX.value = withTiming(1, { duration });
+    anim.scaleY.value = withTiming(1, { duration });
 
     anim.translateX.value = withTiming(
       targetLayout.pageX + targetLayout.width / 2 - GameElements.PIECE_RADIUS,
