@@ -528,7 +528,7 @@ const Piece = ({ team, id }: PieceProps) => {
       { skewY: `${animate.skewY.value}deg` },
       { rotate: `${animate.rotation.value}deg` },
     ],
-    // zIndex: animate.zIndex.value,
+    zIndex: animate.zIndex.value,
     backgroundColor: animate.color.value,
     // shadows: [
     //   { shadowOpacity: shadowOpacity.value },

@@ -41,10 +41,6 @@ Theme:
 - Purchasable theme
 - Entire app is styled by Theme
 
-Sync:
-
-- Make continue button disappear when no game is saved
-
 Polish:
 
 - held piece should be above all others

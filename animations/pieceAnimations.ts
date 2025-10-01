@@ -341,7 +341,7 @@ export const animatePiecePickup = ({
   "worklet";
   scaleX.value = withTiming(1.5, { duration: 100 });
   scaleY.value = withTiming(1.5, { duration: 100 });
-  zIndex.value = withTiming(5000, { duration: 100 });
+  zIndex.value = withTiming(5000, { duration: 0 });
 };
 
 export const animatePieceRelease = ({
