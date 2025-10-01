@@ -43,7 +43,6 @@ Theme:
 
 Polish:
 
-- held piece should be above all others
 - Layer slot visuals so piece "goes in"
 - Debounces
 - Make isAnimating state for pieces so they can't be grabbed during animation
