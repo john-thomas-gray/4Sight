@@ -51,16 +51,14 @@ const GamePlay = () => {
           <Piece key={id} id={id} team={p.team} />
         ))}
 
+      {!layout && <LoadingScreen />}
+
       {layout.layoutReady && (
         <HamburgerMenu
           onPress={() => router.replace("/")}
           className="absolute bottom-6 right-6"
         />
       )}
-
-      {/* {!layout.layoutReady &&  */}
-      <LoadingScreen />
-      {/* // } */}
     </View>
   );
 };
