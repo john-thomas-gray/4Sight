@@ -6,10 +6,12 @@ import { View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
 import PieceLoading from "./PieceLoading";
 
-const LoadingScreen = () => {
+type LoadingScreenProps = { visible: boolean };
+const LoadingScreen = ({ visible }: LoadingScreenProps) => {
   const { settings } = useGameContext();
   const [xStart, yStart] = [0, 0];
   const [translateX, translateY] = [
@@ -18,6 +20,15 @@ const LoadingScreen = () => {
   ];
   const fontSize = useSharedValue(76);
   useLoadingTextAnimations({ translateX, translateY, fontSize });
+  const overlayOpacity = useSharedValue(1);
+
+  React.useEffect(() => {
+    overlayOpacity.value = withTiming(visible ? 1 : 0, { duration: 400 });
+  }, [visible, overlayOpacity]);
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
@@ -26,19 +37,23 @@ const LoadingScreen = () => {
     fontSize: fontSize.value,
   }));
   return (
-    <View
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 90,
-        backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 9999,
-        flexDirection: "row",
-      }}
+    <Animated.View
+      pointerEvents={visible ? "auto" : "none"}
+      style={[
+        overlayStyle,
+        {
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 90,
+          backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999,
+          flexDirection: "row",
+        },
+      ]}
     >
       <Animated.Text
         style={[
@@ -108,7 +123,7 @@ const LoadingScreen = () => {
           rotationDegreesPerLoop={900}
         />
       </View>
-    </View>
+    </Animated.View>
   );
 };
 export default LoadingScreen;

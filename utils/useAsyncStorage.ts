@@ -18,6 +18,7 @@ export type PersistedAppState = {
   playersTurn?: 1 | 2 | 3 | 4;
   wellPieceLocations?: Record<string, string>;
   boardPieceLocations?: Record<string, string>;
+  hasSeenLoading?: boolean;
 };
 
 export const saveAppState = async (state: Partial<PersistedAppState>) => {

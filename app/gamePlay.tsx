@@ -9,7 +9,7 @@ import { useShake } from "@/hooks/useShake";
 import { Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 
 const GamePlay = () => {
@@ -28,6 +28,13 @@ const GamePlay = () => {
     () => (layout.layoutReady ? Object.entries(logic.pieces) : []),
     [layout.layoutReady, logic.pieces]
   );
+
+  const [loadTimer, setLoadTimer] = useState(true);
+  const loadAnimationLoops = 2;
+
+  useEffect(() => {
+    setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);
+  }, []);
 
   return (
     <View
@@ -51,9 +58,9 @@ const GamePlay = () => {
           <Piece key={id} id={id} team={p.team} />
         ))}
 
-      {!layout && <LoadingScreen />}
+      <LoadingScreen visible={!layout.layoutReady || loadTimer} />
 
-      {layout.layoutReady && (
+      {layout.layoutReady && !loadTimer && (
         <HamburgerMenu
           onPress={() => router.replace("/")}
           className="absolute bottom-6 right-6"

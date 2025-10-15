@@ -7,7 +7,9 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-export const animationLoopDuration = 5000;
+// !@# perfect timing is 3000ms, but breaks animation for some reason
+export const loopDuration = 4000;
+const D = loopDuration;
 
 type LoadingTextAnimation = {
   translateX: SharedValue<number>;
@@ -17,18 +19,14 @@ type LoadingTextAnimation = {
 
 export const useLoadingMoveTextAnimation = ({
   translateX,
-  translateY,
-  fontSize,
 }: LoadingTextAnimation) => {
   translateX.value = withRepeat(
     withDelay(
-      animationLoopDuration * 0.2,
+      D * 0.2,
       withSequence(
-        withTiming(-45, { duration: animationLoopDuration * 0.1 }),
-        withTiming(-45, {
-          duration: animationLoopDuration * 0.5,
-        }),
-        withTiming(0, { duration: animationLoopDuration * 0.2 })
+        withTiming(-45, { duration: D * 0.1 }),
+        withTiming(-45, { duration: D * 0.5 }),
+        withTiming(0, { duration: D * 0.2 })
       )
     ),
     -1
@@ -40,11 +38,10 @@ export const useLoadingFontSizeAnimation = ({
 }: {
   fontSize: SharedValue<number>;
 }) => {
-  const eventOffset = animationLoopDuration * 0.7;
-  const upDuration = animationLoopDuration * 0.05;
-  const downDuration = animationLoopDuration * 0.05;
-  const remainderHold =
-    animationLoopDuration - (eventOffset + upDuration + downDuration);
+  const eventOffset = D * 0.7;
+  const upDuration = D * 0.05;
+  const downDuration = D * 0.05;
+  const remainderHold = D - (eventOffset + upDuration + downDuration);
 
   fontSize.value = withRepeat(
     withSequence(
@@ -103,9 +100,6 @@ export const usePieceLoadingAnimation = ({
   rotateDirection?: "cw" | "ccw";
   rotationDegreesPerLoop?: number;
 }) => {
-  const D = animationLoopDuration;
-
-  // Rotation: constant 360° per loop, reset each loop to preserve exact phase
   const degrees =
     rotateDirection === "ccw"
       ? -rotationDegreesPerLoop
