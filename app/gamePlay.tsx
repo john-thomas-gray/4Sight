@@ -1,5 +1,6 @@
 import Board from "@/components/Board";
 import HamburgerMenu from "@/components/HamburgerMenu";
+import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinModal from "@/components/WinModal";
@@ -8,18 +9,12 @@ import { useShake } from "@/hooks/useShake";
 import { Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 
 const GamePlay = () => {
   const { layout, logic, settings } = useGameContext();
   const router = useRouter();
-  const forfeit = React.useCallback(() => {
-    const winningTeam =
-      logic.currentTeam === Team.TeamOne ? Team.TeamTwo : Team.TeamOne;
-    logic.setWinner(winningTeam);
-    logic.setGameState(GameState.Finished);
-  }, [logic]);
   useShake({
     enabled: logic.gameState === GameState.Playing,
     // onShake: forfeit,
@@ -33,6 +28,13 @@ const GamePlay = () => {
     () => (layout.layoutReady ? Object.entries(logic.pieces) : []),
     [layout.layoutReady, logic.pieces]
   );
+
+  const [loadTimer, setLoadTimer] = useState(true);
+  const loadAnimationLoops = 2;
+
+  useEffect(() => {
+    setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);
+  }, []);
 
   return (
     <View
@@ -56,14 +58,14 @@ const GamePlay = () => {
           <Piece key={id} id={id} team={p.team} />
         ))}
 
-      <HamburgerMenu
-        onPress={() => router.replace("/")}
-        className="absolute bottom-6 right-6"
-      />
+      <LoadingScreen visible={!layout.layoutReady || loadTimer} />
 
-      {/* {!layout.layoutReady &&  */}
-      {/* <LoadingScreen /> */}
-      {/* // } */}
+      {layout.layoutReady && !loadTimer && (
+        <HamburgerMenu
+          onPress={() => router.replace("/")}
+          className="absolute bottom-6 right-6"
+        />
+      )}
     </View>
   );
 };

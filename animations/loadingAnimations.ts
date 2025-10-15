@@ -1,4 +1,5 @@
 import {
+  Easing,
   SharedValue,
   withDelay,
   withRepeat,
@@ -6,7 +7,9 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-const animationLoopDuration = 5000;
+// !@# perfect timing is 3000ms, but breaks animation for some reason
+export const loopDuration = 4000;
+const D = loopDuration;
 
 type LoadingTextAnimation = {
   translateX: SharedValue<number>;
@@ -16,18 +19,14 @@ type LoadingTextAnimation = {
 
 export const useLoadingMoveTextAnimation = ({
   translateX,
-  translateY,
-  fontSize,
 }: LoadingTextAnimation) => {
   translateX.value = withRepeat(
     withDelay(
-      animationLoopDuration * 0.2,
+      D * 0.2,
       withSequence(
-        withTiming(-45, { duration: animationLoopDuration * 0.1 }),
-        withDelay(
-          animationLoopDuration * 0.5,
-          withTiming(0, { duration: animationLoopDuration * 0.2 })
-        )
+        withTiming(-45, { duration: D * 0.1 }),
+        withTiming(-45, { duration: D * 0.5 }),
+        withTiming(0, { duration: D * 0.2 })
       )
     ),
     -1
@@ -39,19 +38,21 @@ export const useLoadingFontSizeAnimation = ({
 }: {
   fontSize: SharedValue<number>;
 }) => {
+  const eventOffset = D * 0.7;
+  const upDuration = D * 0.05;
+  const downDuration = D * 0.05;
+  const remainderHold = D - (eventOffset + upDuration + downDuration);
+
   fontSize.value = withRepeat(
     withSequence(
       withDelay(
-        animationLoopDuration * 0.3,
+        eventOffset,
         withSequence(
-          withTiming(80, { duration: animationLoopDuration * 0.05 }),
-          withTiming(76, { duration: animationLoopDuration * 0.05 }),
-          withDelay(
-            animationLoopDuration * 0.4,
-            withTiming(76, { duration: animationLoopDuration * 0.2 })
-          )
+          withTiming(80, { duration: upDuration }),
+          withTiming(76, { duration: downDuration })
         )
-      )
+      ),
+      withTiming(76, { duration: remainderHold })
     ),
     -1
   );
@@ -76,6 +77,12 @@ export const usePieceLoadingAnimation = ({
   direction,
   rotation,
   startOffset,
+  arrivalOffsetFraction = 0,
+  offDirection = "down",
+  offDistance = 700,
+  offDurationFraction = 0.15,
+  rotateDirection = "cw",
+  rotationDegreesPerLoop = 720,
 }: {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
@@ -84,31 +91,89 @@ export const usePieceLoadingAnimation = ({
   xEnd: number;
   yEnd: number;
   direction: "left" | "right" | "up" | "down";
-  rotation: number;
+  rotation: SharedValue<number>;
   startOffset: number;
+  arrivalOffsetFraction?: number;
+  offDirection?: "left" | "right" | "up" | "down";
+  offDistance?: number;
+  offDurationFraction?: number;
+  rotateDirection?: "cw" | "ccw";
+  rotationDegreesPerLoop?: number;
 }) => {
-  translateX.value = withRepeat(
-    withDelay(
-      startOffset,
-      withSequence(
-        withTiming(xEnd, {
-          duration: 1000,
-        }),
-        withDelay(3000 - startOffset, withTiming(100, { duration: 0 }))
-      )
+  const degrees =
+    rotateDirection === "ccw"
+      ? -rotationDegreesPerLoop
+      : rotationDegreesPerLoop;
+  rotation.value = withRepeat(
+    withSequence(
+      withTiming(degrees, { duration: D, easing: Easing.linear }),
+      withTiming(0, { duration: 0 })
     ),
     -1
   );
 
+  const arriveDelay = D * (0.2 + arrivalOffsetFraction);
+  const arriveDuration = D * 0.1;
+  const offStart = D * 0.7;
+  const offDuration = D * offDurationFraction;
+  const holdUntilOff = Math.max(offStart - (arriveDelay + arriveDuration), 0);
+  const offTargetX =
+    offDirection === "right"
+      ? xEnd + offDistance
+      : offDirection === "left"
+      ? xEnd - offDistance
+      : xEnd;
+  const offTargetY =
+    offDirection === "down"
+      ? yStart + offDistance
+      : offDirection === "up"
+      ? yStart - offDistance
+      : yStart;
+  const postOffHoldX =
+    offDirection === "left" || offDirection === "right"
+      ? Math.max(
+          D - (arriveDelay + arriveDuration + holdUntilOff + offDuration),
+          0
+        )
+      : Math.max(D - (arriveDelay + arriveDuration + holdUntilOff), 0);
+
+  translateX.value = withRepeat(
+    withSequence(
+      withDelay(arriveDelay, withTiming(xEnd, { duration: arriveDuration })),
+      // hold at first destination until off animation time
+      withTiming(xEnd, { duration: holdUntilOff }),
+      // off-screen movement if horizontal
+      ...(offDirection === "left" || offDirection === "right"
+        ? [withTiming(offTargetX, { duration: offDuration })]
+        : []),
+      // hold remainder of loop
+      withTiming(
+        offDirection === "left" || offDirection === "right" ? offTargetX : xEnd,
+        { duration: postOffHoldX }
+      ),
+      withTiming(xStart, { duration: 0 })
+    ),
+    -1
+  );
+
+  // Y: off-screen movement if vertical, synced to offStart
+  const postOffHoldY =
+    offDirection === "up" || offDirection === "down"
+      ? Math.max(D - (offStart + offDuration), 0)
+      : D;
+
   translateY.value = withRepeat(
-    withDelay(
-      startOffset + animationLoopDuration * 0.3,
-      withSequence(
-        withTiming(yEnd, {
-          duration: 1500,
-        }),
-        withDelay(3000 - startOffset, withTiming(yStart, { duration: 0 }))
-      )
+    withSequence(
+      ...(offDirection === "up" || offDirection === "down"
+        ? [
+            withDelay(
+              offStart,
+              withTiming(offTargetY, { duration: offDuration })
+            ),
+            withTiming(offTargetY, { duration: postOffHoldY }),
+          ]
+        : [withTiming(yStart, { duration: D })]),
+      withTiming(yStart, { duration: 0 })
     ),
     -1
   );
