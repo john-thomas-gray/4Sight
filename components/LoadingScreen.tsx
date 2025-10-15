@@ -60,6 +60,7 @@ const LoadingScreen = () => {
           height: 100,
         }}
       >
+        {/* Left piece (staggered earlier) */}
         <PieceLoading
           team={Team.TeamOne}
           xStart={100}
@@ -67,23 +68,45 @@ const LoadingScreen = () => {
           xEnd={-43}
           yEnd={500}
           durationOffset={0}
+          arrivalOffsetFraction={0}
+          offDirection="up"
+          offDistance={700}
+          offDurationFraction={0.15}
+          rotateDirection="cw"
+          rotationDegreesPerLoop={900}
         />
-        {/* <PieceLoading
+
+        {/* Middle piece (staggered mid) */}
+        <PieceLoading
           team={Team.TeamTwo}
           xStart={100}
           yStart={0}
           xEnd={-15}
           yEnd={-500}
-          durationOffset={500}
+          durationOffset={0}
+          arrivalOffsetFraction={0.05}
+          offDirection="down"
+          offDistance={700}
+          offDurationFraction={0.15}
+          rotateDirection="ccw"
+          rotationDegreesPerLoop={900}
         />
+
+        {/* Right piece (staggered later) */}
         <PieceLoading
           team={Team.TeamOne}
           xStart={100}
           yStart={0}
           xEnd={13}
           yEnd={0}
-          durationOffset={1000} */}
-        {/* /> */}
+          durationOffset={0}
+          arrivalOffsetFraction={0.1}
+          offDirection="right"
+          offDistance={700}
+          offDurationFraction={0.15}
+          rotateDirection="cw"
+          rotationDegreesPerLoop={900}
+        />
       </View>
     </View>
   );

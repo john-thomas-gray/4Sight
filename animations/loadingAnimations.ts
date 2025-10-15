@@ -1,4 +1,5 @@
 import {
+  Easing,
   SharedValue,
   withDelay,
   withRepeat,
@@ -6,7 +7,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-const animationLoopDuration = 5000;
+export const animationLoopDuration = 5000;
 
 type LoadingTextAnimation = {
   translateX: SharedValue<number>;
@@ -79,6 +80,12 @@ export const usePieceLoadingAnimation = ({
   direction,
   rotation,
   startOffset,
+  arrivalOffsetFraction = 0,
+  offDirection = "down",
+  offDistance = 700,
+  offDurationFraction = 0.15,
+  rotateDirection = "cw",
+  rotationDegreesPerLoop = 720,
 }: {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
@@ -87,34 +94,91 @@ export const usePieceLoadingAnimation = ({
   xEnd: number;
   yEnd: number;
   direction: "left" | "right" | "up" | "down";
-  rotation: number;
+  rotation: SharedValue<number>;
   startOffset: number;
+  arrivalOffsetFraction?: number;
+  offDirection?: "left" | "right" | "up" | "down";
+  offDistance?: number;
+  offDurationFraction?: number;
+  rotateDirection?: "cw" | "ccw";
+  rotationDegreesPerLoop?: number;
 }) => {
   const D = animationLoopDuration;
 
-  // X: arrive at the same moment the text first reaches -45 (0.2D delay + 0.1D ramp => 0.3D)
-  const arriveDelay = D * 0.2;
+  // Rotation: constant 360° per loop, reset each loop to preserve exact phase
+  const degrees =
+    rotateDirection === "ccw"
+      ? -rotationDegreesPerLoop
+      : rotationDegreesPerLoop;
+  rotation.value = withRepeat(
+    withSequence(
+      withTiming(degrees, { duration: D, easing: Easing.linear }),
+      withTiming(0, { duration: 0 })
+    ),
+    -1
+  );
+
+  const arriveDelay = D * (0.2 + arrivalOffsetFraction);
   const arriveDuration = D * 0.1;
-  const holdAfterArriveX = D - (arriveDelay + arriveDuration);
+  const offStart = D * 0.7;
+  const offDuration = D * offDurationFraction;
+  const holdUntilOff = Math.max(offStart - (arriveDelay + arriveDuration), 0);
+  const offTargetX =
+    offDirection === "right"
+      ? xEnd + offDistance
+      : offDirection === "left"
+      ? xEnd - offDistance
+      : xEnd;
+  const offTargetY =
+    offDirection === "down"
+      ? yStart + offDistance
+      : offDirection === "up"
+      ? yStart - offDistance
+      : yStart;
+  const postOffHoldX =
+    offDirection === "left" || offDirection === "right"
+      ? Math.max(
+          D - (arriveDelay + arriveDuration + holdUntilOff + offDuration),
+          0
+        )
+      : Math.max(D - (arriveDelay + arriveDuration + holdUntilOff), 0);
 
   translateX.value = withRepeat(
     withSequence(
       withDelay(arriveDelay, withTiming(xEnd, { duration: arriveDuration })),
-      withTiming(xEnd, { duration: holdAfterArriveX }),
+      // hold at first destination until off animation time
+      withTiming(xEnd, { duration: holdUntilOff }),
+      // off-screen movement if horizontal
+      ...(offDirection === "left" || offDirection === "right"
+        ? [withTiming(offTargetX, { duration: offDuration })]
+        : []),
+      // hold remainder of loop
+      withTiming(
+        offDirection === "left" || offDirection === "right" ? offTargetX : xEnd,
+        { duration: postOffHoldX }
+      ),
       withTiming(xStart, { duration: 0 })
     ),
     -1
   );
 
-  // Y: shoot downward when font size reaches 80 (0.7D start + 0.05D up => 0.75D)
-  const downStart = D * 0.75;
-  const downDuration = D * 0.15; // fast shoot
-  const holdAfterDownY = D - (downStart + downDuration);
+  // Y: off-screen movement if vertical, synced to offStart
+  const postOffHoldY =
+    offDirection === "up" || offDirection === "down"
+      ? Math.max(D - (offStart + offDuration), 0)
+      : D;
 
   translateY.value = withRepeat(
     withSequence(
-      withDelay(downStart, withTiming(yEnd, { duration: downDuration })),
-      withTiming(yEnd, { duration: holdAfterDownY }),
+      ...(offDirection === "up" || offDirection === "down"
+        ? [
+            withDelay(
+              offStart,
+              withTiming(offTargetY, { duration: offDuration })
+            ),
+            withTiming(offTargetY, { duration: postOffHoldY }),
+          ]
+        : [withTiming(yStart, { duration: D })]),
       withTiming(yStart, { duration: 0 })
     ),
     -1

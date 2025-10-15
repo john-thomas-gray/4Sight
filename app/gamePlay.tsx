@@ -15,12 +15,6 @@ import { View } from "react-native";
 const GamePlay = () => {
   const { layout, logic, settings } = useGameContext();
   const router = useRouter();
-  const forfeit = React.useCallback(() => {
-    const winningTeam =
-      logic.currentTeam === Team.TeamOne ? Team.TeamTwo : Team.TeamOne;
-    logic.setWinner(winningTeam);
-    logic.setGameState(GameState.Finished);
-  }, [logic]);
   useShake({
     enabled: logic.gameState === GameState.Playing,
     // onShake: forfeit,
@@ -57,10 +51,12 @@ const GamePlay = () => {
           <Piece key={id} id={id} team={p.team} />
         ))}
 
-      <HamburgerMenu
-        onPress={() => router.replace("/")}
-        className="absolute bottom-6 right-6"
-      />
+      {layout.layoutReady && (
+        <HamburgerMenu
+          onPress={() => router.replace("/")}
+          className="absolute bottom-6 right-6"
+        />
+      )}
 
       {/* {!layout.layoutReady &&  */}
       <LoadingScreen />
