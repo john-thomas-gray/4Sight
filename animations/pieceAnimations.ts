@@ -124,48 +124,6 @@ AnimateWinner) {
       -1
     )
   );
-  // type PointSkew = { x: string; y: string };
-  // type AnimationSkew = {
-  //   svx: SharedValue<string>;
-  //   svy: SharedValue<string>;
-  //   v0: PointSkew;
-  //   v1: PointSkew;
-  // };
-
-  // const animationSkew = ({ svx, svy, v0, v1 }: AnimationSkew) => {
-  //   svx.value = withSequence(
-
-  //       withTiming(v1.x, {
-  //         duration: WINNER_V1,
-  //         easing: Easing.inOut(Easing.exp),
-  //       }),
-
-  //
-
-  //       withTiming(v0.x, {
-  //         duration: WINNER_V0,
-  //         easing: Easing.bounce,
-  //       })
-
-  //   );
-  //   svy.value = withSequence(
-
-  //       withTiming(v1.y, {
-  //         duration: WINNER_V1,
-  //         easing: Easing.inOut(Easing.exp),
-  //       }),
-
-  //
-
-  //       withTiming(v0.y, {
-  //         duration: WINNER_V0,
-  //         easing: Easing.bounce,
-  //       })
-
-  //   );
-  // };
-
-  // animationSkew({ svx: skewX, svy: skewY, v0: skew[0], v1: skew[1] });
 }
 
 type AnimateMisplacedPieceProps = {
