@@ -24,10 +24,10 @@ export const useLoadingMoveTextAnimation = ({
       animationLoopDuration * 0.2,
       withSequence(
         withTiming(-45, { duration: animationLoopDuration * 0.1 }),
-        withDelay(
-          animationLoopDuration * 0.5,
-          withTiming(0, { duration: animationLoopDuration * 0.2 })
-        )
+        withTiming(-45, {
+          duration: animationLoopDuration * 0.5,
+        }),
+        withTiming(0, { duration: animationLoopDuration * 0.2 })
       )
     ),
     -1
@@ -39,19 +39,22 @@ export const useLoadingFontSizeAnimation = ({
 }: {
   fontSize: SharedValue<number>;
 }) => {
+  const eventOffset = animationLoopDuration * 0.7;
+  const upDuration = animationLoopDuration * 0.05;
+  const downDuration = animationLoopDuration * 0.05;
+  const remainderHold =
+    animationLoopDuration - (eventOffset + upDuration + downDuration);
+
   fontSize.value = withRepeat(
     withSequence(
       withDelay(
-        animationLoopDuration * 0.3,
+        eventOffset,
         withSequence(
-          withTiming(80, { duration: animationLoopDuration * 0.05 }),
-          withTiming(76, { duration: animationLoopDuration * 0.05 }),
-          withDelay(
-            animationLoopDuration * 0.4,
-            withTiming(76, { duration: animationLoopDuration * 0.2 })
-          )
+          withTiming(80, { duration: upDuration }),
+          withTiming(76, { duration: downDuration })
         )
-      )
+      ),
+      withTiming(76, { duration: remainderHold })
     ),
     -1
   );
@@ -87,28 +90,32 @@ export const usePieceLoadingAnimation = ({
   rotation: number;
   startOffset: number;
 }) => {
+  const D = animationLoopDuration;
+
+  // X: arrive at the same moment the text first reaches -45 (0.2D delay + 0.1D ramp => 0.3D)
+  const arriveDelay = D * 0.2;
+  const arriveDuration = D * 0.1;
+  const holdAfterArriveX = D - (arriveDelay + arriveDuration);
+
   translateX.value = withRepeat(
-    withDelay(
-      startOffset,
-      withSequence(
-        withTiming(xEnd, {
-          duration: 1000,
-        }),
-        withDelay(3000 - startOffset, withTiming(100, { duration: 0 }))
-      )
+    withSequence(
+      withDelay(arriveDelay, withTiming(xEnd, { duration: arriveDuration })),
+      withTiming(xEnd, { duration: holdAfterArriveX }),
+      withTiming(xStart, { duration: 0 })
     ),
     -1
   );
 
+  // Y: shoot downward when font size reaches 80 (0.7D start + 0.05D up => 0.75D)
+  const downStart = D * 0.75;
+  const downDuration = D * 0.15; // fast shoot
+  const holdAfterDownY = D - (downStart + downDuration);
+
   translateY.value = withRepeat(
-    withDelay(
-      startOffset + animationLoopDuration * 0.3,
-      withSequence(
-        withTiming(yEnd, {
-          duration: 1500,
-        }),
-        withDelay(3000 - startOffset, withTiming(yStart, { duration: 0 }))
-      )
+    withSequence(
+      withDelay(downStart, withTiming(yEnd, { duration: downDuration })),
+      withTiming(yEnd, { duration: holdAfterDownY }),
+      withTiming(yStart, { duration: 0 })
     ),
     -1
   );
