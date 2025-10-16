@@ -4,9 +4,13 @@ import { useGameContext } from "@/context/GameContext";
 import { CellProps, CellType } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
 const Space = ({ id }: CellProps) => {
-  const { layout } = useGameContext();
+  const { layout, logic } = useGameContext();
   const { settings } = useGameContext();
   const viewRef = useRef<View>(null);
 
@@ -30,14 +34,34 @@ const Space = ({ id }: CellProps) => {
   const col = parseInt(colStr, 10);
   const isEven = (row + col) % 2 === 0;
 
+  const baseColor = isEven
+    ? settings.theme?.colorTheme?.EVEN_SPACE_COLOR || "#d1fae5"
+    : settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff";
+
+  const shouldHighlight = !!(logic.nextTurnWins && logic.nextTurnWins[id]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      logic.highlightPulse.value,
+      [0, 1],
+      [baseColor, "#FFD700"]
+    );
+    return {
+      backgroundColor: shouldHighlight ? color : baseColor,
+    } as ViewStyle;
+  });
+
   const style: ViewStyle = {
     ...GameElements.SPACE_STYLE,
-    backgroundColor: isEven
-      ? settings.theme?.colorTheme?.EVEN_SPACE_COLOR || "#d1fae5"
-      : settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
   };
 
-  return <View ref={viewRef} onLayout={reportLayout} style={style} />;
+  return (
+    <Animated.View
+      ref={viewRef}
+      onLayout={reportLayout}
+      style={[style, animatedStyle]}
+    />
+  );
 };
 
 export default Space;

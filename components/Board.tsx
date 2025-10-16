@@ -108,11 +108,13 @@ const Board = ({ className, onRotate }: BoardProps) => {
       return;
 
     isMoving.current = true;
+    logic.setGravityAnimating(true);
 
     pullPieces(direction);
 
     setTimeout(() => {
       isMoving.current = false;
+      logic.setGravityAnimating(false);
       // !@# magic number
     }, 1500);
   };
@@ -269,6 +271,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
+      scheduleOnRN(logic.setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         // [0, 0], /* * */ !@#
         [0, 1],
@@ -309,12 +312,14 @@ const Board = ({ className, onRotate }: BoardProps) => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
       scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setIsPreviewingGravity, false);
     });
 
   const lpDown = Gesture.LongPress()
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
+      scheduleOnRN(logic.setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         [8, 1],
         [8, 2],
@@ -349,12 +354,14 @@ const Board = ({ className, onRotate }: BoardProps) => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
       scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setIsPreviewingGravity, false);
     });
 
   const lpLeft = Gesture.LongPress()
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
+      scheduleOnRN(logic.setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         [1, 0],
         [2, 0],
@@ -389,12 +396,14 @@ const Board = ({ className, onRotate }: BoardProps) => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
       scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setIsPreviewingGravity, false);
     });
 
   const lpRight = Gesture.LongPress()
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
+      scheduleOnRN(logic.setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         [1, 8],
         [2, 8],
@@ -429,6 +438,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
       scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setIsPreviewingGravity, false);
     });
 
   const longPressGestures = Gesture.Simultaneous(lpUp, lpDown, lpLeft, lpRight);

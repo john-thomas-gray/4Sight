@@ -22,6 +22,15 @@ import React, {
   useRef,
   useState,
 } from "react";
+import type { SharedValue } from "react-native-reanimated";
+import {
+  cancelAnimation,
+  Easing,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 // reanimated helpers used in animation helpers module
 import { PersistedAppState } from "@/utils/useAsyncStorage";
 import { useLayout } from "./LayoutContext";
@@ -62,6 +71,12 @@ export type LogicContextType = {
     React.SetStateAction<Record<string, boolean>>
   >;
   rehydrateFromSavedState: (state: PersistedAppState) => void;
+  nextTurnWins: Record<string, boolean>;
+  highlightPulse: SharedValue<number>;
+  isPreviewingGravity: boolean;
+  setIsPreviewingGravity: React.Dispatch<React.SetStateAction<boolean>>;
+  gravityAnimating: boolean;
+  setGravityAnimating: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -96,6 +111,50 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [previewHiddenPieces, setPreviewHiddenPieces] = useState<
     Record<string, boolean>
   >({});
+
+  /* When a dropped piece makes a space activate highlightPulse,
+  that space's highlightPulse -- and only that space's highlightPulse --
+  should not start until the piece has stopped animating.
+  The newly made highlightPulse space(s) should start pulsing the
+   next time highlightPulse.value reaches 0 after the newest piece's
+   animation has fully stopped. */
+
+  // Spaces that result in a win on the next turn (for either team)
+  const [nextTurnWins, setNextTurnWins] = useState<Record<string, boolean>>({});
+
+  // Global pulse shared value to keep all highlights perfectly in sync
+  const highlightPulse = useSharedValue(0);
+
+  // Whether the user is currently long-press previewing a gravity shift
+  const [isPreviewingGravity, setIsPreviewingGravity] = useState(false);
+  // Whether the gravity pull animation is currently running
+  const [gravityAnimating, setGravityAnimating] = useState(false);
+  React.useEffect(() => {
+    cancelAnimation(highlightPulse);
+    const noHighlights = Object.keys(nextTurnWins || {}).length === 0;
+    const notPlaying = gameState !== GameState.Playing;
+    if (isPreviewingGravity || gravityAnimating || notPlaying || noHighlights) {
+      // fade down to base color and hold at 0
+      highlightPulse.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.out(Easing.quad),
+      });
+    } else {
+      // restart pulse from base
+      highlightPulse.value = 0;
+      highlightPulse.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0, { duration: 1200, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        false
+      );
+    }
+    return () => {
+      cancelAnimation(highlightPulse);
+    };
+  }, [isPreviewingGravity, gravityAnimating, gameState, nextTurnWins]);
 
   // Tracks whether we rehydrated from saved state to avoid overwriting
   const rehydratedRef = useRef(false);
@@ -312,6 +371,15 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         animations: pieceAnimations,
       });
 
+      // Merge next-turn-win space ids from both teams and expose as a map
+      const mergedNextTurnWins = new Set<string>([
+        ...pieceRelationships.winNextTurns[Team.TeamOne],
+        ...pieceRelationships.winNextTurns[Team.TeamTwo],
+      ]);
+      const nextTurnWinsMap: Record<string, boolean> = {};
+      mergedNextTurnWins.forEach((sid) => (nextTurnWinsMap[sid] = true));
+      setNextTurnWins(nextTurnWinsMap);
+
       const teamOneWins =
         Object.keys(pieceRelationships.winners.teamOne).length > 0;
       const teamTwoWins =
@@ -470,6 +538,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         if (state.playersTurn !== undefined) setPlayersTurn(state.playersTurn);
         if (state.turnCount !== undefined) setTurnCount(state.turnCount);
       },
+      nextTurnWins,
+      highlightPulse,
+      isPreviewingGravity,
+      setIsPreviewingGravity,
+      gravityAnimating,
+      setGravityAnimating,
     }),
     [
       gameMode,
@@ -488,6 +562,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       checkGameFinished,
       resetGame,
       previewHiddenPieces,
+      nextTurnWins,
+      gravityAnimating,
     ]
   );
 
