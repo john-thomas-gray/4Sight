@@ -49,7 +49,6 @@ Polish:
 - onePiecePlaced prevents you from placing two pieces in one turn in case timer fails
 - all slot arrows turn the direction of the pull (make a feed forward?)
 - Piece dropped on inaccessible space bounces off glass.
-- Slow down reset animation for shake
 - Animated screen transitions
 - Settings page animates when theme changes
 - Available/unavailable slot visualizations

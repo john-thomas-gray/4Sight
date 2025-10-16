@@ -1,5 +1,6 @@
 import { Team } from "@/types/board";
 import { PieceProps } from "@/types/logic";
+import getReachableSlot from "@/utils/getReachableSlot";
 
 interface FindPieceRelationships {
   boardPieceLocations: Record<string, string>;
@@ -56,9 +57,18 @@ const findPieceRelationships = ({
 
   const formatSpaceId = ({ x, y }: { x: number; y: number }) => `${x}-${y}`;
 
+  // Track potential winning placements (empty cells that would complete a win)
+  const winNextTurnSpaces: Record<Team.TeamOne | Team.TeamTwo, Set<string>> = {
+    [Team.TeamOne]: new Set<string>(),
+    [Team.TeamTwo]: new Set<string>(),
+  };
+
   function scanLine(line: string[][]) {
     let run: any[] = [];
     let lastTeam: Team = Team.Unassigned;
+
+    // Keep full line details to evaluate sliding windows for win-next-turns
+    const items: { spaceId: string; pieceId: string; team: Team }[] = [];
 
     const flushRun = () => {
       if (!run.length) return;
@@ -75,6 +85,10 @@ const findPieceRelationships = ({
     };
 
     for (const [spaceId, pieceId] of line) {
+      const team: Team =
+        pieceId === "unassigned" ? Team.Unassigned : allPieces[pieceId].team;
+      items.push({ spaceId, pieceId, team });
+
       if (pieceId === "unassigned") {
         flushRun();
         lastTeam = Team.Unassigned;
@@ -91,6 +105,51 @@ const findPieceRelationships = ({
       }
     }
     flushRun();
+
+    // Sliding window over the line to detect single-gap, same-team near-wins
+    if (items.length >= winLen) {
+      const reachabilityCache: Record<string, boolean> = {};
+      const isReachable = (spaceId: string) => {
+        if (reachabilityCache[spaceId] !== undefined)
+          return reachabilityCache[spaceId];
+        const layout: any = getReachableSlot(boardPieceLocations, spaceId);
+        const drop = layout?.dropSlot;
+        const ok =
+          !!drop &&
+          drop.id &&
+          drop.id !== "null" &&
+          drop.id !== "abort" &&
+          drop.id !== "out of bounds" &&
+          drop.distance !== 99;
+        reachabilityCache[spaceId] = ok;
+        return ok;
+      };
+      for (let i = 0; i <= items.length - winLen; i++) {
+        const windowItems = items.slice(i, i + winLen);
+
+        let teamOneCount = 0;
+        let teamTwoCount = 0;
+        const emptyCells: { spaceId: string }[] = [];
+
+        for (const it of windowItems) {
+          if (it.team === Team.TeamOne) teamOneCount++;
+          else if (it.team === Team.TeamTwo) teamTwoCount++;
+          else emptyCells.push({ spaceId: it.spaceId });
+        }
+
+        // Exactly one empty and the rest from the same team
+        if (emptyCells.length === 1) {
+          const emptyId = emptyCells[0].spaceId;
+          if (teamOneCount === winLen - 1 && teamTwoCount === 0) {
+            if (isReachable(emptyId))
+              winNextTurnSpaces[Team.TeamOne].add(emptyId);
+          } else if (teamTwoCount === winLen - 1 && teamOneCount === 0) {
+            if (isReachable(emptyId))
+              winNextTurnSpaces[Team.TeamTwo].add(emptyId);
+          }
+        }
+      }
+    }
   }
 
   function crawlAllLines() {
@@ -176,50 +235,17 @@ const findPieceRelationships = ({
   }
 
   crawlAllLines();
+  pieceRelationships.winNextTurns[Team.TeamOne] = Array.from(
+    winNextTurnSpaces[Team.TeamOne]
+  );
+  pieceRelationships.winNextTurns[Team.TeamTwo] = Array.from(
+    winNextTurnSpaces[Team.TeamTwo]
+  );
+  console.log("pieceRelationships", pieceRelationships);
   return pieceRelationships;
 };
 
 export default findPieceRelationships;
-
-// consecutives:
-//    { winners: {
-//     Team.TeamOne:
-//       [{spaceId: "1-1", pieceId: "1"}, {pieceId: "1-2", spaceId: "2"}, {pieceId: "1-3", spaceId: "3"} ],
-//       [{spaceId: "3-1", pieceId: "8"], [pieceId: "3-2", spaceId: "9"}, [pieceId: "3-3", spaceId: "10}] ],
-
-//     ]
-//    },
-//     partials: {
-//       [Team.TeamOne]: [{spaceId: "6-1", pieceId: "8"], [pieceId: "7-1", spaceId: "9"} ],
-//       [Team.TeamTwo]: [],
-//       [Team.Unassigned]: [],
-//     }
-//   }
-//     winNextTurns:
-//       [Team.TeamOne]: ["5-3", "2-4"],
-//       [Team.TeamTwo]: [],
-//       [Team.Unassigned]: [],
-//     }
-
-// else if...
-// const ends = [
-//   line[line.indexOf(run[0]) - 1],
-//   line[line.indexOf(run.at(-1)) + 1],
-// ];
-// const emptyEnds =
-//   ends.filter(([coord]) => {
-//     const val = boardPieceLocations[coord];
-//     return val === null;
-//   }) || [];
-// if (emptyEnds.length) {
-//   consecutives.partials.push({ [capturer]: piecesObj });
-// }
-// if (emptyEnds.length) {
-//   consecutives.partials.push({[capturer]: piecesMap});
-//   consecutives.winNextTurns.push(emptyEnds.map([coord]) => coord)
-// }
-
-// REMAINING FUNCTIONALITY
 
 // Additionally, if a space preceeds or follows (X - 1) consecutive
 // spaces containing pieces of the same team, unless those pieceIds
