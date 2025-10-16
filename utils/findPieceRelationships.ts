@@ -63,6 +63,12 @@ const findPieceRelationships = ({
     [Team.TeamTwo]: new Set<string>(),
   };
 
+  // Track all spaceIds that are part of any current winning sequence per team
+  const winningSpaceIds: Record<Team.TeamOne | Team.TeamTwo, Set<string>> = {
+    [Team.TeamOne]: new Set<string>(),
+    [Team.TeamTwo]: new Set<string>(),
+  };
+
   function scanLine(line: string[][]) {
     let run: any[] = [];
     let lastTeam: Team = Team.Unassigned;
@@ -78,6 +84,8 @@ const findPieceRelationships = ({
       if (run.length >= winLen) {
         if (team === Team.TeamOne || team === Team.TeamTwo) {
           pieceRelationships.winners[team].push(run);
+          // Record all spaces in this winning run so we can filter next-turn wins
+          run.forEach(({ spaceId }) => winningSpaceIds[team].add(spaceId));
         }
       } else if (run.length === winLen - 1) {
       }
@@ -130,21 +138,34 @@ const findPieceRelationships = ({
         let teamOneCount = 0;
         let teamTwoCount = 0;
         const emptyCells: { spaceId: string }[] = [];
+        const occupiedByTeamOne: string[] = [];
+        const occupiedByTeamTwo: string[] = [];
 
         for (const it of windowItems) {
-          if (it.team === Team.TeamOne) teamOneCount++;
-          else if (it.team === Team.TeamTwo) teamTwoCount++;
-          else emptyCells.push({ spaceId: it.spaceId });
+          if (it.team === Team.TeamOne) {
+            teamOneCount++;
+            occupiedByTeamOne.push(it.spaceId);
+          } else if (it.team === Team.TeamTwo) {
+            teamTwoCount++;
+            occupiedByTeamTwo.push(it.spaceId);
+          } else emptyCells.push({ spaceId: it.spaceId });
         }
 
         // Exactly one empty and the rest from the same team
         if (emptyCells.length === 1) {
           const emptyId = emptyCells[0].spaceId;
           if (teamOneCount === winLen - 1 && teamTwoCount === 0) {
-            if (isReachable(emptyId))
+            // Skip if any contributing spaces are part of an existing winning run
+            const overlapsWinner = occupiedByTeamOne.some((sid) =>
+              winningSpaceIds[Team.TeamOne].has(sid)
+            );
+            if (!overlapsWinner && isReachable(emptyId))
               winNextTurnSpaces[Team.TeamOne].add(emptyId);
           } else if (teamTwoCount === winLen - 1 && teamOneCount === 0) {
-            if (isReachable(emptyId))
+            const overlapsWinner = occupiedByTeamTwo.some((sid) =>
+              winningSpaceIds[Team.TeamTwo].has(sid)
+            );
+            if (!overlapsWinner && isReachable(emptyId))
               winNextTurnSpaces[Team.TeamTwo].add(emptyId);
           }
         }
