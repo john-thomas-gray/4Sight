@@ -1,6 +1,10 @@
 import { animatePieceReset, animateWinner } from "@/animations/pieceAnimations";
 import { GameElements, Logic } from "@/constants";
-import { WINNER_BASE_DELAY } from "@/constants/animations";
+import {
+  WINNER_BASE_DELAY,
+  WINNER_V0,
+  WINNER_V1,
+} from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import {
@@ -333,11 +337,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
           pieceStatus: PieceStatus
         ) => {
           const pieceAnims = animations;
-          let baseDelay = WINNER_BASE_DELAY;
-
+          // Keep step equal to actual winner duration to maintain synchrony
+          const CASCADE_STEP = WINNER_V1 + WINNER_V0;
+          let pieceIdx = 0;
           groups.forEach((group) => {
-            group.forEach((boardPiece: BoardPiece, idx) => {
-              const delay = baseDelay + idx * 300; // stagger each piece
+            group.forEach((boardPiece: BoardPiece) => {
+              const delay = WINNER_BASE_DELAY + pieceIdx * CASCADE_STEP;
               setTimeout(() => {
                 setPieceStatusMap((prev) => ({
                   ...prev,
@@ -345,10 +350,11 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
                 }));
                 animateWinner({
                   ...pieceAnims[boardPiece.pieceId],
+                  speedFactor: 0.5, // run each piece animation twice as fast
                 });
               }, delay);
+              pieceIdx += 1;
             });
-            baseDelay += group.length * 100; // increment baseDelay for next group
           });
         };
 

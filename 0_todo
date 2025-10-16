@@ -31,11 +31,6 @@ Win State:
 - Pieces jiggle
 - If it's a tie, the person who shifted gravity's pieces light up first, then the other players pieces light up. A little "gotcha". Only then do the corners change to alternating / both colors
 
-Signifiers:
-
-- Three pieces in a row with an accessible empty square as the next space are highlighted
-- hightlights three pieces in a row with flashing beacons
-
 Theme:
 
 - Purchasable theme
