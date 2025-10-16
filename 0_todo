@@ -28,7 +28,7 @@ Tutorial:
 
 Win State:
 
-- Pieces fill in gold jump and jiggle in a cascade
+- Pieces jiggle
 - If it's a tie, the person who shifted gravity's pieces light up first, then the other players pieces light up. A little "gotcha". Only then do the corners change to alternating / both colors
 
 Signifiers:
@@ -64,10 +64,3 @@ Settings:
 - Turn off shake to forfeit
 
 Tests
-
----
-
-zIndex Problems:
-
-- held piece should be above all others
-- Layer slot visuals so piece "goes in"

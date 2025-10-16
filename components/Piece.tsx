@@ -15,7 +15,7 @@ import {
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction, Team } from "@/types/board";
-import { PieceProps, PieceStatus } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
@@ -155,13 +155,13 @@ const Piece = ({ team, id }: PieceProps) => {
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
-        // .enabled(
-        //   logic.gameState !== GameState.Finished &&
-        //     logic.gameState !== GameState.PostGame &&
-        //     (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
-        //     logic.currentTeam === team &&
-        //     logic.moveInProgress === false
-        // )
+        .enabled(
+          logic.gameState !== GameState.Finished &&
+            logic.gameState !== GameState.PostGame &&
+            (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
+            logic.currentTeam === team &&
+            logic.moveInProgress === false
+        )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           animatePiecePickup({
@@ -412,8 +412,6 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
               return;
             } else if (isSpace) {
-              console.log("isSpace");
-              // Check if the space is occupied
               const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
               if (isOccupied) {
                 if (

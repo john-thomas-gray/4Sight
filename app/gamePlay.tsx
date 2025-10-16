@@ -17,7 +17,6 @@ const GamePlay = () => {
   const router = useRouter();
   useShake({
     enabled: logic.gameState === GameState.Playing,
-    // onShake: forfeit,
     onShake: () => logic.resetGame(logic.playersTurn, true),
   });
   useShake({
@@ -30,7 +29,7 @@ const GamePlay = () => {
   );
 
   const [loadTimer, setLoadTimer] = useState(true);
-  const loadAnimationLoops = 2;
+  const loadAnimationLoops = 1.5;
 
   useEffect(() => {
     setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);

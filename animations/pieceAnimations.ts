@@ -299,7 +299,7 @@ export const animatePiecePickup = ({
   "worklet";
   scaleX.value = withTiming(1.5, { duration: 100 });
   scaleY.value = withTiming(1.5, { duration: 100 });
-  zIndex.value = withTiming(5000, { duration: 0 });
+  zIndex.value = 5000;
 };
 
 export const animatePieceRelease = ({
@@ -314,7 +314,7 @@ export const animatePieceRelease = ({
   "worklet";
   scaleX.value = withTiming(1, { duration: 100 });
   scaleY.value = withTiming(1, { duration: 100 });
-  zIndex.value = withTiming(500, { duration: 100 });
+  zIndex.value = 500;
 };
 
 export const animateBlockedPiece = ({
