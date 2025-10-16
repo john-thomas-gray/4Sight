@@ -350,7 +350,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
                 }));
                 animateWinner({
                   ...pieceAnims[boardPiece.pieceId],
-                  speedFactor: 0.5, // run each piece animation twice as fast
                 });
               }, delay);
               pieceIdx += 1;

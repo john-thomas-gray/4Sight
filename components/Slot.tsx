@@ -2,11 +2,9 @@ import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps, CellType, Team } from "@/types/board";
 import React, { useEffect, useRef } from "react";
-import { Image, View } from "react-native";
+import { View } from "react-native";
+import Svg, { Circle, Mask, Rect } from "react-native-svg";
 import { cellImages } from "../assets/images";
-
-// If a piece is held and the cursor is in the area of a slot space
-// project a preview of where that piece would go if released
 
 const Slot = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
@@ -61,41 +59,70 @@ const Slot = ({ id, team }: CellProps) => {
       style={{
         ...GameElements.SLOT_STYLE,
         borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#C0C0C0",
-        backgroundColor:
-          settings.theme?.colorTheme?.SLOT_BACKGROUND_COLOR || "#6E2C00",
+        zIndex: 1000,
         transform: [{ rotate: rotation }],
       }}
     >
-      <View
+      <Svg height="40" width="40">
+        <Mask id="mask">
+          {/* White = visible, Black = transparent */}
+          <Rect x="0" y="0" width="40" height="40" fill="white" />
+          <Circle cx="20" cy="20" r="15" fill="black" />
+        </Mask>
+        <Rect
+          x="0"
+          y="0"
+          width="40"
+          height="40"
+          fill="#6E2C00"
+          mask="url(#mask)"
+        />
+      </Svg>
+
+      {/* <View
+        ref={viewRef}
         style={{
-          position: "absolute",
-          width: 28,
-          height: 28,
-          borderRadius: 14,
+          ...GameElements.SLOT_STYLE,
+          borderColor:
+            settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#C0C0C0",
           backgroundColor:
-            settings.theme?.colorTheme?.SLOT_INSERT_COLOR || "#C0C0C0",
-          zIndex: 0,
+            settings.theme?.colorTheme?.SLOT_FOREGROUND_COLOR || "#6E2C00",
+          transform: [{ rotate: rotation }],
         }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          width: 18,
-          height: 8,
-          marginEnd: 2,
-          borderRadius: 14,
-          backgroundColor: currentTeamColor,
-        }}
-      ></View>
-      <Image
-        source={slotImages[team === Team.TeamOne ? Team.TeamOne : Team.TeamTwo]}
-        style={{
-          width: 24,
-          height: 24,
-          resizeMode: "contain",
-          zIndex: 1,
-        }}
-      />
+      >
+        <View
+          style={{
+            position: "absolute",
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor:
+              settings.theme?.colorTheme?.SLOT_INSERT_COLOR || "#C0C0C0",
+            zIndex: 0,
+          }}
+        />
+        <View
+          style={{
+            position: "absolute",
+            width: 18,
+            height: 8,
+            marginEnd: 2,
+            borderRadius: 14,
+            backgroundColor: currentTeamColor,
+          }}
+        ></View>
+        <Image
+          source={
+            slotImages[team === Team.TeamOne ? Team.TeamOne : Team.TeamTwo]
+          }
+          style={{
+            width: 24,
+            height: 24,
+            resizeMode: "contain",
+            zIndex: 1,
+          }}
+        />
+      </View> */}
     </View>
   );
 };

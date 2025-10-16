@@ -12,7 +12,7 @@ export const SCHOOLHOUSE_COLOR: ColorThemeType = {
   WELL_BG_COLOR_ONE: "#eeea99ff",
   WELL_BG_COLOR_TWO: "#f8c1c1ff",
   SLOT_BORDER_COLOR: "#f5f5f5",
-  SLOT_BACKGROUND_COLOR: "#4473d8ff",
+  SLOT_FOREGROUND_COLOR: "#4473d8ff",
   SLOT_INSERT_COLOR: "#c7e9ffff",
   ODD_SPACE_COLOR: "#4473d8ff",
   EVEN_SPACE_COLOR: "#b0b0b0ff",
