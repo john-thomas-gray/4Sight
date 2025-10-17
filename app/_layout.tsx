@@ -1,6 +1,7 @@
 import "react-native-reanimated";
 
-import { GameProvider } from "@/context/GameContext";
+import LoadingScreen from "@/components/LoadingScreen";
+import { GameProvider, useGameContext } from "@/context/GameContext";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -11,14 +12,24 @@ export default function RootLayout() {
     <GameProvider>
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              gestureEnabled: false,
-            }}
-          />
+          <RootWithGlobalLoading />
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </GameProvider>
+  );
+}
+
+function RootWithGlobalLoading() {
+  const { logic } = useGameContext();
+  return (
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <LoadingScreen visible={logic.isGlobalLoading} />
+    </>
   );
 }

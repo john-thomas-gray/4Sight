@@ -46,7 +46,7 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
           top: 0,
           left: 0,
           right: 0,
-          bottom: 90,
+          bottom: 0,
           backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
           justifyContent: "center",
           alignItems: "center",

@@ -81,6 +81,8 @@ export type LogicContextType = {
   setIsPreviewingGravity: React.Dispatch<React.SetStateAction<boolean>>;
   gravityAnimating: boolean;
   setGravityAnimating: React.Dispatch<React.SetStateAction<boolean>>;
+  isGlobalLoading: boolean;
+  setIsGlobalLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -133,6 +135,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [isPreviewingGravity, setIsPreviewingGravity] = useState(false);
   // Whether the gravity pull animation is currently running
   const [gravityAnimating, setGravityAnimating] = useState(false);
+  // Global loading overlay across screens
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   React.useEffect(() => {
     cancelAnimation(highlightPulse);
     const noHighlights = Object.keys(nextTurnWins || {}).length === 0;
@@ -549,6 +553,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setIsPreviewingGravity,
       gravityAnimating,
       setGravityAnimating,
+      isGlobalLoading,
+      setIsGlobalLoading,
     }),
     [
       gameMode,
@@ -569,6 +575,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       previewHiddenPieces,
       nextTurnWins,
       gravityAnimating,
+      isGlobalLoading,
     ]
   );
 

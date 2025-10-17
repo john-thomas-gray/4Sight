@@ -40,7 +40,7 @@ const SlotRim: React.FC<Props> = ({ id }) => {
         top: slotLayout.pageY,
         width: slotLayout.width,
         height: slotLayout.height,
-        zIndex: 1200, // above default piece (500), below held piece (5000)
+        zIndex: 1200,
         transform: [{ rotate: rotation }],
       }}
     >

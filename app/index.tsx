@@ -59,12 +59,14 @@ function InnerIndexLayout() {
   );
 
   const handlePlay = React.useCallback(async () => {
+    logic.setIsGlobalLoading(true);
     logic.resetGame(1, false);
     await clearSavedGame();
     router.replace("/gamePlay");
   }, [logic]);
 
   const handleContinue = React.useCallback(async () => {
+    logic.setIsGlobalLoading(true);
     const saved = await loadAppState();
     logic.rehydrateFromSavedState(saved);
     logic.setGameState(GameState.Playing);

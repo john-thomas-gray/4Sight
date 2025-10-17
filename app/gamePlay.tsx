@@ -5,7 +5,6 @@ import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
-import WinModal from "@/components/WinModal";
 import { useGameContext } from "@/context/GameContext";
 import { useShake } from "@/hooks/useShake";
 import { Team } from "@/types/board";
@@ -31,11 +30,18 @@ const GamePlay = () => {
   );
 
   const [loadTimer, setLoadTimer] = useState(true);
-  const loadAnimationLoops = 0;
+  const loadAnimationLoops = 1;
 
   useEffect(() => {
     setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);
   }, []);
+
+  // Hide global loading once gameplay layout is ready and local timer finished
+  useEffect(() => {
+    if (layout.layoutReady && !loadTimer) {
+      logic.setIsGlobalLoading(false);
+    }
+  }, [layout.layoutReady, loadTimer, logic]);
 
   return (
     <View
@@ -44,10 +50,10 @@ const GamePlay = () => {
         backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#065f46",
       }}
     >
-      <WinModal
+      {/* <WinModal
         visible={logic.gameState === GameState.Finished}
         winner={logic.winner}
-      />
+      /> */}
       <View className="flex-col items-center justify-center">
         <TeamWellGrid team={Team.TeamTwo} />
         <Board className="mt-7 mb-7" />
