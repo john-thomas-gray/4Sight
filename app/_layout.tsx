@@ -28,7 +28,9 @@ function RootWithGlobalLoading() {
           headerShown: false,
           gestureEnabled: false,
         }}
-      />
+      >
+        <Stack.Screen name="gamePlay" options={{ animation: "none" }} />
+      </Stack>
       <LoadingScreen visible={logic.isGlobalLoading} />
     </>
   );

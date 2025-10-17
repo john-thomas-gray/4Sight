@@ -38,7 +38,7 @@ Theme:
 
 Polish:
 
-- Layer slot visuals so piece "goes in"
+- Fix visual glitch in loading screen where pieces flash on and off
 - Debounces
 - Make isAnimating state for pieces so they can't be grabbed during animation
 - onePiecePlaced prevents you from placing two pieces in one turn in case timer fails

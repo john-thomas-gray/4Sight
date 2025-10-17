@@ -13,13 +13,6 @@ import PieceLoading from "./PieceLoading";
 type LoadingScreenProps = { visible: boolean };
 const LoadingScreen = ({ visible }: LoadingScreenProps) => {
   const { settings } = useGameContext();
-  const [xStart, yStart] = [0, 0];
-  const [translateX, translateY] = [
-    useSharedValue(xStart),
-    useSharedValue(yStart),
-  ];
-  const fontSize = useSharedValue(76);
-  useLoadingTextAnimations({ translateX, translateY, fontSize });
   const overlayOpacity = useSharedValue(1);
 
   React.useEffect(() => {
@@ -28,13 +21,6 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
-  }));
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-    ],
-    fontSize: fontSize.value,
   }));
   return (
     <Animated.View
@@ -55,6 +41,31 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
         },
       ]}
     >
+      {visible && <LoadingContent />}
+    </Animated.View>
+  );
+};
+
+const LoadingContent = () => {
+  const { settings } = useGameContext();
+  const [xStart, yStart] = [0, 0];
+  const [translateX, translateY] = [
+    useSharedValue(xStart),
+    useSharedValue(yStart),
+  ];
+  const fontSize = useSharedValue(76);
+  useLoadingTextAnimations({ translateX, translateY, fontSize });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+    ],
+    fontSize: fontSize.value,
+  }));
+
+  return (
+    <>
       <Animated.Text
         style={[
           animatedStyle,
@@ -75,7 +86,6 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
           height: 100,
         }}
       >
-        {/* Left piece (staggered earlier) */}
         <PieceLoading
           team={Team.TeamOne}
           xStart={100}
@@ -90,8 +100,6 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
           rotateDirection="cw"
           rotationDegreesPerLoop={900}
         />
-
-        {/* Middle piece (staggered mid) */}
         <PieceLoading
           team={Team.TeamTwo}
           xStart={100}
@@ -106,8 +114,6 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
           rotateDirection="ccw"
           rotationDegreesPerLoop={900}
         />
-
-        {/* Right piece (staggered later) */}
         <PieceLoading
           team={Team.TeamOne}
           xStart={100}
@@ -123,7 +129,7 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
           rotationDegreesPerLoop={900}
         />
       </View>
-    </Animated.View>
+    </>
   );
 };
 export default LoadingScreen;
