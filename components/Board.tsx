@@ -255,11 +255,11 @@ const Board = ({ className, onRotate }: BoardProps) => {
       return;
     }
     const toHide: Record<string, boolean> = {};
-    Object.keys(logic.boardPieceLocations).forEach((spaceId) => {
-      const pieceId = logic.boardPieceLocations[spaceId];
-      if (previews.find((p) => p.spaceId === spaceId)) {
-        toHide[pieceId] = true;
-      }
+    const wellPieceIds = new Set<string>(
+      Object.values(logic.wellPieceLocations || {})
+    );
+    Object.keys(logic.pieces).forEach((pieceId) => {
+      toHide[pieceId] = !wellPieceIds.has(pieceId);
     });
     setGravityPreviewPieces(previews);
     logic.setPreviewHiddenPieces(toHide);

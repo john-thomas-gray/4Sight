@@ -1,5 +1,6 @@
 import { Animations, GameElements } from "@/constants";
 import { SLOT_INSERT, WINNER_V0, WINNER_V1 } from "@/constants/animations";
+import { PIECE_WELL_SCALE } from "@/constants/gameElements";
 import type { PieceAnimation } from "@/hooks/usePieceAnimations";
 import { Board } from "@/types";
 import { CellLayout, Direction, EachCellType, Team } from "@/types/board";
@@ -272,8 +273,8 @@ export const animatePieceReset = ({
     // stop any repeating animations (e.g., winner pulse) before resetting to well
     cancelAnimation(anim.scaleX);
     cancelAnimation(anim.scaleY);
-    anim.scaleX.value = withTiming(1, { duration });
-    anim.scaleY.value = withTiming(1, { duration });
+    anim.scaleX.value = withTiming(PIECE_WELL_SCALE, { duration });
+    anim.scaleY.value = withTiming(PIECE_WELL_SCALE, { duration });
 
     anim.translateX.value = withTiming(
       targetLayout.pageX + targetLayout.width / 2 - GameElements.PIECE_RADIUS,
@@ -297,8 +298,8 @@ export const animatePiecePickup = ({
   zIndex: SharedValue<number>;
 }) => {
   "worklet";
-  scaleX.value = withTiming(1.5, { duration: 100 });
-  scaleY.value = withTiming(1.5, { duration: 100 });
+  scaleX.value = withTiming(GameElements.PIECE_HELD_SCALE, { duration: 100 });
+  scaleY.value = withTiming(GameElements.PIECE_HELD_SCALE, { duration: 100 });
   zIndex.value = 5000;
 };
 
@@ -312,9 +313,8 @@ export const animatePieceRelease = ({
   zIndex: SharedValue<number>;
 }) => {
   "worklet";
-  scaleX.value = withTiming(1, { duration: 100 });
-  scaleY.value = withTiming(1, { duration: 100 });
-  zIndex.value = 500;
+  // Keep piece above overlays briefly after release; scale is managed by caller
+  zIndex.value = withDelay(100, withTiming(500, { duration: 0 }));
 };
 
 export const animateBlockedPiece = ({

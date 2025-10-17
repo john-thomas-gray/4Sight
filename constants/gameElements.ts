@@ -52,6 +52,9 @@ export const CORNER_BORDER_RADIUS: number = 8;
 
 export const PIECE_SIZE: number = 32;
 export const PIECE_RADIUS: number = PIECE_SIZE / 2;
+export const PIECE_HELD_SCALE: number = 1.5;
+export const PIECE_WELL_SCALE: number = 1.1;
+export const PIECE_PLACED_SCALE: number = 1;
 
 export const INITIAL_PIECE_POSITIONS = {
   "0": { x: 94, y: 34 },

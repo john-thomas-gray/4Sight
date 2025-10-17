@@ -1,9 +1,8 @@
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { CellProps, CellType, Team } from "@/types/board";
-import React, { useEffect, useRef } from "react";
-import { View } from "react-native";
-import Svg, { Circle, Mask, Rect } from "react-native-svg";
+import React, { useCallback, useEffect, useRef } from "react";
+import { Image, View } from "react-native";
 import { cellImages } from "../assets/images";
 
 const Slot = ({ id, team }: CellProps) => {
@@ -13,20 +12,30 @@ const Slot = ({ id, team }: CellProps) => {
 
   team = logic.currentTeam;
 
-  const reportLayout = () => {
+  const reportLayout = useCallback(() => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      layout.registerCell({
-        id,
-        type: CellType.Slot,
-        layout: { pageX, pageY, width, height },
-      });
+      const prev = layout.slots[id];
+      const next = { pageX, pageY, width, height } as const;
+      const changed =
+        !prev ||
+        prev.pageX !== next.pageX ||
+        prev.pageY !== next.pageY ||
+        prev.width !== next.width ||
+        prev.height !== next.height;
+      if (changed) {
+        layout.registerCell({
+          id,
+          type: CellType.Slot,
+          layout: next,
+        });
+      }
     });
-  };
+  }, [id, layout]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [reportLayout]);
 
   const checkDirection = (id: string) => {
     const [row, col]: [number, number] = id.split("-").map(Number) as [
@@ -58,71 +67,40 @@ const Slot = ({ id, team }: CellProps) => {
       ref={viewRef}
       style={{
         ...GameElements.SLOT_STYLE,
-        borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#C0C0C0",
-        zIndex: 1000,
+        borderWidth: 0,
         transform: [{ rotate: rotation }],
       }}
     >
-      <Svg height="40" width="40">
-        <Mask id="mask">
-          {/* White = visible, Black = transparent */}
-          <Rect x="0" y="0" width="40" height="40" fill="white" />
-          <Circle cx="20" cy="20" r="15" fill="black" />
-        </Mask>
-        <Rect
-          x="0"
-          y="0"
-          width="40"
-          height="40"
-          fill="#6E2C00"
-          mask="url(#mask)"
-        />
-      </Svg>
-
-      {/* <View
-        ref={viewRef}
+      <View
         style={{
-          ...GameElements.SLOT_STYLE,
-          borderColor:
-            settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#C0C0C0",
+          position: "absolute",
+          width: 36,
+          height: 36,
+          borderRadius: 14,
           backgroundColor:
-            settings.theme?.colorTheme?.SLOT_FOREGROUND_COLOR || "#6E2C00",
-          transform: [{ rotate: rotation }],
+            settings.theme?.colorTheme?.SLOT_INSERT_COLOR || "#C0C0C0",
+          zIndex: 0,
         }}
-      >
-        <View
-          style={{
-            position: "absolute",
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor:
-              settings.theme?.colorTheme?.SLOT_INSERT_COLOR || "#C0C0C0",
-            zIndex: 0,
-          }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            width: 18,
-            height: 8,
-            marginEnd: 2,
-            borderRadius: 14,
-            backgroundColor: currentTeamColor,
-          }}
-        ></View>
-        <Image
-          source={
-            slotImages[team === Team.TeamOne ? Team.TeamOne : Team.TeamTwo]
-          }
-          style={{
-            width: 24,
-            height: 24,
-            resizeMode: "contain",
-            zIndex: 1,
-          }}
-        />
-      </View> */}
+      />
+      <View
+        style={{
+          position: "absolute",
+          width: 18,
+          height: 8,
+          marginEnd: 2,
+          borderRadius: 14,
+          backgroundColor: currentTeamColor,
+        }}
+      ></View>
+      <Image
+        source={slotImages[team === Team.TeamOne ? Team.TeamOne : Team.TeamTwo]}
+        style={{
+          width: 24,
+          height: 24,
+          resizeMode: "contain",
+          zIndex: 1,
+        }}
+      />
     </View>
   );
 };

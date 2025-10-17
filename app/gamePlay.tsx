@@ -1,7 +1,9 @@
 import Board from "@/components/Board";
+import Glass from "@/components/Glass";
 import HamburgerMenu from "@/components/HamburgerMenu";
 import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
+import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinModal from "@/components/WinModal";
 import { useGameContext } from "@/context/GameContext";
@@ -51,6 +53,13 @@ const GamePlay = () => {
         <Board className="mt-7 mb-7" />
         <TeamWellGrid team={Team.TeamOne} />
       </View>
+
+      {layout.layoutReady && <Glass />}
+
+      {layout.layoutReady &&
+        Object.keys(layout.slots).map((slotId) => (
+          <SlotRim key={`slotrim-${slotId}`} id={slotId} />
+        ))}
 
       {layout.layoutReady &&
         piecesToRender.map(([id, p]) => (

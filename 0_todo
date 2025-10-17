@@ -51,6 +51,7 @@ Polish:
 - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
 - Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
   slight pulsing. Highlight undulates and shimmers.
+- Winner aura and color fades immediately when reset is called, not once the pieces reach the well
 
 Settings:
 

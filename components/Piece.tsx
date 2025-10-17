@@ -390,6 +390,8 @@ const Piece = ({ team, id }: PieceProps) => {
                     }
                   }
                 }
+                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 scheduleOnRN(unset);
                 return;
               }
@@ -410,6 +412,8 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
               scheduleOnRN(set);
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
+              animate.scaleX.value = GameElements.PIECE_PLACED_SCALE;
+              animate.scaleY.value = GameElements.PIECE_PLACED_SCALE;
               return;
             } else if (isSpace) {
               const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
@@ -425,8 +429,11 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
+
                 scheduleOnRN(set);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
+                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 return;
               }
 
@@ -451,6 +458,8 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
                 scheduleOnRN(set);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
+                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 return;
               }
 
@@ -467,6 +476,8 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
               scheduleOnRN(set);
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
+              animate.scaleX.value = GameElements.PIECE_PLACED_SCALE;
+              animate.scaleY.value = GameElements.PIECE_PLACED_SCALE;
               return;
             } else if (isWell) {
               const isOccupied = logic.wellPieceLocations[id] !== undefined;
@@ -484,6 +495,8 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
                 scheduleOnRN(set);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
+                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 return;
               }
 
@@ -492,6 +505,8 @@ const Piece = ({ team, id }: PieceProps) => {
                 translateY: animate.translateY,
                 selectedCell,
               });
+              animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+              animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
               scheduleOnRN(set);
               scheduleOnRN(unset, WELL_RETURN);
               return;
@@ -509,6 +524,8 @@ const Piece = ({ team, id }: PieceProps) => {
               currentWellLayout: currentWellDataSV.value.layout,
             });
           }
+          animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+          animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
           scheduleOnRN(set);
           scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
           return;
