@@ -594,7 +594,7 @@ const Piece = ({ team, id }: PieceProps) => {
           />
         </Animated.View>
       </GestureDetector>
-      {hoverSpaceId && (
+      {hoverSpaceId && settings.piecePlacementPreviews && (
         <Animated.View
           style={{
             position: "absolute",

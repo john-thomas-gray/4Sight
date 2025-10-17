@@ -487,7 +487,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         setPieces({});
       }
 
-      // Apply players turn at the end to ensure derived currentTeam matches
       setPlayersTurn(nextPlayersTurn);
       firstTurn.current = true;
     },

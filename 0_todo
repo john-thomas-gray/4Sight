@@ -38,20 +38,21 @@ Theme:
 
 Polish:
 
+- Winner aura and color fades immediately when reset is called, not once the pieces reach the well
+- Continue glitch
 - Fix visual glitch in loading screen where pieces flash on and off
-- Debounces
+- Animated screen transitions
+- Available/unavailable slot visualizations
+- all slot arrows turn the direction of the pull (make a feed forward?)
+- Settings page animates when theme changes
+- Piece dropped on inaccessible space bounces off glass.
 - Make isAnimating state for pieces so they can't be grabbed during animation
 - onePiecePlaced prevents you from placing two pieces in one turn in case timer fails
-- all slot arrows turn the direction of the pull (make a feed forward?)
-- Piece dropped on inaccessible space bounces off glass.
-- Animated screen transitions
-- Settings page animates when theme changes
-- Available/unavailable slot visualizations
-- prevent winner intro animation from playing again, unless a new piece is added to the row
-- Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
+- Debounces
 - Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
   slight pulsing. Highlight undulates and shimmers.
-- Winner aura and color fades immediately when reset is called, not once the pieces reach the well
+- prevent winner intro animation from playing again, unless a new piece is added to the row
+- Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
 
 Settings:
 

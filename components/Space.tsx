@@ -10,8 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 const Space = ({ id }: CellProps) => {
-  const { layout, logic } = useGameContext();
-  const { settings } = useGameContext();
+  const { layout, logic, settings } = useGameContext();
   const viewRef = useRef<View>(null);
 
   const reportLayout = () => {
@@ -38,7 +37,9 @@ const Space = ({ id }: CellProps) => {
     ? settings.theme?.colorTheme?.EVEN_SPACE_COLOR || "#d1fae5"
     : settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff";
 
-  const shouldHighlight = !!(logic.nextTurnWins && logic.nextTurnWins[id]);
+  const shouldHighlight =
+    settings.highlightWinningMoves &&
+    !!(logic.nextTurnWins && logic.nextTurnWins[id]);
 
   const animatedStyle = useAnimatedStyle(() => {
     const color = interpolateColor(

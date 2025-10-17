@@ -3,7 +3,7 @@ import { CLASSIC } from "@/constants/themes/classic";
 import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse";
 import { useGameContext } from "@/context/GameContext";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
@@ -103,6 +103,56 @@ const Settings = () => {
               />
             </View>
           </Pressable>
+        </View>
+      </View>
+      <View className="px-6 mt-8">
+        <Text className="text-2xl font-semibold text-gray-800 mb-3">
+          Gameplay
+        </Text>
+        <View className="flex-col gap-4">
+          <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-900 text-xl">Shift Previews</Text>
+              <Switch
+                value={settings.shiftPreviews}
+                onValueChange={settings.setShiftPreviews}
+              />
+            </View>
+            <Text className="text-gray-600 mt-2">
+              Shows a preview of where pieces will settle after a gravity shift.
+            </Text>
+          </View>
+
+          <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-900 text-xl">
+                Piece Placement Previews
+              </Text>
+              <Switch
+                value={settings.piecePlacementPreviews}
+                onValueChange={settings.setPiecePlacementPreviews}
+              />
+            </View>
+            <Text className="text-gray-600 mt-2">
+              Shows a preview of where a piece will fall once dropped in a slot.
+            </Text>
+          </View>
+
+          <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-900 text-xl">
+                Highlight Winning Moves
+              </Text>
+              <Switch
+                value={settings.highlightWinningMoves}
+                onValueChange={settings.setHighlightWinningMoves}
+              />
+            </View>
+            <Text className="text-gray-600 mt-2">
+              Highlights spaces where a player can place a piece to win the
+              game.
+            </Text>
+          </View>
         </View>
       </View>
       <BackButton />

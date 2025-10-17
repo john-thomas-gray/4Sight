@@ -17,6 +17,12 @@ import { useLogic } from "./LogicContext";
 type SettingsContextType = {
   theme: ThemeType;
   setTheme: React.Dispatch<React.SetStateAction<ThemeType>>;
+  shiftPreviews: boolean;
+  setShiftPreviews: React.Dispatch<React.SetStateAction<boolean>>;
+  piecePlacementPreviews: boolean;
+  setPiecePlacementPreviews: React.Dispatch<React.SetStateAction<boolean>>;
+  highlightWinningMoves: boolean;
+  setHighlightWinningMoves: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -27,6 +33,11 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [theme, setTheme] = useState<ThemeType>(CLASSIC);
+  const [shiftPreviews, setShiftPreviews] = useState<boolean>(true);
+  const [piecePlacementPreviews, setPiecePlacementPreviews] =
+    useState<boolean>(true);
+  const [highlightWinningMoves, setHighlightWinningMoves] =
+    useState<boolean>(true);
 
   const logic = useLogic();
 
@@ -61,6 +72,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
       if (saved?.theme) {
         setTheme(normalizeTheme(saved.theme));
       }
+      if (saved.shiftPreviews !== undefined)
+        setShiftPreviews(saved.shiftPreviews);
+      if (saved.piecePlacementPreviews !== undefined)
+        setPiecePlacementPreviews(saved.piecePlacementPreviews);
+      if (saved.highlightWinningMoves !== undefined)
+        setHighlightWinningMoves(saved.highlightWinningMoves);
       const hasBoard =
         saved.boardPieceLocations &&
         Object.keys(saved.boardPieceLocations).length > 0;
@@ -78,6 +95,17 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     saveAppState({ theme });
   }, [theme]);
+
+  // Persist toggles when they change
+  useEffect(() => {
+    saveAppState({ shiftPreviews });
+  }, [shiftPreviews]);
+  useEffect(() => {
+    saveAppState({ piecePlacementPreviews });
+  }, [piecePlacementPreviews]);
+  useEffect(() => {
+    saveAppState({ highlightWinningMoves });
+  }, [highlightWinningMoves]);
 
   // Persist game state every turn
   useEffect(() => {
@@ -97,7 +125,18 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   }, [logic.turnCount, logic.winner]);
 
   return (
-    <SettingsContext.Provider value={{ theme, setTheme: setAndPersistTheme }}>
+    <SettingsContext.Provider
+      value={{
+        theme,
+        setTheme: setAndPersistTheme,
+        shiftPreviews,
+        setShiftPreviews,
+        piecePlacementPreviews,
+        setPiecePlacementPreviews,
+        highlightWinningMoves,
+        setHighlightWinningMoves,
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );

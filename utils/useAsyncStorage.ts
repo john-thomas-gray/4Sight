@@ -19,6 +19,10 @@ export type PersistedAppState = {
   wellPieceLocations?: Record<string, string>;
   boardPieceLocations?: Record<string, string>;
   hasSeenLoading?: boolean;
+  // User settings
+  shiftPreviews?: boolean;
+  piecePlacementPreviews?: boolean;
+  highlightWinningMoves?: boolean;
 };
 
 export const saveAppState = async (state: Partial<PersistedAppState>) => {
