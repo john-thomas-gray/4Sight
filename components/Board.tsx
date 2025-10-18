@@ -100,16 +100,16 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const isMoving = useRef(false);
 
   const executePull = (direction: Direction) => {
-    if (
-      logic.gameState === GameState.Finished ||
-      logic.gameState === GameState.Ready ||
-      isMoving.current
-    )
+    // If game is finished, fling should reset instead of pulling
+    if (logic.gameState === GameState.Finished) {
+      logic.resetGame(logic.playersTurn, false);
       return;
+    }
+    if (logic.gameState === GameState.Ready || isMoving.current) return;
 
     isMoving.current = true;
     logic.setGravityAnimating(true);
-
+    console.log("pulling lol");
     pullPieces(direction);
 
     setTimeout(() => {
@@ -127,7 +127,10 @@ const Board = ({ className, onRotate }: BoardProps) => {
           logic.setLastGravityDirection(direction);
       } catch {}
       executePull(direction);
-    } else if (gameState === GameState.PostGame) {
+    } else if (
+      gameState === GameState.PostGame ||
+      gameState === GameState.Finished
+    ) {
       logic.resetGame(logic.playersTurn, false);
     }
   };

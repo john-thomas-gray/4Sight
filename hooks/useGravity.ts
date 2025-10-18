@@ -18,8 +18,9 @@ const moveLog = ({
 };
 
 export const useGravity = () => {
-  const { layout, logic } = useGameContext();
+  const { logic } = useGameContext();
   const applyGravity = (direction: GravityProps["direction"]) => {
+    console.log("applyGravity", direction);
     // Don't apply gravity if a move is already in progress
     if (logic.moveInProgress) {
       return;

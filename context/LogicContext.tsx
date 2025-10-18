@@ -308,12 +308,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const nextTurn = useCallback(() => {
-    if (gameState === GameState.Ready) {
-      setGameState(GameState.Playing);
-    } else if (gameState === GameState.Finished) return;
-    setPlayersTurn(getNextPlayersTurn(playersTurn));
+    setGameState((prev) =>
+      prev === GameState.Ready ? GameState.Playing : prev
+    );
+    setPlayersTurn((prev) => getNextPlayersTurn(prev));
     setTurnCount((prev) => prev + 1);
-  }, [gameState, playersTurn]);
+  }, []);
 
   const currentTeam = playersTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne;
 
@@ -416,10 +416,11 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       } else {
         nextTurn();
       }
+      console.log(gameState);
     },
     [pieces, pieceAnimations, nextTurn]
   );
-  console.log(gameState);
+
   const resetGame = useCallback(
     (startingPlayersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => {
       // Ensure a fresh start (not treated as rehydration)

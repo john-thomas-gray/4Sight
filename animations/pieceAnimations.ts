@@ -313,7 +313,9 @@ export const animatePieceRelease = ({
   zIndex: SharedValue<number>;
 }) => {
   "worklet";
-  // Keep piece above overlays briefly after release; scale is managed by caller
+
+  scaleX.value = withTiming(GameElements.PIECE_PLACED_SCALE, { duration: 120 });
+  scaleY.value = withTiming(GameElements.PIECE_PLACED_SCALE, { duration: 120 });
   zIndex.value = withDelay(100, withTiming(500, { duration: 0 }));
 };
 

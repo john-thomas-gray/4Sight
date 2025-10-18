@@ -1,7 +1,14 @@
+import {
+  animatePieceDrop,
+  animatePiecePickup,
+  animatePieceRelease,
+  animateToSelectedCell,
+} from "@/animations/pieceAnimations";
 import TutorialModal from "@/components/TutorialModal";
 import TutorialOverlay, { HighlightRect } from "@/components/TutorialOverlay";
+import { SLOT_INSERT, SLOT_TO_SPACE } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
-import { Team } from "@/types/board";
+import { CellType, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import React from "react";
 
@@ -18,6 +25,7 @@ function useTutorial(): TutorialAPI {
   const [showOverlay, setShowOverlay] = React.useState<boolean>(false);
   const [showModal, setShowModal] = React.useState<boolean>(false);
   const completedRef = React.useRef<boolean>(false);
+  const usedPieceIdsRef = React.useRef<Set<string>>(new Set());
 
   // Helpers
   const getFinalSpaceForSlot = React.useCallback(
@@ -70,14 +78,22 @@ function useTutorial(): TutorialAPI {
   const getAvailableWellPiece = React.useCallback(
     (team: Team): [string, string] | null => {
       const teamWells = layout.wells[team] || {};
-      // pick the first well that has a piece
+      // Choose the first well that still maps to a piece id that hasn't been used and isn't on board
       for (const wellId of Object.keys(teamWells)) {
         const pieceId = logic.wellPieceLocations[wellId];
-        if (pieceId) return [wellId, pieceId];
+        if (!pieceId) continue;
+        if (usedPieceIdsRef.current.has(pieceId)) continue;
+        // sanity: skip if already on the board
+        const alreadyOnBoard = Object.values(
+          logic.boardPieceLocations || {}
+        ).includes(pieceId);
+        if (alreadyOnBoard) continue;
+        usedPieceIdsRef.current.add(pieceId);
+        return [wellId, pieceId];
       }
       return null;
     },
-    [layout.wells, logic.wellPieceLocations]
+    [layout.wells, logic.wellPieceLocations, logic.boardPieceLocations]
   );
 
   const scriptDropFromSlot = React.useCallback(
@@ -94,26 +110,84 @@ function useTutorial(): TutorialAPI {
             return;
           }
           const [wellId, pieceId] = available;
+          const anim = logic.pieceAnimations[pieceId];
+          const slotLayout = layout.slots[slotId];
+          const spaceLayout = layout.spaces[target];
+          if (!anim || !slotLayout || !spaceLayout) {
+            resolve();
+            return;
+          }
+          // Remove from well immediately so well mapping updates
           logic.setWellPieceLocations((prev) => {
             const next = { ...prev };
             delete next[wellId];
             return next;
           });
-          logic.setBoardPieceLocations((prev) => ({
-            ...prev,
-            [target]: pieceId,
-          }));
-          // Let Board snap-animate the piece into place on next frame
-          setTimeout(() => resolve(), 500);
+
+          // 1) Mark move in progress and pick up
+          logic.setMoveInProgress(true);
+          animatePiecePickup({
+            scaleX: anim.scaleX,
+            scaleY: anim.scaleY,
+            zIndex: anim.zIndex,
+          });
+
+          // 2) Wait 500ms, move to slot center
+          setTimeout(() => {
+            animateToSelectedCell({
+              translateX: anim.translateX,
+              translateY: anim.translateY,
+              selectedCell: {
+                id: slotId,
+                layout: slotLayout,
+                type: CellType.Slot,
+              } as any,
+            });
+
+            // 3) Wait 500ms, release (sets placed scale), then drop into final space
+            setTimeout(() => {
+              animatePieceRelease({
+                scaleX: anim.scaleX,
+                scaleY: anim.scaleY,
+                zIndex: anim.zIndex,
+              });
+              animatePieceDrop({
+                translateX: anim.translateX,
+                translateY: anim.translateY,
+                slotLayout,
+                spaceLayout,
+              });
+
+              // 4) After drop animation finishes, update board mapping, trigger finish check, and resolve
+              const totalDropMs = SLOT_INSERT + SLOT_TO_SPACE;
+              setTimeout(() => {
+                logic.setBoardPieceLocations((prev) => {
+                  const updated = { ...prev, [target]: pieceId } as Record<
+                    string,
+                    string
+                  >;
+                  try {
+                    logic.checkGameFinished(updated);
+                  } catch {}
+                  return updated;
+                });
+                logic.setMoveInProgress(false);
+                resolve();
+              }, totalDropMs + 10);
+            }, 500);
+          }, 500);
         }, delayMs);
       });
     },
     [
       getFinalSpaceForSlot,
       getAvailableWellPiece,
-      logic.setWellPieceLocations,
-      logic.setBoardPieceLocations,
+      layout.slots,
+      layout.spaces,
       logic.boardPieceLocations,
+      logic.pieceAnimations,
+      logic.setBoardPieceLocations,
+      logic.setWellPieceLocations,
     ]
   );
 
@@ -159,34 +233,45 @@ function useTutorial(): TutorialAPI {
         case 2: {
           // After user places a white piece, script a black piece drop
           setShowModal(true);
-          setModalText("Players take turns dropping pieces.");
+          setModalText("Players take turns dropping a piece.");
           setShowOverlay(false);
           // After dismiss, we will auto-place a black piece from 0-4
           break;
         }
         case 3: {
           setShowModal(true);
-          setModalText("Pieces can be dropped from any side of the board.");
+          setModalText("A piece can be dropped from any side of the board.");
           setShowOverlay(false);
           break;
         }
         case 4: {
           setShowModal(true);
           setModalText(
-            "Swipe a direction to shift gravity and make the pieces fall that way."
+            "You can also drop by placing a piece directly on a reachable space."
           );
-          // highlight top quarter triangle is complex; keep modal guidance only
-          setShowOverlay(false);
+          setShowOverlay(true);
+          const rects: HighlightRect[] = [];
+          const r = rectFromCell("1-2");
+          if (r) rects.push(r);
+          // Include white team wells
+          Object.keys(layout.wells[Team.TeamOne] || {}).forEach((wid) => {
+            const wellLayout = layout.wells[Team.TeamOne][wid];
+            rects.push({
+              x: wellLayout.pageX,
+              y: wellLayout.pageY,
+              width: wellLayout.width,
+              height: wellLayout.height,
+            });
+          });
+          setHighlights(rects);
           break;
         }
         case 5: {
           setShowModal(true);
           setModalText(
-            "If a space is available, you may place a piece directly on it to trigger a drop."
+            "Swipe a direction to shift gravity and make the pieces fall that way."
           );
-          setShowOverlay(true);
-          const r = rectFromCell("7-2");
-          setHighlights(r ? [r] : []);
+          setShowOverlay(false);
           break;
         }
         case 6: {
@@ -206,7 +291,7 @@ function useTutorial(): TutorialAPI {
         case 8: {
           setShowModal(true);
           setModalText(
-            "Winner goes first. Reactivate the tutorial in Settings. Play fair and have fun!"
+            "Winner goes first. Go to settings to replay the tutorial. Have fun!"
           );
           setShowOverlay(false);
           completedRef.current = true;
@@ -253,12 +338,12 @@ function useTutorial(): TutorialAPI {
         return;
       }
       if (step === 3) {
-        // Sequence: white 8-2, black 0-2, white 8-1, black 0-5
+        // Sequence: white 6-0, black 0-4, white 7-8, black 8-1
         (async () => {
-          await scriptDropFromSlot(Team.TeamOne, "8-2");
-          await scriptDropFromSlot(Team.TeamTwo, "0-2");
-          await scriptDropFromSlot(Team.TeamOne, "8-1");
-          await scriptDropFromSlot(Team.TeamTwo, "0-5");
+          await scriptDropFromSlot(Team.TeamOne, "6-0");
+          await scriptDropFromSlot(Team.TeamTwo, "0-4");
+          await scriptDropFromSlot(Team.TeamOne, "7-8");
+          await scriptDropFromSlot(Team.TeamTwo, "8-1");
           setStep(4);
         })();
         return;
@@ -267,13 +352,23 @@ function useTutorial(): TutorialAPI {
       return;
     }
     if (step === 4) {
-      // wait for gravity swipe; don't advance on modal
+      // Do not advance; wait for placement at 1-2
       setShowModal(false);
       return;
     }
-    if (step === 5 || step === 6 || step === 7) {
+    if (step === 6) {
       setShowModal(false);
       setStep(step + 1);
+      return;
+    }
+    if (step === 7) {
+      // Do not advance; require device shake reset to progress
+      setShowModal(false);
+      return;
+    }
+    if (step === 5) {
+      // wait for gravity swipe; don't advance on modal
+      setShowModal(false);
       return;
     }
     if (step === 8) {
@@ -315,22 +410,37 @@ function useTutorial(): TutorialAPI {
     };
   }, []);
 
-  // Detect downward gravity swipe for step 4
+  // Detect downward gravity swipe for step 5
   React.useEffect(() => {
-    if (step !== 4) return;
+    if (step !== 5) return;
     if (logic.lastGravityDirection === "down") {
-      setStep(5);
+      setStep(6);
     }
   }, [step, logic.lastGravityDirection]);
 
-  // Detect placement at space 7-2 for step 5
+  // Detect device shake to move from step 7 -> 8 (game reset)
   React.useEffect(() => {
-    if (step !== 5) return;
-    if (logic.boardPieceLocations["7-2"]) {
-      setShowOverlay(false);
-      setStep(6);
+    if (step !== 7) return;
+    // When game state changes to Ready due to shake-triggered reset, advance
+    if (logic.gameState === GameState.Ready) {
+      setStep(8);
     }
-  }, [step, logic.boardPieceLocations]);
+  }, [step, logic.gameState]);
+
+  // Detect placement at space 1-2 for step 4 (use piece/team-aware logic)
+  React.useEffect(() => {
+    if (step !== 4) return;
+    const whiteIds = Object.entries(logic.pieces)
+      .filter(([, p]) => p.team === Team.TeamOne)
+      .map(([id]) => id);
+    const pid = logic.boardPieceLocations["1-2"];
+    const placedAtOneTwo = pid ? whiteIds.includes(pid) : false;
+    if (placedAtOneTwo) {
+      setShowOverlay(false);
+      const t = setTimeout(() => setStep(5), SLOT_INSERT + SLOT_TO_SPACE + 10);
+      return () => clearTimeout(t);
+    }
+  }, [step, logic.boardPieceLocations, logic.pieces]);
 
   return {
     overlay: (

@@ -12,18 +12,25 @@ import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import useTutorial from "../hooks/useTutorial";
 
 const GamePlay = () => {
   const { layout, logic, settings } = useGameContext();
   const router = useRouter();
   useShake({
-    enabled: logic.gameState === GameState.Playing,
-    onShake: () => logic.resetGame(logic.playersTurn, true),
-  });
-  useShake({
-    enabled: logic.gameState === GameState.PostGame,
-    onShake: () => logic.resetGame(logic.playersTurn, false),
+    enabled:
+      logic.gameState === GameState.PostGame ||
+      logic.gameState === GameState.Finished ||
+      logic.gameState === GameState.Playing,
+    onShake: () => {
+      logic.resetGame(logic.playersTurn, false);
+      console.log("shaking");
+    },
   });
   const piecesToRender = React.useMemo(
     () => (layout.layoutReady ? Object.entries(logic.pieces) : []),
@@ -31,7 +38,7 @@ const GamePlay = () => {
   );
 
   const [loadTimer, setLoadTimer] = useState(true);
-  const loadAnimationLoops = 1;
+  const loadAnimationLoops = 0;
 
   useEffect(() => {
     setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);
@@ -43,6 +50,14 @@ const GamePlay = () => {
       logic.setIsGlobalLoading(false);
     }
   }, [layout.layoutReady, loadTimer, logic]);
+
+  // Fade-in for the menu when tutorial ends
+  const menuOpacity = useSharedValue(0);
+  useEffect(() => {
+    const target = !settings.tutorialEnabled ? 1 : 0;
+    menuOpacity.value = withTiming(target, { duration: 400 });
+  }, [settings.tutorialEnabled]);
+  const menuStyle = useAnimatedStyle(() => ({ opacity: menuOpacity.value }));
 
   return (
     <View
@@ -79,10 +94,13 @@ const GamePlay = () => {
       {layout.layoutReady && !loadTimer && <TutorialMount />}
 
       {layout.layoutReady && !loadTimer && (
-        <HamburgerMenu
-          onPress={() => router.replace("/")}
+        <Animated.View
+          style={menuStyle}
+          pointerEvents={!settings.tutorialEnabled ? "auto" : "none"}
           className="absolute bottom-6 right-6"
-        />
+        >
+          <HamburgerMenu onPress={() => router.replace("/")} />
+        </Animated.View>
       )}
     </View>
   );

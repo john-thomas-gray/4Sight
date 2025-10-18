@@ -15,7 +15,7 @@ import {
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction, Team } from "@/types/board";
-import { PieceProps, PieceStatus } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
@@ -155,13 +155,13 @@ const Piece = ({ team, id }: PieceProps) => {
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
-        // .enabled(
-        //   logic.gameState !== GameState.Finished &&
-        //     logic.gameState !== GameState.PostGame &&
-        //     (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
-        //     logic.currentTeam === team &&
-        //     logic.moveInProgress === false
-        // )
+        .enabled(
+          logic.gameState !== GameState.Finished &&
+            logic.gameState !== GameState.PostGame &&
+            (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
+            logic.currentTeam === team &&
+            logic.moveInProgress === false
+        )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           animatePiecePickup({
@@ -390,8 +390,6 @@ const Piece = ({ team, id }: PieceProps) => {
                     }
                   }
                 }
-                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 scheduleOnRN(unset);
                 return;
               }
@@ -412,8 +410,6 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
               scheduleOnRN(set);
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
-              animate.scaleX.value = GameElements.PIECE_PLACED_SCALE;
-              animate.scaleY.value = GameElements.PIECE_PLACED_SCALE;
               return;
             } else if (isSpace) {
               const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
@@ -432,8 +428,6 @@ const Piece = ({ team, id }: PieceProps) => {
 
                 scheduleOnRN(set);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
-                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 return;
               }
 
@@ -458,8 +452,6 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
                 scheduleOnRN(set);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
-                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 return;
               }
 
@@ -476,8 +468,6 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
               scheduleOnRN(set);
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
-              animate.scaleX.value = GameElements.PIECE_PLACED_SCALE;
-              animate.scaleY.value = GameElements.PIECE_PLACED_SCALE;
               return;
             } else if (isWell) {
               const isOccupied = logic.wellPieceLocations[id] !== undefined;
@@ -495,8 +485,6 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
                 scheduleOnRN(set);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
-                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
                 return;
               }
 
@@ -505,8 +493,6 @@ const Piece = ({ team, id }: PieceProps) => {
                 translateY: animate.translateY,
                 selectedCell,
               });
-              animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-              animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
               scheduleOnRN(set);
               scheduleOnRN(unset, WELL_RETURN);
               return;
@@ -524,10 +510,7 @@ const Piece = ({ team, id }: PieceProps) => {
               currentWellLayout: currentWellDataSV.value.layout,
             });
           }
-          animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-          animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
-          scheduleOnRN(set);
-          scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
+          scheduleOnRN(unset);
           return;
         }),
     [logic.gameState, logic.currentTeam, status, logic.moveInProgress]
