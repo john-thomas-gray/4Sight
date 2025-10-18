@@ -38,6 +38,8 @@ Theme:
 
 Polish:
 
+- Turn change delay builds up each time you start a new game from the menu
+
 - Only allow one move per turn
 
 - Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
@@ -68,5 +70,9 @@ Polish:
   slight pulsing. Highlight undulates and shimmers.
 - prevent winner intro animation from playing again, unless a new piece is added to the row
 - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
+
+- Loading screen lags
+
+- Send game to a friend / review game (continue changes to 'review' when the game is over and you hit menu)
 
 Tests

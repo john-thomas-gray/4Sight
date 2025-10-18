@@ -23,6 +23,8 @@ type SettingsContextType = {
   setPiecePlacementPreviews: React.Dispatch<React.SetStateAction<boolean>>;
   highlightWinningMoves: boolean;
   setHighlightWinningMoves: React.Dispatch<React.SetStateAction<boolean>>;
+  tutorialEnabled: boolean;
+  setTutorialEnabled: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -38,6 +40,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
     useState<boolean>(true);
   const [highlightWinningMoves, setHighlightWinningMoves] =
     useState<boolean>(true);
+  const [tutorialEnabled, setTutorialEnabled] = useState<boolean>(true);
 
   const logic = useLogic();
 
@@ -78,6 +81,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
         setPiecePlacementPreviews(saved.piecePlacementPreviews);
       if (saved.highlightWinningMoves !== undefined)
         setHighlightWinningMoves(saved.highlightWinningMoves);
+      if (saved.tutorialEnabled !== undefined)
+        setTutorialEnabled(saved.tutorialEnabled);
       const hasBoard =
         saved.boardPieceLocations &&
         Object.keys(saved.boardPieceLocations).length > 0;
@@ -106,6 +111,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     saveAppState({ highlightWinningMoves });
   }, [highlightWinningMoves]);
+  useEffect(() => {
+    saveAppState({ tutorialEnabled });
+  }, [tutorialEnabled]);
 
   // Persist game state every turn
   useEffect(() => {
@@ -135,6 +143,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
         setPiecePlacementPreviews,
         highlightWinningMoves,
         setHighlightWinningMoves,
+        tutorialEnabled,
+        setTutorialEnabled,
       }}
     >
       {children}

@@ -23,6 +23,7 @@ export type PersistedAppState = {
   shiftPreviews?: boolean;
   piecePlacementPreviews?: boolean;
   highlightWinningMoves?: boolean;
+  tutorialEnabled?: boolean;
 };
 
 export const saveAppState = async (state: Partial<PersistedAppState>) => {

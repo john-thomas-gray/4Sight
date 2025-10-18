@@ -122,6 +122,10 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const handleFling = (direction: Direction, gameState: GameState) => {
     if (gameState === GameState.Playing) {
       console.log("pull");
+      try {
+        logic.setLastGravityDirection &&
+          logic.setLastGravityDirection(direction);
+      } catch {}
       executePull(direction);
     } else if (gameState === GameState.PostGame) {
       logic.resetGame(logic.playersTurn, false);

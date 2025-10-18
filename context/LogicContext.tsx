@@ -6,7 +6,7 @@ import {
   WINNER_V1,
 } from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
-import { Team } from "@/types/board";
+import { Direction, Team } from "@/types/board";
 import {
   GameMode,
   GameState,
@@ -83,6 +83,10 @@ export type LogicContextType = {
   setGravityAnimating: React.Dispatch<React.SetStateAction<boolean>>;
   isGlobalLoading: boolean;
   setIsGlobalLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  lastGravityDirection?: Direction;
+  setLastGravityDirection?: React.Dispatch<
+    React.SetStateAction<Direction | undefined>
+  >;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -137,6 +141,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [gravityAnimating, setGravityAnimating] = useState(false);
   // Global loading overlay across screens
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [lastGravityDirection, setLastGravityDirection] = useState<
+    Direction | undefined
+  >(undefined);
   React.useEffect(() => {
     cancelAnimation(highlightPulse);
     const noHighlights = Object.keys(nextTurnWins || {}).length === 0;
@@ -554,6 +561,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setGravityAnimating,
       isGlobalLoading,
       setIsGlobalLoading,
+      lastGravityDirection,
+      setLastGravityDirection,
     }),
     [
       gameMode,
@@ -575,6 +584,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       nextTurnWins,
       gravityAnimating,
       isGlobalLoading,
+      lastGravityDirection,
     ]
   );
 

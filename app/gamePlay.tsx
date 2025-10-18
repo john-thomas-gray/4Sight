@@ -12,6 +12,7 @@ import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
+import useTutorial from "../hooks/useTutorial";
 
 const GamePlay = () => {
   const { layout, logic, settings } = useGameContext();
@@ -74,6 +75,9 @@ const GamePlay = () => {
 
       <LoadingScreen visible={!layout.layoutReady || loadTimer} />
 
+      {/* Tutorial overlay and modal render above gameplay UI */}
+      {layout.layoutReady && !loadTimer && <TutorialMount />}
+
       {layout.layoutReady && !loadTimer && (
         <HamburgerMenu
           onPress={() => router.replace("/")}
@@ -85,3 +89,14 @@ const GamePlay = () => {
 };
 
 export default GamePlay;
+
+// Separate child to safely use hooks conditionally above the rest of the UI
+const TutorialMount = () => {
+  const tutorial = useTutorial();
+  return (
+    <>
+      {tutorial.overlay}
+      {tutorial.modal}
+    </>
+  );
+};

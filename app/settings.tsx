@@ -112,6 +112,19 @@ const Settings = () => {
         <View className="flex-col gap-4">
           <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
             <View className="flex-row items-center justify-between">
+              <Text className="text-gray-900 text-xl">Tutorial</Text>
+              <Switch
+                value={settings.tutorialEnabled}
+                onValueChange={settings.setTutorialEnabled}
+              />
+            </View>
+            <Text className="text-gray-600 mt-2">
+              An interactive tutorial explains the rules.
+            </Text>
+          </View>
+
+          <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
+            <View className="flex-row items-center justify-between">
               <Text className="text-gray-900 text-xl">Shift Previews</Text>
               <Switch
                 value={settings.shiftPreviews}
