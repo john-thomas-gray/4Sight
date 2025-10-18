@@ -426,10 +426,17 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       // Ensure a fresh start (not treated as rehydration)
       rehydratedRef.current = false;
       rehydrationPositionsAppliedRef.current = false;
-      // Determine the players turn based on forfeit rule
+      // Determine base starting turn: if ending a game, use current turn holder
+      const baseStartingTurn =
+        gameState === GameState.PostGame || gameState === GameState.Finished
+          ? playersTurn
+          : gameState === GameState.Playing
+          ? getNextPlayersTurn(playersTurn)
+          : startingPlayersTurn;
+      // Apply forfeit rule if applicable
       const nextPlayersTurn = forfeit
-        ? getNextPlayersTurn(startingPlayersTurn)
-        : startingPlayersTurn;
+        ? getNextPlayersTurn(baseStartingTurn)
+        : baseStartingTurn;
 
       // Reset core gameplay state
       setWinner(Team.Unassigned);
@@ -505,6 +512,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       wellPieceLocations,
       pieces,
       pieceAnimations,
+      gameState,
+      playersTurn,
     ]
   );
 

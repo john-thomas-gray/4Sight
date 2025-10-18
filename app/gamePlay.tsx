@@ -29,7 +29,6 @@ const GamePlay = () => {
       logic.gameState === GameState.Playing,
     onShake: () => {
       logic.resetGame(logic.playersTurn, false);
-      console.log("shaking");
     },
   });
   const piecesToRender = React.useMemo(
@@ -38,7 +37,7 @@ const GamePlay = () => {
   );
 
   const [loadTimer, setLoadTimer] = useState(true);
-  const loadAnimationLoops = 0;
+  const loadAnimationLoops = 1;
 
   useEffect(() => {
     setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);

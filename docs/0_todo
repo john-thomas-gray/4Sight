@@ -38,6 +38,8 @@ Theme:
 
 Polish:
 
+- When you drop a piece on a square, its animation doesn't work with the slot rim.
+
 - Turn change delay builds up each time you start a new game from the menu
 
 - Only allow one move per turn

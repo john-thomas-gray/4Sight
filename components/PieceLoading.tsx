@@ -71,7 +71,7 @@ const PieceLoading = ({
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: translateX.value },
+      { translateX: translateX.value - xStart },
       { translateY: translateY.value },
       { rotate: `${rotationSV.value}deg` },
     ],
@@ -96,7 +96,7 @@ const PieceLoading = ({
     justifyContent: "center",
     position: "absolute",
     bottom: 10,
-    left: 0,
+    left: xStart,
     backgroundColor:
       team === Team.TeamOne
         ? settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff"

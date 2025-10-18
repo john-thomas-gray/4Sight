@@ -5,18 +5,6 @@ type GravityProps = {
   direction: Direction.Up | Direction.Down | Direction.Left | Direction.Right;
 };
 
-const moveLog = ({
-  pieceId,
-  currentSpaceId,
-  targetSpaceId,
-}: {
-  pieceId: string;
-  currentSpaceId: string;
-  targetSpaceId: string;
-}) => {
-  console.log(`Moving ${pieceId} from ${currentSpaceId} to ${targetSpaceId}`);
-};
-
 export const useGravity = () => {
   const { logic } = useGameContext();
   const applyGravity = (direction: GravityProps["direction"]) => {
@@ -34,7 +22,6 @@ export const useGravity = () => {
           const currentSpaceId = `${row}-${col}`;
 
           if (updatedPieceLocations[currentSpaceId]) {
-            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetRow = row;
             while (
               targetRow > 1 &&
@@ -46,7 +33,6 @@ export const useGravity = () => {
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
               hasMoves = true;
-              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -59,7 +45,6 @@ export const useGravity = () => {
         for (let col = 1; col <= 7; col++) {
           const currentSpaceId = `${row}-${col}`;
           if (updatedPieceLocations[currentSpaceId]) {
-            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetRow = row;
             while (
               targetRow < 7 &&
@@ -70,7 +55,6 @@ export const useGravity = () => {
             const targetSpaceId = `${targetRow}-${col}`;
             if (targetSpaceId !== currentSpaceId) {
               hasMoves = true;
-              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -83,7 +67,6 @@ export const useGravity = () => {
         for (let row = 1; row <= 7; row++) {
           const currentSpaceId = `${row}-${col}`;
           if (updatedPieceLocations[currentSpaceId]) {
-            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetCol = col;
             while (
               targetCol > 1 &&
@@ -95,7 +78,6 @@ export const useGravity = () => {
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
               hasMoves = true;
-              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
@@ -108,7 +90,6 @@ export const useGravity = () => {
         for (let row = 1; row <= 7; row++) {
           const currentSpaceId = `${row}-${col}`;
           if (updatedPieceLocations[currentSpaceId]) {
-            const pieceId = updatedPieceLocations[currentSpaceId];
             let targetCol = col;
             while (
               targetCol < 7 &&
@@ -120,7 +101,6 @@ export const useGravity = () => {
             const targetSpaceId = `${row}-${targetCol}`;
             if (targetSpaceId !== currentSpaceId) {
               hasMoves = true;
-              // moveLog({ currentSpaceId, targetSpaceId, pieceId });
               updatedPieceLocations[targetSpaceId] =
                 updatedPieceLocations[currentSpaceId];
               delete updatedPieceLocations[currentSpaceId];
