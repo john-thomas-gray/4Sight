@@ -121,6 +121,10 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
   const handleFling = (direction: Direction, gameState: GameState) => {
     if (gameState === GameState.Playing) {
+      // If tutorial restricts to down-only, ignore other directions
+      if (logic.restrictGravityToDown && direction !== Direction.Down) {
+        return;
+      }
       console.log("pull");
       try {
         logic.setLastGravityDirection &&
@@ -147,6 +151,14 @@ const Board = ({ className, onRotate }: BoardProps) => {
       dir = e.velocityX > 0 ? Direction.Right : Direction.Left;
     } else {
       dir = e.velocityY > 0 ? Direction.Down : Direction.Up;
+    }
+    // If restricted to down, force downward direction when vertical component dominates
+    if (logic.restrictGravityToDown && dir !== Direction.Down) {
+      if (absVY >= absVX) {
+        dir = Direction.Down;
+      } else {
+        return;
+      }
     }
     scheduleOnRN(handleFling, dir, logic.gameState);
   });

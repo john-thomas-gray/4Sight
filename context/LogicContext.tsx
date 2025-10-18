@@ -87,6 +87,8 @@ export type LogicContextType = {
   setLastGravityDirection?: React.Dispatch<
     React.SetStateAction<Direction | undefined>
   >;
+  restrictGravityToDown: boolean;
+  setRestrictGravityToDown: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -144,6 +146,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [lastGravityDirection, setLastGravityDirection] = useState<
     Direction | undefined
   >(undefined);
+  const [restrictGravityToDown, setRestrictGravityToDown] = useState(false);
   React.useEffect(() => {
     cancelAnimation(highlightPulse);
     const noHighlights = Object.keys(nextTurnWins || {}).length === 0;
@@ -573,6 +576,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setIsGlobalLoading,
       lastGravityDirection,
       setLastGravityDirection,
+      restrictGravityToDown,
+      setRestrictGravityToDown,
     }),
     [
       gameMode,
@@ -595,6 +600,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       gravityAnimating,
       isGlobalLoading,
       lastGravityDirection,
+      restrictGravityToDown,
     ]
   );
 

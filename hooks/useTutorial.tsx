@@ -249,7 +249,7 @@ function useTutorial(): TutorialAPI {
           setModalText(
             "You can also drop by placing a piece directly on a reachable space."
           );
-          setShowOverlay(true);
+          setShowOverlay(false);
           const rects: HighlightRect[] = [];
           const r = rectFromCell("1-2");
           if (r) rects.push(r);
@@ -272,6 +272,10 @@ function useTutorial(): TutorialAPI {
             "Swipe a direction to shift gravity and make the pieces fall that way."
           );
           setShowOverlay(false);
+          try {
+            logic.setRestrictGravityToDown &&
+              logic.setRestrictGravityToDown(true);
+          } catch {}
           break;
         }
         case 6: {
@@ -291,7 +295,7 @@ function useTutorial(): TutorialAPI {
         case 8: {
           setShowModal(true);
           setModalText(
-            "Winner goes first. Go to settings to replay the tutorial. Have fun!"
+            "Winner goes first. Go to Settings to replay the tutorial. Have fun!"
           );
           setShowOverlay(false);
           completedRef.current = true;
@@ -304,17 +308,41 @@ function useTutorial(): TutorialAPI {
     run();
   }, [step, settings.tutorialEnabled, layout.layoutReady]);
 
+  const step5ArmedRef = React.useRef(false);
+  const step5BaselineRef = React.useRef<string | undefined>(undefined);
+  const step5ObservedChangeRef = React.useRef(false);
+  React.useEffect(() => {
+    if (step === 5 && !step5ArmedRef.current) {
+      step5ArmedRef.current = true;
+      step5ObservedChangeRef.current = false;
+      step5BaselineRef.current = logic.lastGravityDirection;
+      try {
+        logic.setLastGravityDirection &&
+          logic.setLastGravityDirection(undefined);
+      } catch {}
+    }
+    if (step !== 5) {
+      step5ArmedRef.current = false;
+      step5ObservedChangeRef.current = false;
+      step5BaselineRef.current = undefined;
+    }
+  }, [step, logic.setLastGravityDirection]);
+
+  // Track that a new gravity swipe occurred after arming step 5
+  React.useEffect(() => {
+    if (step !== 5) return;
+    if (!step5ArmedRef.current) return;
+    if (logic.lastGravityDirection !== step5BaselineRef.current) {
+      step5ObservedChangeRef.current = true;
+    }
+  }, [step, logic.lastGravityDirection]);
+
   // advance handlers (simplified)
   const handleModalPress = React.useCallback(() => {
     if (!settings.tutorialEnabled) return;
     if (step === 1) {
       // After reading, allow interaction: dim all except column 4 and white well
       const rects: HighlightRect[] = [];
-      for (let row = 0; row <= 7; row++) {
-        const id = `${row}-4`;
-        const r = rectFromCell(id);
-        if (r) rects.push(r);
-      }
       // Include visible white team wells
       Object.keys(layout.wells[Team.TeamOne] || {}).forEach((wid) => {
         const wellLayout = layout.wells[Team.TeamOne][wid];
@@ -325,6 +353,8 @@ function useTutorial(): TutorialAPI {
           height: wellLayout.height,
         });
       });
+      const r = rectFromCell("0-4");
+      if (r) rects.push(r);
       setHighlights(rects);
       setShowOverlay(true);
       setShowModal(false);
@@ -354,6 +384,7 @@ function useTutorial(): TutorialAPI {
     if (step === 4) {
       // Do not advance; wait for placement at 1-2
       setShowModal(false);
+      setShowOverlay(true);
       return;
     }
     if (step === 6) {
@@ -413,16 +444,26 @@ function useTutorial(): TutorialAPI {
   // Detect downward gravity swipe for step 5
   React.useEffect(() => {
     if (step !== 5) return;
+    if (!step5ObservedChangeRef.current) return;
     if (logic.lastGravityDirection === "down") {
       setStep(6);
     }
   }, [step, logic.lastGravityDirection]);
+
+  // When leaving step 5 (advance or otherwise), clear the restriction
+  React.useEffect(() => {
+    if (step === 5) return;
+    try {
+      logic.setRestrictGravityToDown && logic.setRestrictGravityToDown(false);
+    } catch {}
+  }, [step]);
 
   // Detect device shake to move from step 7 -> 8 (game reset)
   React.useEffect(() => {
     if (step !== 7) return;
     // When game state changes to Ready due to shake-triggered reset, advance
     if (logic.gameState === GameState.Ready) {
+      setShowModal(false);
       setStep(8);
     }
   }, [step, logic.gameState]);

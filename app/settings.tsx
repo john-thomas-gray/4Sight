@@ -112,19 +112,6 @@ const Settings = () => {
         <View className="flex-col gap-4">
           <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
             <View className="flex-row items-center justify-between">
-              <Text className="text-gray-900 text-xl">Tutorial</Text>
-              <Switch
-                value={settings.tutorialEnabled}
-                onValueChange={settings.setTutorialEnabled}
-              />
-            </View>
-            <Text className="text-gray-600 mt-2">
-              An interactive tutorial explains the rules.
-            </Text>
-          </View>
-
-          <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
-            <View className="flex-row items-center justify-between">
               <Text className="text-gray-900 text-xl">Shift Previews</Text>
               <Switch
                 value={settings.shiftPreviews}
@@ -132,7 +119,7 @@ const Settings = () => {
               />
             </View>
             <Text className="text-gray-600 mt-2">
-              Shows a preview of where pieces will settle after a gravity shift.
+              Previews where pieces will settle after a gravity shift.
             </Text>
           </View>
 
@@ -147,7 +134,7 @@ const Settings = () => {
               />
             </View>
             <Text className="text-gray-600 mt-2">
-              Shows a preview of where a piece will fall once dropped in a slot.
+              Previews where a piece would fall if dropped in the current slot.
             </Text>
           </View>
 
@@ -162,8 +149,20 @@ const Settings = () => {
               />
             </View>
             <Text className="text-gray-600 mt-2">
-              Highlights spaces where a player can place a piece to win the
-              game.
+              Highlights spaces where a player move to win the game.
+            </Text>
+          </View>
+
+          <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-gray-900 text-xl">Tutorial</Text>
+              <Switch
+                value={settings.tutorialEnabled}
+                onValueChange={settings.setTutorialEnabled}
+              />
+            </View>
+            <Text className="text-gray-600 mt-2">
+              Learn 4Sight through an interactive tutorial.
             </Text>
           </View>
         </View>

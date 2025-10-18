@@ -44,13 +44,13 @@ Polish:
 
 - Only allow one move per turn
 
+- Animate tutorial messages
+
 - Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
 
 - Winner aura and color fades immediately when reset is called, not once the pieces reach the well
 
 - Continue glitch
-
-- Fix visual glitch in loading screen where pieces flash on and off
 
 - Animated screen transitions
 
