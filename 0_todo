@@ -38,25 +38,35 @@ Theme:
 
 Polish:
 
+- Only allow one move per turn
+
+- Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
+
 - Winner aura and color fades immediately when reset is called, not once the pieces reach the well
+
 - Continue glitch
+
 - Fix visual glitch in loading screen where pieces flash on and off
+
 - Animated screen transitions
+
 - Available/unavailable slot visualizations
 - all slot arrows turn the direction of the pull (make a feed forward?)
+
+- Make gravity shift exactly 1/4 of the board
+
 - Settings page animates when theme changes
+
 - Piece dropped on inaccessible space bounces off glass.
+
 - Make isAnimating state for pieces so they can't be grabbed during animation
 - onePiecePlaced prevents you from placing two pieces in one turn in case timer fails
+
 - Debounces
+
 - Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
   slight pulsing. Highlight undulates and shimmers.
 - prevent winner intro animation from playing again, unless a new piece is added to the row
 - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
-
-Settings:
-
-- Turn off previews
-- Turn off shake to forfeit
 
 Tests
