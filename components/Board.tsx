@@ -109,7 +109,6 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
     isMoving.current = true;
     logic.setGravityAnimating(true);
-    console.log("pulling lol");
     pullPieces(direction);
 
     setTimeout(() => {

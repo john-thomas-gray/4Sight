@@ -32,9 +32,6 @@ import Highlight from "./Highlight";
 const Piece = ({ team, id }: PieceProps) => {
   const { layout, logic, settings } = useGameContext();
 
-  const set = () => {
-    logic.setMoveInProgress(true);
-  };
   const unset = (delay = 0) => {
     if (delay > 0) {
       logic.setMIP({ setting: false, delay });
@@ -133,6 +130,15 @@ const Piece = ({ team, id }: PieceProps) => {
     }
   };
 
+  const restoreWPLUI = () => {
+    if (currentWellId) {
+      logic.setWellPieceLocations((prev) => ({
+        ...prev,
+        [currentWellId as string]: id,
+      }));
+    }
+  };
+
   useEffect(() => {
     if (team === Team.TeamOne) {
       if (status !== PieceStatus.winner) {
@@ -158,9 +164,9 @@ const Piece = ({ team, id }: PieceProps) => {
         .enabled(
           logic.gameState !== GameState.Finished &&
             logic.gameState !== GameState.PostGame &&
-            (status === PieceStatus.isHeld || status === PieceStatus.inWell) &&
             logic.currentTeam === team &&
-            logic.moveInProgress === false
+            (status === PieceStatus.isHeld ||
+              (status === PieceStatus.inWell && logic.moveInProgress === false))
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
@@ -171,7 +177,7 @@ const Piece = ({ team, id }: PieceProps) => {
           });
           scheduleOnRN(deleteWPLUI);
           scheduleOnRN(updateStatus, PieceStatus.isHeld);
-          console.log(logic.playersTurn);
+          scheduleOnRN(logic.setMoveInProgress, true);
         })
         .onUpdate((event) => {
           pieceHoldOffset(
@@ -371,6 +377,9 @@ const Piece = ({ team, id }: PieceProps) => {
                     slotLayout: selectedCell.layout,
                     currentWellLayout: currentWellDataSV.value.layout,
                     direction: slotDirection,
+                    scaleX: animate.scaleX,
+                    scaleY: animate.scaleY,
+                    zIndex: animate.zIndex,
                   });
 
                   const blockingSpaceId = `${nextRow}-${nextCol}`;
@@ -392,6 +401,7 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
                 // Return status to inWell since placement didn't occur
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
+                scheduleOnRN(restoreWPLUI);
                 scheduleOnRN(unset);
                 return;
               }
@@ -410,7 +420,6 @@ const Piece = ({ team, id }: PieceProps) => {
 
               scheduleOnRN(setBPLUI, finalSpaceId);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
-              scheduleOnRN(set);
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
               return;
             } else if (isSpace) {
@@ -428,7 +437,6 @@ const Piece = ({ team, id }: PieceProps) => {
                   });
                 }
 
-                scheduleOnRN(set);
                 // Return status to inWell since placement didn't occur
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
@@ -454,7 +462,7 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
-                scheduleOnRN(set);
+
                 // Return status to inWell since placement didn't occur
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
@@ -472,7 +480,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
               scheduleOnRN(setBPLUI, id);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
-              scheduleOnRN(set);
+
               scheduleOnRN(unset, ANIMATE_PIECE_DROP);
               return;
             } else if (isWell) {
@@ -489,7 +497,7 @@ const Piece = ({ team, id }: PieceProps) => {
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
-                scheduleOnRN(set);
+
                 // Return status to inWell since placement didn't occur
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
@@ -501,7 +509,7 @@ const Piece = ({ team, id }: PieceProps) => {
                 translateY: animate.translateY,
                 selectedCell,
               });
-              scheduleOnRN(set);
+
               scheduleOnRN(unset, WELL_RETURN);
               return;
             }
@@ -567,6 +575,9 @@ const Piece = ({ team, id }: PieceProps) => {
           style={[
             baseStyle,
             animatedStyles,
+            status === PieceStatus.inWell
+              ? { zIndex: GameElements.PIECE_WELL_ZINDEX }
+              : null,
             logic.previewHiddenPieces[id] ? { opacity: 0 } : null,
           ]}
         >

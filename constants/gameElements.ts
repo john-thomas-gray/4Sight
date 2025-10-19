@@ -55,6 +55,9 @@ export const PIECE_RADIUS: number = PIECE_SIZE / 2;
 export const PIECE_HELD_SCALE: number = 1.5;
 export const PIECE_WELL_SCALE: number = 1.1;
 export const PIECE_PLACED_SCALE: number = 1;
+export const PIECE_HELD_ZINDEX: number = 5000;
+export const PIECE_WELL_ZINDEX: number = 500;
+export const PIECE_PLACED_ZINDEX: number = 500;
 
 export const INITIAL_PIECE_POSITIONS = {
   "0": { x: 94, y: 34 },

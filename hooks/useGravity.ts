@@ -1,3 +1,4 @@
+import { GRAVITY_IN_PROGRESS } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction } from "@/types/board";
 
@@ -8,11 +9,14 @@ type GravityProps = {
 export const useGravity = () => {
   const { logic } = useGameContext();
   const applyGravity = (direction: GravityProps["direction"]) => {
-    console.log("applyGravity", direction);
-    // Don't apply gravity if a move is already in progress
     if (logic.moveInProgress) {
       return;
     }
+
+    logic.setMoveInProgress(true);
+    setTimeout(() => {
+      logic.setMoveInProgress(false);
+    }, GRAVITY_IN_PROGRESS);
 
     const updatedPieceLocations = { ...logic.boardPieceLocations };
     let hasMoves = false;
@@ -118,13 +122,7 @@ export const useGravity = () => {
       return;
     }
 
-    // Set move in progress to prevent other pieces from moving
-    logic.setMoveInProgress(true);
-
     logic.setBoardPieceLocations(updatedPieceLocations);
-
-    // Reset move in progress after gravity completes
-    logic.setMoveInProgress(false);
   };
   return applyGravity;
 };

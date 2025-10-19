@@ -319,18 +319,40 @@ export const animatePieceRelease = ({
   zIndex.value = withDelay(100, withTiming(500, { duration: 0 }));
 };
 
+export const resetBlockedPieceScale = ({
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+}) => {
+  "worklet";
+
+  scaleX.value = withTiming(GameElements.PIECE_WELL_SCALE, { duration: 120 });
+  scaleY.value = withTiming(GameElements.PIECE_WELL_SCALE, { duration: 120 });
+  zIndex.value = withDelay(100, withTiming(5000, { duration: 0 }));
+};
+
 export const animateBlockedPiece = ({
   translateX,
   translateY,
   slotLayout,
   currentWellLayout,
   direction,
+  scaleX,
+  scaleY,
+  zIndex,
 }: {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   slotLayout: CellLayout;
   currentWellLayout: Board.CellLayout;
   direction: Direction;
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
 }) => {
   "worklet";
   const totalTime = 1300;
@@ -368,9 +390,16 @@ export const animateBlockedPiece = ({
     withTiming(slotCenterX + bounceOffsetX, {
       duration: totalTime * 0.15,
     }),
-    withTiming(slotCenterX, {
-      duration: totalTime * 0.15,
-    }),
+    withTiming(
+      slotCenterX,
+      {
+        duration: totalTime * 0.15,
+      },
+      () => {
+        // When we arrive back at the slot center, reset size/zIndex to well state
+        resetBlockedPieceScale({ scaleX, scaleY, zIndex });
+      }
+    ),
     withDelay(
       totalTime * 0.23,
       withTiming(wellCenterX, {

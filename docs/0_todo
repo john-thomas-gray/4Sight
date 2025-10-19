@@ -21,19 +21,22 @@ Theme:
 
 Polish:
 
-- Turn change delay builds up each time you start a new game from the menu\*
+- Turn change delay builds up each time a game is won\*
 - loading screen glitch\*
+
 - Make isAnimating state for pieces so they can't be grabbed during animation\*
 - onePiecePlaced prevents you from placing two pieces in one turn in case timer fails\*
 - Only allow one move per turn\*
 
 - When you drop a piece on a square, its animation doesn't work with the slot rim.
 
+- exiting to the menu and making a new game switches who plays first
+
 - Animate tutorial messages
 
 - Reorder tutorial more elegantly
 
-- Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
+= Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
 
 - Winner aura and color fades immediately when reset is called, not once the pieces reach the well
 
