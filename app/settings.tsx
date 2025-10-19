@@ -2,12 +2,14 @@ import BackButton from "@/components/BackButton";
 import { CLASSIC } from "@/constants/themes/classic";
 import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse";
 import { useGameContext } from "@/context/GameContext";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
   const { settings } = useGameContext();
+  const router = useRouter();
   const isSameTheme = (a: typeof CLASSIC | undefined, b: typeof CLASSIC) => {
     if (!a || !a.colorTheme) return false;
     return (
@@ -119,29 +121,28 @@ const Settings = () => {
               />
             </View>
             <Text className="text-gray-600 mt-2">
-              Previews where pieces will settle after a gravity shift.
+              Shows where pieces will land after a gravity shift.
             </Text>
           </View>
 
           <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
             <View className="flex-row items-center justify-between">
-              <Text className="text-gray-900 text-xl">
-                Piece Placement Previews
-              </Text>
+              <Text className="text-gray-900 text-xl">Piece Drop Preview</Text>
               <Switch
                 value={settings.piecePlacementPreviews}
                 onValueChange={settings.setPiecePlacementPreviews}
               />
             </View>
             <Text className="text-gray-600 mt-2">
-              Previews where a piece would fall if dropped in the current slot.
+              Shows where a piece would land if dropped in the selected row or
+              column.
             </Text>
           </View>
 
           <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
             <View className="flex-row items-center justify-between">
               <Text className="text-gray-900 text-xl">
-                Highlight Winning Moves
+                Winning Move Highlights
               </Text>
               <Switch
                 value={settings.highlightWinningMoves}
@@ -149,21 +150,29 @@ const Settings = () => {
               />
             </View>
             <Text className="text-gray-600 mt-2">
-              Highlights spaces where a player move to win the game.
+              Highlights spaces where a drop would put four same-colored pieces
+              in a row.
             </Text>
           </View>
 
           <View className="w-full rounded-lg p-4 border border-gray-300 bg-gray-50">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-gray-900 text-xl">Tutorial</Text>
-              <Switch
-                value={settings.tutorialEnabled}
-                onValueChange={settings.setTutorialEnabled}
-              />
-            </View>
-            <Text className="text-gray-600 mt-2">
-              Learn 4Sight through an interactive tutorial.
-            </Text>
+            <Pressable
+              className="w-full items-center justify-center py-3 rounded-md bg-black"
+              android_ripple={{ color: "#D1D5DB" }}
+              onPress={() => {
+                if (!settings.tutorialEnabled)
+                  settings.setTutorialEnabled(true);
+                router.replace("/gamePlay");
+              }}
+              style={({ pressed }) => [
+                {
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                  opacity: pressed ? 0.9 : 1,
+                },
+              ]}
+            >
+              <Text className="text-white text-xl">Play Tutorial</Text>
+            </Pressable>
           </View>
         </View>
       </View>

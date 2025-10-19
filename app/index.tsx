@@ -17,7 +17,7 @@ export default function Index() {
 }
 
 function InnerIndexLayout() {
-  const { logic } = useGameContext();
+  const { logic, settings } = useGameContext();
   const [hasSavedGame, setHasSavedGame] = React.useState(false);
 
   const computeHasSavedGame = React.useCallback((saved: PersistedAppState) => {
@@ -86,7 +86,9 @@ function InnerIndexLayout() {
       </View>
       <View className="flex-col items-center space-y-4">
         <Pressable onPress={onPressPlay}>
-          <Text className="text-3xl">New Game</Text>
+          <Text className="text-3xl">
+            {settings.tutorialEnabled ? "Tutorial" : "New Game"}
+          </Text>
         </Pressable>
         {hasSavedGame && (
           <Pressable onPress={onPressContinue}>
@@ -95,9 +97,6 @@ function InnerIndexLayout() {
         )}
         <Pressable onPress={onPressSettings}>
           <Text className="text-3xl">Settings</Text>
-        </Pressable>
-        <Pressable onPress={onPressHowTo}>
-          <Text className="text-3xl">How to Play</Text>
         </Pressable>
       </View>
     </View>

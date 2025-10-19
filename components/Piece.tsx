@@ -390,6 +390,8 @@ const Piece = ({ team, id }: PieceProps) => {
                     }
                   }
                 }
+                // Return status to inWell since placement didn't occur
+                scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset);
                 return;
               }
@@ -427,6 +429,8 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
 
                 scheduleOnRN(set);
+                // Return status to inWell since placement didn't occur
+                scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
                 return;
               }
@@ -451,6 +455,8 @@ const Piece = ({ team, id }: PieceProps) => {
                   });
                 }
                 scheduleOnRN(set);
+                // Return status to inWell since placement didn't occur
+                scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
                 return;
               }
@@ -484,6 +490,8 @@ const Piece = ({ team, id }: PieceProps) => {
                   });
                 }
                 scheduleOnRN(set);
+                // Return status to inWell since placement didn't occur
+                scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
                 return;
               }
@@ -510,6 +518,8 @@ const Piece = ({ team, id }: PieceProps) => {
               currentWellLayout: currentWellDataSV.value.layout,
             });
           }
+          // Return status to inWell since placement didn't occur
+          scheduleOnRN(updateStatus, PieceStatus.inWell);
           scheduleOnRN(unset);
           return;
         }),

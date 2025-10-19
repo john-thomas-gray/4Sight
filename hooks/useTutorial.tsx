@@ -22,8 +22,22 @@ function useTutorial(): TutorialAPI {
   const [step, setStep] = React.useState<number>(0);
   const [highlights, setHighlights] = React.useState<HighlightRect[]>([]);
   const [modalText, setModalText] = React.useState<string>("");
+  const [modalTimeoutMS] = React.useState<number>(0);
   const [showOverlay, setShowOverlay] = React.useState<boolean>(false);
   const [showModal, setShowModal] = React.useState<boolean>(false);
+  // Modal action controls
+  const [modalPrimaryLabel, setModalPrimaryLabel] = React.useState<
+    string | undefined
+  >(undefined);
+  const [modalSecondaryLabel, setModalSecondaryLabel] = React.useState<
+    string | undefined
+  >(undefined);
+  const [modalEmphasizePrimary, setModalEmphasizePrimary] =
+    React.useState<boolean>(false);
+  const [modalDismissOnOverlayPress, setModalDismissOnOverlayPress] =
+    React.useState<boolean>(true);
+  const modalOnPrimaryRef = React.useRef<(() => void) | undefined>(undefined);
+  const modalOnSecondaryRef = React.useRef<(() => void) | undefined>(undefined);
   const completedRef = React.useRef<boolean>(false);
   const usedPieceIdsRef = React.useRef<Set<string>>(new Set());
   const step4PostActionRanRef = React.useRef<boolean>(false);
@@ -192,13 +206,12 @@ function useTutorial(): TutorialAPI {
     ]
   );
 
-  // boot
+  // boot - wait at step 0 for consent
   React.useEffect(() => {
     if (!settings.tutorialEnabled) return;
     if (!layout.layoutReady) return;
     if (step !== 0) return;
-    // Start tutorial
-    setStep(1);
+    // Stay on step 0; consent modal is configured in step machine
   }, [settings.tutorialEnabled, layout.layoutReady, step]);
 
   // compute helper
@@ -223,15 +236,54 @@ function useTutorial(): TutorialAPI {
 
     const run = async () => {
       switch (step) {
+        case 0: {
+          // Configure welcome + consent with delayed appearance
+          setShowOverlay(false);
+          const t = setTimeout(() => {
+            setModalText(
+              "Welcome to 4Sight!\nWould you like to play the tutorial?"
+            );
+            setModalPrimaryLabel("Yes");
+            setModalSecondaryLabel("No");
+            setModalEmphasizePrimary(true);
+            setModalDismissOnOverlayPress(false);
+            modalOnPrimaryRef.current = () => {
+              setShowModal(false);
+              // Proceed to tutorial
+              setStep(1);
+            };
+            modalOnSecondaryRef.current = () => {
+              setShowModal(false);
+              // Opt-out: disable tutorial entirely
+              settings.setTutorialEnabled(false);
+            };
+            setShowModal(true);
+          }, 1500);
+          return () => clearTimeout(t);
+        }
         case 1: {
+          // Clear any consent buttons
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          // Do not dismiss modal on overlay press in step 1
+          setModalDismissOnOverlayPress(false);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           setModalText(
-            "Drag a piece and release over a slot to drop the piece into the board."
+            "Pick up a white piece and place it in a slot to drop it into the board."
           );
           setShowModal(true);
           // focus highlights after modal tap
           break;
         }
         case 2: {
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          setModalDismissOnOverlayPress(true);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           // After user places a white piece, script a black piece drop
           setShowModal(true);
           setModalText("Players take turns dropping a piece.");
@@ -240,12 +292,24 @@ function useTutorial(): TutorialAPI {
           break;
         }
         case 3: {
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          setModalDismissOnOverlayPress(true);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           setShowModal(true);
           setModalText("A piece can be dropped from any side of the board.");
           setShowOverlay(false);
           break;
         }
         case 4: {
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          setModalDismissOnOverlayPress(true);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           setShowModal(true);
           setModalText(
             "You can also drop by placing a piece directly on a reachable space."
@@ -268,6 +332,12 @@ function useTutorial(): TutorialAPI {
           break;
         }
         case 5: {
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          setModalDismissOnOverlayPress(true);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           setShowModal(true);
           setModalText(
             "Swipe a direction to shift gravity and make the pieces fall that way."
@@ -280,6 +350,12 @@ function useTutorial(): TutorialAPI {
           break;
         }
         case 6: {
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          setModalDismissOnOverlayPress(true);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           setShowModal(true);
           setModalText(
             "The first player to get four in a row horizontally, vertically or diagonally wins the game!"
@@ -288,12 +364,24 @@ function useTutorial(): TutorialAPI {
           break;
         }
         case 7: {
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          setModalDismissOnOverlayPress(true);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           setShowModal(true);
           setModalText("Shake your device at any time to restart the game.");
           setShowOverlay(false);
           break;
         }
         case 8: {
+          setModalPrimaryLabel(undefined);
+          setModalSecondaryLabel(undefined);
+          setModalEmphasizePrimary(false);
+          setModalDismissOnOverlayPress(true);
+          modalOnPrimaryRef.current = undefined;
+          modalOnSecondaryRef.current = undefined;
           setShowModal(true);
           setModalText(
             "Winner goes first. Go to Settings to replay the tutorial. Have fun!"
@@ -341,24 +429,9 @@ function useTutorial(): TutorialAPI {
   // advance handlers (simplified)
   const handleModalPress = React.useCallback(() => {
     if (!settings.tutorialEnabled) return;
+    if (step === 0) return; // overlay press disabled; use explicit buttons
     if (step === 1) {
-      // After reading, allow interaction: dim all except column 4 and white well
-      const rects: HighlightRect[] = [];
-      // Include visible white team wells
-      Object.keys(layout.wells[Team.TeamOne] || {}).forEach((wid) => {
-        const wellLayout = layout.wells[Team.TeamOne][wid];
-        rects.push({
-          x: wellLayout.pageX,
-          y: wellLayout.pageY,
-          width: wellLayout.width,
-          height: wellLayout.height,
-        });
-      });
-      const r = rectFromCell("0-4");
-      if (r) rects.push(r);
-      setHighlights(rects);
-      setShowOverlay(true);
-      setShowModal(false);
+      // Do nothing on overlay press for step 1 (do not dismiss)
       return;
     }
     if (step === 2 || step === 3) {
@@ -503,7 +576,23 @@ function useTutorial(): TutorialAPI {
       <TutorialModal
         visible={showModal && settings.tutorialEnabled}
         text={modalText}
+        timeoutMS={modalTimeoutMS}
         onPress={handleModalPress}
+        primaryLabel={modalPrimaryLabel}
+        secondaryLabel={modalSecondaryLabel}
+        onPrimary={() =>
+          modalOnPrimaryRef.current && modalOnPrimaryRef.current()
+        }
+        onSecondary={() =>
+          modalOnSecondaryRef.current && modalOnSecondaryRef.current()
+        }
+        emphasizePrimary={modalEmphasizePrimary}
+        dismissOnOverlayPress={modalDismissOnOverlayPress}
+        allowThrough={step === 1}
+        fadeOnHolding={step === 1}
+        transparentOpacity={0.06}
+        transparentFadeMs={120}
+        restoreFadeMs={180}
       />
     ),
   };
