@@ -429,10 +429,17 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       // Ensure a fresh start (not treated as rehydration)
       rehydratedRef.current = false;
       rehydrationPositionsAppliedRef.current = false;
-      // Determine base starting turn: if ending a game, use current turn holder
+      // Determine base starting turn
+      // - If resetting after a finished game, the winner starts next
+      // - If resetting mid-game (Playing), alternate from current
+      // - Otherwise use provided startingPlayersTurn
       const baseStartingTurn =
         gameState === GameState.PostGame || gameState === GameState.Finished
-          ? playersTurn
+          ? winner === Team.TeamOne
+            ? 1
+            : winner === Team.TeamTwo
+            ? 2
+            : startingPlayersTurn
           : gameState === GameState.Playing
           ? getNextPlayersTurn(playersTurn)
           : startingPlayersTurn;
@@ -517,6 +524,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       pieceAnimations,
       gameState,
       playersTurn,
+      winner,
     ]
   );
 

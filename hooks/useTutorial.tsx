@@ -26,6 +26,7 @@ function useTutorial(): TutorialAPI {
   const [showModal, setShowModal] = React.useState<boolean>(false);
   const completedRef = React.useRef<boolean>(false);
   const usedPieceIdsRef = React.useRef<Set<string>>(new Set());
+  const step4PostActionRanRef = React.useRef<boolean>(false);
 
   // Helpers
   const getFinalSpaceForSlot = React.useCallback(
@@ -478,7 +479,15 @@ function useTutorial(): TutorialAPI {
     const placedAtOneTwo = pid ? whiteIds.includes(pid) : false;
     if (placedAtOneTwo) {
       setShowOverlay(false);
-      const t = setTimeout(() => setStep(5), SLOT_INSERT + SLOT_TO_SPACE + 10);
+      if (step4PostActionRanRef.current) return;
+      step4PostActionRanRef.current = true;
+      const delayMs = SLOT_INSERT + SLOT_TO_SPACE + 10;
+      const t = setTimeout(() => {
+        // After white placement animation finishes, drop a black piece from 0-4
+        scriptDropFromSlot(Team.TeamTwo, "0-4").then(() => {
+          setStep(5);
+        });
+      }, delayMs);
       return () => clearTimeout(t);
     }
   }, [step, logic.boardPieceLocations, logic.pieces]);

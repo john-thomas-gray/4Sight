@@ -9,23 +9,6 @@
 - Board lifts up when you hold down on a corner
 - Split wells so each player is near one
 
-Tutorial:
-
-- Interactive introduction that runs the first time you play
-- Animations of transparent hands demonstrate gestures
-
-1. Drage a piece to a slot to drop it into the board.
-2. Pieces can be dropped from any side of the board
-
-- Demonstrate 2 by automatically dropping pieces to
-  advance the position \*
-
-3. If a space is available, you may place a piece on it directly.
-4. Swipe to shift gravity in that direction.
-5. The first player to get four in a row horizontally, vertically or
-   diagonally wins the game!.
-6. Shake your device at any time to restart the game.
-
 Win State:
 
 - Pieces jiggle
@@ -38,19 +21,21 @@ Theme:
 
 Polish:
 
+- Turn change delay builds up each time you start a new game from the menu\*
+- loading screen glitch\*
+- Make isAnimating state for pieces so they can't be grabbed during animation\*
+- onePiecePlaced prevents you from placing two pieces in one turn in case timer fails\*
+- Only allow one move per turn\*
+
 - When you drop a piece on a square, its animation doesn't work with the slot rim.
 
-- Turn change delay builds up each time you start a new game from the menu
-
-- Only allow one move per turn
-
 - Animate tutorial messages
+
+- Reorder tutorial more elegantly
 
 - Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
 
 - Winner aura and color fades immediately when reset is called, not once the pieces reach the well
-
-- Continue glitch
 
 - Animated screen transitions
 
@@ -63,11 +48,6 @@ Polish:
 
 - Piece dropped on inaccessible space bounces off glass.
 
-- Make isAnimating state for pieces so they can't be grabbed during animation
-- onePiecePlaced prevents you from placing two pieces in one turn in case timer fails
-
-- Debounces
-
 - Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
   slight pulsing. Highlight undulates and shimmers.
 - prevent winner intro animation from playing again, unless a new piece is added to the row
@@ -76,5 +56,7 @@ Polish:
 - Loading screen lags
 
 - Send game to a friend / review game (continue changes to 'review' when the game is over and you hit menu)
+
+- Restart well glitch\*
 
 Tests
