@@ -1,9 +1,19 @@
 import { Animations, GameElements } from "@/constants";
 import { SLOT_INSERT, WINNER_V0, WINNER_V1 } from "@/constants/animations";
-import { PIECE_WELL_SCALE } from "@/constants/gameElements";
+import {
+  PIECE_HELD_ZINDEX,
+  PIECE_PLACED_ZINDEX,
+  PIECE_WELL_ZINDEX,
+} from "@/constants/gameElements";
 import type { PieceAnimation } from "@/hooks/usePieceAnimations";
 import { Board } from "@/types";
-import { CellLayout, Direction, EachCellType, Team } from "@/types/board";
+import {
+  CellLayout,
+  CellType,
+  Direction,
+  EachCellType,
+  Team,
+} from "@/types/board";
 import type { PieceProps } from "@/types/logic";
 import {
   cancelAnimation,
@@ -15,19 +25,44 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-type AnimateWinner = {
-  translateX: SharedValue<number>;
-  translateY: SharedValue<number>;
+export const setPieceScale = ({
+  scaleX,
+  scaleY,
+  zIndex,
+  location,
+}: {
   scaleX: SharedValue<number>;
   scaleY: SharedValue<number>;
-  skewX: SharedValue<number>;
-  skewY: SharedValue<number>;
-  rotation: SharedValue<number>;
-  shadowOpacity?: SharedValue<number>;
-  shadowRadius?: SharedValue<number>;
-  shadowOffset?: SharedValue<number>;
-  color: SharedValue<string>;
-  winnerColor: SharedValue<string>;
+  zIndex: SharedValue<number>;
+  location: "well" | "placed" | "held";
+}) => {
+  "worklet";
+
+  const scaleMap = {
+    well: GameElements.PIECE_WELL_SCALE,
+    placed: GameElements.PIECE_PLACED_SCALE,
+    held: GameElements.PIECE_HELD_SCALE,
+  };
+
+  const zIndexMap = {
+    well: PIECE_WELL_ZINDEX,
+    placed: PIECE_PLACED_ZINDEX,
+    held: PIECE_HELD_ZINDEX,
+  };
+
+  const scaleDurationMap = {
+    well: 500,
+    placed: 200,
+    held: 100,
+  };
+
+  scaleX.value = withTiming(scaleMap[location as keyof typeof scaleMap], {
+    duration: scaleDurationMap[location as keyof typeof scaleDurationMap],
+  });
+  scaleY.value = withTiming(scaleMap[location as keyof typeof scaleMap], {
+    duration: scaleDurationMap[location as keyof typeof scaleDurationMap],
+  });
+  zIndex.value = zIndexMap[location as keyof typeof zIndexMap];
 };
 
 export function animateWinner({
@@ -42,18 +77,22 @@ export function animateWinner({
   winnerColor,
 }: // shadowOpacity,
 // shadowRadius,
-// shadowOffset,
-AnimateWinner) {
+// shadowOffset
+{
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  skewX: SharedValue<number>;
+  skewY: SharedValue<number>;
+  rotation: SharedValue<number>;
+  shadowOpacity?: SharedValue<number>;
+  shadowRadius?: SharedValue<number>;
+  shadowOffset?: SharedValue<number>;
+  color: SharedValue<string>;
+  winnerColor: SharedValue<string>;
+}) {
   "worklet";
-  const trans = {
-    0: { x: translateX.value, y: translateY.value },
-    1: { x: translateX.value - 5, y: translateY.value - 15 },
-  };
-
-  const scale = {
-    0: { x: scaleX.value, y: scaleY.value },
-    1: { x: scaleX.value * 1.3, y: scaleY.value * 1.3 },
-  };
 
   // reserved for future skew/rotation winner effects if desired
   type Point = { x: number; y: number };
@@ -64,13 +103,22 @@ AnimateWinner) {
     v1: Point;
   };
 
+  const trans = {
+    0: { x: translateX.value, y: translateY.value },
+    1: { x: translateX.value - 5, y: translateY.value - 15 },
+  };
+
+  const scale = {
+    0: { x: scaleX.value, y: scaleY.value },
+    1: { x: scaleX.value * 1.3, y: scaleY.value * 1.3 },
+  };
+
   const animation = ({ svx, svy, v0, v1 }: Animation) => {
     svx.value = withSequence(
       withTiming(v1.x, {
         duration: WINNER_V1,
         easing: Easing.inOut(Easing.exp),
       }),
-
       withTiming(v0.x, {
         duration: WINNER_V0,
         easing: Easing.bounce,
@@ -81,7 +129,6 @@ AnimateWinner) {
         duration: WINNER_V1,
         easing: Easing.inOut(Easing.exp),
       }),
-
       withTiming(v0.y, {
         duration: WINNER_V0,
         easing: Easing.bounce,
@@ -127,25 +174,34 @@ AnimateWinner) {
   );
 }
 
-type AnimateMisplacedPieceProps = {
-  translateX: SharedValue<number>;
-  translateY: SharedValue<number>;
-  currentWellLayout: Board.CellLayout;
-};
-
 export const animateMisplacedPiece = ({
   translateY,
   translateX,
   currentWellLayout,
-}: AnimateMisplacedPieceProps) => {
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  currentWellLayout: Board.CellLayout;
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+}) => {
   "worklet";
   const well = currentWellLayout;
   if (!well) return;
+
+  setPieceScale({ scaleX, scaleY, zIndex, location: "held" });
   translateX.value = withTiming(
     well.pageX + well.width / 2 - GameElements.PIECE_RADIUS,
     {
       duration: Animations.WELL_RETURN,
       easing: Easing.inOut(Easing.quad),
+    },
+    () => {
+      setPieceScale({ scaleX, scaleY, zIndex, location: "well" });
     }
   );
   translateY.value = withTiming(
@@ -157,17 +213,21 @@ export const animateMisplacedPiece = ({
   );
 };
 
-type AnimateToSelectedCellProps = {
-  translateX: SharedValue<number>;
-  translateY: SharedValue<number>;
-  selectedCell: EachCellType;
-};
-
 export const animateToSelectedCell = ({
   translateX,
   translateY,
   selectedCell,
-}: AnimateToSelectedCellProps) => {
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  selectedCell: EachCellType;
+  scaleX?: SharedValue<number>;
+  scaleY?: SharedValue<number>;
+  zIndex?: SharedValue<number>;
+}) => {
   "worklet";
   translateX.value = withTiming(
     selectedCell.layout!.pageX +
@@ -185,6 +245,16 @@ export const animateToSelectedCell = ({
     {
       duration: Animations.WELL_RETURN,
       easing: Easing.inOut(Easing.quad),
+    },
+    () => {
+      if (
+        selectedCell.type === (CellType.Well as CellType) &&
+        scaleX &&
+        scaleY &&
+        zIndex
+      ) {
+        setPieceScale({ scaleX, scaleY, zIndex, location: "well" });
+      }
     }
   );
 };
@@ -270,20 +340,30 @@ export const animatePieceReset = ({
     const anim = pieceAnimations[pieceId];
     if (!anim || !targetLayout) return;
 
-    // stop any repeating animations (e.g., winner pulse) before resetting to well
     cancelAnimation(anim.scaleX);
     cancelAnimation(anim.scaleY);
-    anim.scaleX.value = withTiming(PIECE_WELL_SCALE, { duration });
-    anim.scaleY.value = withTiming(PIECE_WELL_SCALE, { duration });
 
-    anim.translateX.value = withTiming(
-      targetLayout.pageX + targetLayout.width / 2 - GameElements.PIECE_RADIUS,
-      { duration }
-    );
-    anim.translateY.value = withTiming(
-      targetLayout.pageY + targetLayout.height / 2 - GameElements.PIECE_RADIUS,
-      { duration }
-    );
+    setPieceScale({
+      scaleX: anim.scaleX,
+      scaleY: anim.scaleY,
+      zIndex: anim.zIndex,
+      location: "held",
+    });
+
+    anim.zIndex.value = PIECE_HELD_ZINDEX;
+
+    animateToSelectedCell({
+      translateX: anim.translateX,
+      translateY: anim.translateY,
+      selectedCell: {
+        layout: targetLayout,
+        id: pieceId,
+        type: CellType.Well as CellType,
+      },
+      scaleX: anim.scaleX,
+      scaleY: anim.scaleY,
+      zIndex: anim.zIndex,
+    });
     assignedThisReset.add(targetWellId);
   });
 };
@@ -317,22 +397,6 @@ export const animatePieceRelease = ({
   scaleX.value = withTiming(GameElements.PIECE_PLACED_SCALE, { duration: 120 });
   scaleY.value = withTiming(GameElements.PIECE_PLACED_SCALE, { duration: 120 });
   zIndex.value = withDelay(100, withTiming(500, { duration: 0 }));
-};
-
-export const resetBlockedPieceScale = ({
-  scaleX,
-  scaleY,
-  zIndex,
-}: {
-  scaleX: SharedValue<number>;
-  scaleY: SharedValue<number>;
-  zIndex: SharedValue<number>;
-}) => {
-  "worklet";
-
-  scaleX.value = withTiming(GameElements.PIECE_WELL_SCALE, { duration: 120 });
-  scaleY.value = withTiming(GameElements.PIECE_WELL_SCALE, { duration: 120 });
-  zIndex.value = withDelay(100, withTiming(5000, { duration: 0 }));
 };
 
 export const animateBlockedPiece = ({
@@ -383,10 +447,16 @@ export const animateBlockedPiece = ({
   }
 
   translateX.value = withSequence(
-    withTiming(slotCenterX, {
-      duration: totalTime * 0.23,
-      easing: Easing.inOut(Easing.quad),
-    }),
+    withTiming(
+      slotCenterX,
+      {
+        duration: totalTime * 0.23,
+        easing: Easing.inOut(Easing.quad),
+      },
+      () => {
+        setPieceScale({ scaleX, scaleY, zIndex, location: "placed" });
+      }
+    ),
     withTiming(slotCenterX + bounceOffsetX, {
       duration: totalTime * 0.15,
     }),
@@ -396,16 +466,21 @@ export const animateBlockedPiece = ({
         duration: totalTime * 0.15,
       },
       () => {
-        // When we arrive back at the slot center, reset size/zIndex to well state
-        resetBlockedPieceScale({ scaleX, scaleY, zIndex });
+        setPieceScale({ scaleX, scaleY, zIndex, location: "held" });
       }
     ),
     withDelay(
       totalTime * 0.23,
-      withTiming(wellCenterX, {
-        duration: totalTime * 0.23,
-        easing: Easing.inOut(Easing.quad),
-      })
+      withTiming(
+        wellCenterX,
+        {
+          duration: totalTime * 0.23,
+          easing: Easing.inOut(Easing.quad),
+        },
+        () => {
+          setPieceScale({ scaleX, scaleY, zIndex, location: "well" });
+        }
+      )
     )
   );
   translateY.value = withSequence(

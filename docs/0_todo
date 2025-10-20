@@ -21,12 +21,12 @@ Theme:
 
 Polish:
 
+- Pieces aren't returned to wells properly
 - Turn change delay builds up each time a game is won\*
 - loading screen glitch\*
-
-- Make isAnimating state for pieces so they can't be grabbed during animation\*
-- onePiecePlaced prevents you from placing two pieces in one turn in case timer fails\*
-- Only allow one move per turn\*
+- set winner z index to 5000 so they don't go under slots
+- Can't grab piece directly after moving another.
+- Can't grab piece directly after turn changes
 
 - When you drop a piece on a square, its animation doesn't work with the slot rim.
 
@@ -35,8 +35,6 @@ Polish:
 - Animate tutorial messages
 
 - Reorder tutorial more elegantly
-
-= Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
 
 - Winner aura and color fades immediately when reset is called, not once the pieces reach the well
 
@@ -63,3 +61,6 @@ Polish:
 - Restart well glitch\*
 
 Tests
+
+= Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
+= moveInProgress restricts the number of moves you can make and prevents interfering wiht pieces in motion

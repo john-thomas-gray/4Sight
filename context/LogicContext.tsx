@@ -426,13 +426,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const resetGame = useCallback(
     (startingPlayersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => {
-      // Ensure a fresh start (not treated as rehydration)
       rehydratedRef.current = false;
       rehydrationPositionsAppliedRef.current = false;
-      // Determine base starting turn
-      // - If resetting after a finished game, the winner starts next
-      // - If resetting mid-game (Playing), alternate from current
-      // - Otherwise use provided startingPlayersTurn
       const baseStartingTurn =
         gameState === GameState.PostGame || gameState === GameState.Finished
           ? winner === Team.TeamOne
@@ -443,61 +438,48 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
           : gameState === GameState.Playing
           ? getNextPlayersTurn(playersTurn)
           : startingPlayersTurn;
-      // Apply forfeit rule if applicable
       const nextPlayersTurn = forfeit
         ? getNextPlayersTurn(baseStartingTurn)
         : baseStartingTurn;
 
-      // Reset core gameplay state
       setWinner(Team.Unassigned);
       setGameState(GameState.Ready);
       setMoveInProgress(false);
       setTurnCount(0);
 
-      // Animate on-board pieces back to an empty team well before resetting maps
-      try {
-        animatePieceReset({
-          boardPieceLocations,
-          wellPieceLocations,
-          wells,
-          pieces,
-          pieceAnimations,
-          duration: 500,
-        });
-      } catch {
-        // no-op: animation is best-effort during reset
-      }
+      animatePieceReset({
+        boardPieceLocations,
+        wellPieceLocations,
+        wells,
+        pieces,
+        pieceAnimations,
+        duration: 500,
+      });
 
-      // Reset board relationships
       setBoardPieceLocations({});
       setWellPieceLocations({});
 
-      // Reset piece status map
       const freshPieceStatusMap: PieceStatusMap = {};
       for (let i = 0; i < 48; i++) {
         freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
       }
       setPieceStatusMap(freshPieceStatusMap);
 
-      // Rebuild pieces and well mappings to Ready state if layout is available
       if (layoutReady) {
         const rebuiltPieces: Record<string, PieceProps> = {};
 
-        // Build Team One
         const teamOneWells = Object.keys(wells[Team.TeamOne] || {});
         teamOneWells.forEach((wellId, idx) => {
           const id = `${0 + idx}`;
           rebuiltPieces[id] = { id, team: Team.TeamOne };
         });
 
-        // Build Team Two
         const teamTwoWells = Object.keys(wells[Team.TeamTwo] || {});
         teamTwoWells.forEach((wellId, idx) => {
           const id = `${24 + idx}`;
           rebuiltPieces[id] = { id, team: Team.TeamTwo };
         });
 
-        // Compute well piece mapping in one pass
         const newWellPieceLocations: Record<string, string> = {};
         teamOneWells.forEach((wellId, idx) => {
           newWellPieceLocations[wellId] = `${0 + idx}`;

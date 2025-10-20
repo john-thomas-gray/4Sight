@@ -15,7 +15,7 @@ import {
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction, Team } from "@/types/board";
-import { GameState, PieceProps, PieceStatus } from "@/types/logic";
+import { PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
@@ -130,13 +130,15 @@ const Piece = ({ team, id }: PieceProps) => {
     }
   };
 
-  const restoreWPLUI = () => {
-    if (currentWellId) {
-      logic.setWellPieceLocations((prev) => ({
-        ...prev,
-        [currentWellId as string]: id,
-      }));
-    }
+  const setWPLUI = (targetWellId: string) => {
+    const wellIdToSet = targetWellId;
+
+    logic.setWellPieceLocations((prev) => ({
+      ...prev,
+      [wellIdToSet]: id,
+    }));
+
+    console.log(logic.wellPieceLocations);
   };
 
   useEffect(() => {
@@ -153,6 +155,8 @@ const Piece = ({ team, id }: PieceProps) => {
     }
   }, [status]);
 
+  //#region PIECE MOVEMENT LOGIC
+
   const [hoverSpaceId, setHoverSpaceId] = React.useState<string | null>(null);
   const setHover = (spaceId: string | null) => {
     setHoverSpaceId(spaceId);
@@ -161,13 +165,13 @@ const Piece = ({ team, id }: PieceProps) => {
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(
-          logic.gameState !== GameState.Finished &&
-            logic.gameState !== GameState.PostGame &&
-            logic.currentTeam === team &&
-            (status === PieceStatus.isHeld ||
-              (status === PieceStatus.inWell && logic.moveInProgress === false))
-        )
+        // .enabled(
+        //   logic.gameState !== GameState.Finished &&
+        //     logic.gameState !== GameState.PostGame &&
+        //     logic.currentTeam === team &&
+        //     (status === PieceStatus.isHeld ||
+        //       (status === PieceStatus.inWell && logic.moveInProgress === false))
+        // )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           animatePiecePickup({
@@ -283,7 +287,7 @@ const Piece = ({ team, id }: PieceProps) => {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,
           };
-
+          /* DETECT WHICH CELL THE PIECE WAS DROPPED ON */
           for (const selectedCell of allCells) {
             if (!selectedCell.layout) continue;
 
@@ -315,7 +319,6 @@ const Piece = ({ team, id }: PieceProps) => {
             let prevCol: number | null = null;
 
             if (isSlot) {
-              console.log("isSlot");
               const slotDirection =
                 nextRow === 8
                   ? Direction.Up
@@ -360,12 +363,8 @@ const Piece = ({ team, id }: PieceProps) => {
                 nextRow += deltas[slotDirection].dr;
                 nextCol += deltas[slotDirection].dc;
               }
-
+              /* AN ADJACENT PIECE BLOCKS THE SLOT */
               if (prevRow === null || prevCol === null) {
-                console.warn(
-                  "No free board space near slot. Slot blocked!:",
-                  selectedCell.id
-                );
                 if (
                   currentWellDataSV.value &&
                   typeof currentWellDataSV.value === "object" &&
@@ -401,7 +400,13 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
                 // Return status to inWell since placement didn't occur
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
-                scheduleOnRN(restoreWPLUI);
+                if (
+                  currentWellDataSV.value &&
+                  typeof currentWellDataSV.value === "object" &&
+                  "id" in currentWellDataSV.value
+                ) {
+                  scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
+                }
                 scheduleOnRN(unset);
                 return;
               }
@@ -431,13 +436,15 @@ const Piece = ({ team, id }: PieceProps) => {
                   currentWellDataSV.value.layout
                 ) {
                   animateMisplacedPiece({
+                    scaleX: animate.scaleX,
+                    scaleY: animate.scaleY,
+                    zIndex: animate.zIndex,
                     translateX: animate.translateX,
                     translateY: animate.translateY,
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
 
-                // Return status to inWell since placement didn't occur
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
                 return;
@@ -457,6 +464,10 @@ const Piece = ({ team, id }: PieceProps) => {
                   currentWellDataSV.value.layout
                 ) {
                   animateMisplacedPiece({
+                    scaleX: animate.scaleX,
+                    scaleY: animate.scaleY,
+                    zIndex: animate.zIndex,
+
                     translateX: animate.translateX,
                     translateY: animate.translateY,
                     currentWellLayout: currentWellDataSV.value.layout,
@@ -464,6 +475,13 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
 
                 // Return status to inWell since placement didn't occur
+                if (
+                  currentWellDataSV.value &&
+                  typeof currentWellDataSV.value === "object" &&
+                  "id" in currentWellDataSV.value
+                ) {
+                  scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
+                }
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
                 return;
@@ -492,13 +510,22 @@ const Piece = ({ team, id }: PieceProps) => {
                   currentWellDataSV.value.layout
                 ) {
                   animateMisplacedPiece({
+                    scaleX: animate.scaleX,
+                    scaleY: animate.scaleY,
+                    zIndex: animate.zIndex,
                     translateX: animate.translateX,
                     translateY: animate.translateY,
                     currentWellLayout: currentWellDataSV.value.layout,
                   });
                 }
 
-                // Return status to inWell since placement didn't occur
+                if (
+                  currentWellDataSV.value &&
+                  typeof currentWellDataSV.value === "object" &&
+                  "id" in currentWellDataSV.value
+                ) {
+                  scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
+                }
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
                 scheduleOnRN(unset, ANIMATE_MISPLACED_PIECE);
                 return;
@@ -508,8 +535,12 @@ const Piece = ({ team, id }: PieceProps) => {
                 translateX: animate.translateX,
                 translateY: animate.translateY,
                 selectedCell,
+                scaleX: animate.scaleX,
+                scaleY: animate.scaleY,
+                zIndex: animate.zIndex,
               });
 
+              scheduleOnRN(setWPLUI, selectedCell.id);
               scheduleOnRN(unset, WELL_RETURN);
               return;
             }
@@ -521,6 +552,9 @@ const Piece = ({ team, id }: PieceProps) => {
             currentWellDataSV.value.layout
           ) {
             animateMisplacedPiece({
+              scaleX: animate.scaleX,
+              scaleY: animate.scaleY,
+              zIndex: animate.zIndex,
               translateX: animate.translateX,
               translateY: animate.translateY,
               currentWellLayout: currentWellDataSV.value.layout,
@@ -529,11 +563,18 @@ const Piece = ({ team, id }: PieceProps) => {
           // Return status to inWell since placement didn't occur
           scheduleOnRN(updateStatus, PieceStatus.inWell);
           scheduleOnRN(unset);
+          if (
+            currentWellDataSV.value &&
+            typeof currentWellDataSV.value === "object" &&
+            "id" in currentWellDataSV.value
+          ) {
+            scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
+          }
           return;
         }),
     [logic.gameState, logic.currentTeam, status, logic.moveInProgress]
   );
-
+  //#endregion
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
       { translateX: animate.translateX.value },
