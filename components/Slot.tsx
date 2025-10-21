@@ -78,7 +78,7 @@ const Slot = ({ id, team }: CellProps) => {
           height: 36,
           borderRadius: 14,
           backgroundColor:
-            settings.theme?.colorTheme?.SLOT_INSERT_COLOR || "#C0C0C0",
+            settings.theme?.colorTheme?.PIECE_TO_SLOT_COLOR || "#C0C0C0",
           zIndex: 0,
         }}
       />

@@ -2,9 +2,9 @@ import {
   animateBlockedPiece,
   animateBlockingPiece,
   animateMisplacedPiece,
-  animatePieceDrop,
-  animatePiecePickup,
   animateToSelectedCell,
+  elevationPieceToHeld,
+  successfulPieceDrop,
 } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
 import {
@@ -173,7 +173,7 @@ const Piece = ({ team, id }: PieceProps) => {
         // )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
-          animatePiecePickup({
+          elevationPieceToHeld({
             scaleX: animate.scaleX,
             scaleY: animate.scaleY,
             zIndex: animate.zIndex,
@@ -277,11 +277,6 @@ const Piece = ({ team, id }: PieceProps) => {
         })
         .onEnd(() => {
           scheduleOnRN(setHover, null);
-          // animatePieceRelease({
-          //   scaleX: animate.scaleX,
-          //   scaleY: animate.scaleY,
-          //   zIndex: animate.zIndex,
-          // });
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,
@@ -415,11 +410,14 @@ const Piece = ({ team, id }: PieceProps) => {
 
               if (!finalSpaceLayout) return;
 
-              animatePieceDrop({
+              successfulPieceDrop({
                 translateX: animate.translateX,
                 translateY: animate.translateY,
                 slotLayout: selectedCell.layout,
                 spaceLayout: finalSpaceLayout,
+                scaleX: animate.scaleX,
+                scaleY: animate.scaleY,
+                zIndex: animate.zIndex,
               });
 
               scheduleOnRN(setBPLUI, finalSpaceId);
@@ -488,7 +486,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
               if (!slotData.layout) return;
 
-              animatePieceDrop({
+              successfulPieceDrop({
                 translateX: animate.translateX,
                 translateY: animate.translateY,
                 slotLayout: slotData.layout,

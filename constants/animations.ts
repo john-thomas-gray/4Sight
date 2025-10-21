@@ -1,5 +1,5 @@
-export const SLOT_INSERT = 150;
-export const SLOT_INSERT_ALT = 200;
+export const PIECE_TO_SLOT = 150;
+export const PIECE_TO_SLOT_ALT = 200;
 export const SLOT_TO_SPACE = 700;
 export const WELL_RETURN = 300;
 export const BOARD_COLOR_CHANGE = 300;
@@ -18,4 +18,11 @@ export const GRAVITY_IN_PROGRESS = 1000;
 export const ANIMATE_MISPLACED_PIECE = WELL_RETURN;
 export const ANIMATE_TO_SELECTED_CELL = 200;
 export const ANIMATE_PIECE_DROP =
-  SLOT_INSERT + SLOT_TO_SPACE + BOARD_COLOR_CHANGE;
+  PIECE_TO_SLOT + SLOT_TO_SPACE + BOARD_COLOR_CHANGE;
+
+export const WELL_SCALE_DURATION = 500;
+export const BOARD_SCALE_DURATION = 200;
+export const HELD_SCALE_DURATION = 100;
+export const WELL_ZINDEX_DELAY = 500;
+export const BOARD_ZINDEX_DELAY = 200;
+export const HELD_ZINDEX_DELAY = 0;

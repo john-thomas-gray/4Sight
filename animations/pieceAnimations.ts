@@ -2,8 +2,10 @@ import { Animations, GameElements } from "@/constants";
 import {
   BOARD_SCALE_DURATION,
   HELD_SCALE_DURATION,
-  SLOT_INSERT,
+  HELD_ZINDEX_DELAY,
+  PIECE_TO_SLOT,
   WELL_SCALE_DURATION,
+  WELL_ZINDEX_DELAY,
   WINNER_V0,
   WINNER_V1,
 } from "@/constants/animations";
@@ -125,6 +127,281 @@ export const animateScalePiece = ({
   });
   scaleY.value = withTiming(scaleMap[location as keyof typeof scaleMap], {
     duration: scaleDurationMap[location as keyof typeof scaleDurationMap],
+  });
+};
+
+export const elevationPieceToSlot = ({
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+}) => {
+  "worklet";
+
+  animateScalePiece({ scaleX, scaleY, location: "board" });
+  animateZIndexPiece({
+    zIndex,
+    location: "board",
+    delay: BOARD_SCALE_DURATION,
+  });
+};
+export const elevationPieceToWell = ({
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+}) => {
+  "worklet";
+
+  animateScalePiece({ scaleX, scaleY, location: "well" });
+  animateZIndexPiece({
+    zIndex,
+    location: "well",
+    delay: WELL_ZINDEX_DELAY,
+  });
+};
+export const elevationPieceToHeld = ({
+  scaleX,
+  scaleY,
+  zIndex,
+}: {
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+}) => {
+  "worklet";
+
+  animateScalePiece({ scaleX, scaleY, location: "held" });
+  animateZIndexPiece({
+    zIndex,
+    location: "held",
+    delay: HELD_ZINDEX_DELAY,
+  });
+};
+
+export const animateBlockedPiece = ({
+  translateX,
+  translateY,
+  slotLayout,
+  scaleX,
+  scaleY,
+  zIndex,
+  currentWellLayout,
+  direction,
+}: {
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  slotLayout: CellLayout;
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
+  currentWellLayout: Board.CellLayout;
+  direction: Direction;
+}) => {
+  "worklet";
+  const totalTime = 1300;
+
+  const slot = slotLayout;
+  const slotCenterX = slot.pageX + slot.width / 2 - GameElements.PIECE_RADIUS;
+  const slotCenterY = slot.pageY + slot.height / 2 - GameElements.PIECE_RADIUS;
+
+  const well = currentWellLayout;
+  const wellCenterX = well.pageX + well.width / 2 - GameElements.PIECE_RADIUS;
+  const wellCenterY = well.pageY + well.height / 2 - GameElements.PIECE_RADIUS;
+
+  let bounceOffsetX = 0;
+  let bounceOffsetY = 0;
+
+  switch (direction) {
+    case Direction.Left:
+      bounceOffsetX = -10;
+      break;
+    case Direction.Right:
+      bounceOffsetX = 10;
+      break;
+    case Direction.Up:
+      bounceOffsetY = -10;
+      break;
+    case Direction.Down:
+      bounceOffsetY = 10;
+      break;
+  }
+  elevationPieceToSlot({ scaleX, scaleY, zIndex });
+  translateX.value = withSequence(
+    withTiming(slotCenterX, {
+      duration: totalTime * 0.23,
+      easing: Easing.inOut(Easing.quad),
+    }),
+    withTiming(slotCenterX + bounceOffsetX, {
+      duration: totalTime * 0.15,
+    }),
+    withTiming(
+      slotCenterX,
+      {
+        duration: totalTime * 0.15,
+      },
+      () => {
+        elevationPieceToHeld({ scaleX, scaleY, zIndex });
+      }
+    ),
+    withDelay(
+      totalTime * 0.23,
+      withTiming(wellCenterX, {
+        duration: totalTime * 0.23,
+        easing: Easing.inOut(Easing.quad),
+      })
+    )
+  );
+  setTimeout(() => {
+    elevationPieceToWell({ scaleX, scaleY, zIndex });
+  }, totalTime * 0.76);
+  translateY.value = withSequence(
+    withTiming(slotCenterY, {
+      duration: totalTime * 0.23,
+      easing: Easing.inOut(Easing.quad),
+    }),
+    withTiming(slotCenterY + bounceOffsetY, {
+      duration: totalTime * 0.15,
+    }),
+    withTiming(slotCenterY, {
+      duration: totalTime * 0.15,
+    }),
+    withDelay(
+      totalTime * 0.23,
+      withTiming(wellCenterY, {
+        duration: totalTime * 0.23,
+        easing: Easing.inOut(Easing.quad),
+      })
+    )
+  );
+};
+
+export const animateBlockingPiece = ({
+  translateX,
+  translateY,
+  blockedSpaceLayout,
+  direction,
+}: {
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  blockedSpaceLayout: CellLayout;
+  direction: Direction;
+}) => {
+  "worklet";
+  const totalTime = 1300;
+  const spaceCenterX =
+    blockedSpaceLayout.pageX +
+    blockedSpaceLayout.width / 2 -
+    GameElements.PIECE_RADIUS;
+  const spaceCenterY =
+    blockedSpaceLayout.pageY +
+    blockedSpaceLayout.height / 2 -
+    GameElements.PIECE_RADIUS;
+
+  let bounceOffsetX = 0;
+  let bounceOffsetY = 0;
+
+  switch (direction) {
+    case Direction.Left:
+      bounceOffsetX = -4;
+      break;
+    case Direction.Right:
+      bounceOffsetX = 4;
+      break;
+    case Direction.Up:
+      bounceOffsetY = -4;
+      break;
+    case Direction.Down:
+      bounceOffsetY = 4;
+      break;
+  }
+
+  translateX.value = withDelay(
+    totalTime * 0.38,
+    withSequence(
+      withTiming(spaceCenterX + bounceOffsetX, {
+        duration: totalTime * 0.15,
+      }),
+      withTiming(spaceCenterX, {
+        duration: totalTime * 0.15,
+      })
+    )
+  );
+  translateY.value = withDelay(
+    totalTime * 0.38,
+    withSequence(
+      withTiming(spaceCenterY + bounceOffsetY, {
+        duration: totalTime * 0.15,
+      }),
+      withTiming(spaceCenterY, {
+        duration: totalTime * 0.15,
+      })
+    )
+  );
+};
+export const animatePieceReset = ({
+  boardPieceLocations,
+  wellPieceLocations,
+  wells,
+  pieces,
+  pieceAnimations,
+  duration = 500,
+}: {
+  boardPieceLocations: Record<string, string>;
+  wellPieceLocations: Record<string, string>;
+  wells: Record<Team, Record<string, CellLayout>>;
+  pieces: Record<string, PieceProps>;
+  pieceAnimations: Record<string, PieceAnimation>;
+  duration?: number;
+}) => {
+  "worklet";
+  const boardSnapshot = { ...boardPieceLocations };
+  const wellSnapshot = { ...wellPieceLocations };
+  const assignedThisReset = new Set<string>();
+
+  Object.values(boardSnapshot).forEach((pieceId) => {
+    const piece = pieces[pieceId];
+    if (!piece) return;
+    const teamWells = wells[piece.team] || {};
+    const targetWellId = Object.keys(teamWells).find(
+      (wid) => !wellSnapshot[wid] && !assignedThisReset.has(wid)
+    );
+    if (!targetWellId) return;
+    const targetLayout = teamWells[targetWellId];
+    const anim = pieceAnimations[pieceId];
+    if (!anim || !targetLayout) return;
+
+    cancelAnimation(anim.scaleX);
+    cancelAnimation(anim.scaleY);
+
+    setPieceScale({
+      scaleX: anim.scaleX,
+      scaleY: anim.scaleY,
+      zIndex: anim.zIndex,
+      location: "held",
+    });
+
+    anim.zIndex.value = PIECE_HELD_ZINDEX;
+
+    animateToSelectedCell({
+      translateX: anim.translateX,
+      translateY: anim.translateY,
+      selectedCell: {
+        layout: targetLayout,
+        id: pieceId,
+        type: CellType.Well as CellType,
+      },
+      scaleX: anim.scaleX,
+      scaleY: anim.scaleY,
+      zIndex: anim.zIndex,
+    });
+    assignedThisReset.add(targetWellId);
   });
 };
 
@@ -256,7 +533,7 @@ export const animateMisplacedPiece = ({
   const well = currentWellLayout;
   if (!well) return;
 
-  setPieceScale({ scaleX, scaleY, zIndex, location: "held" });
+  elevationPieceToHeld({ scaleX, scaleY, zIndex });
   translateX.value = withTiming(
     well.pageX + well.width / 2 - GameElements.PIECE_RADIUS,
     {
@@ -264,7 +541,7 @@ export const animateMisplacedPiece = ({
       easing: Easing.inOut(Easing.quad),
     },
     () => {
-      setPieceScale({ scaleX, scaleY, zIndex, location: "well" });
+      elevationPieceToWell({ scaleX, scaleY, zIndex });
     }
   );
   translateY.value = withTiming(
@@ -322,23 +599,30 @@ export const animateToSelectedCell = ({
   );
 };
 
-export const animatePieceDrop = ({
+export const successfulPieceDrop = ({
   translateX,
   translateY,
   slotLayout,
   spaceLayout,
+  scaleX,
+  scaleY,
+  zIndex,
 }: {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   slotLayout: CellLayout;
   spaceLayout: CellLayout;
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
 }) => {
   "worklet";
+  elevationPieceToSlot({ scaleX, scaleY, zIndex });
   translateX.value = withSequence(
     withTiming(
       slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS,
       {
-        duration: SLOT_INSERT,
+        duration: PIECE_TO_SLOT,
         easing: Easing.inOut(Easing.quad),
       }
     ),
@@ -356,7 +640,7 @@ export const animatePieceDrop = ({
     withTiming(
       slotLayout.pageY + slotLayout.height / 2 - GameElements.PIECE_RADIUS,
       {
-        duration: Animations.SLOT_INSERT,
+        duration: Animations.PIECE_TO_SLOT,
         easing: Easing.inOut(Easing.quad),
       }
     ),
@@ -367,266 +651,6 @@ export const animatePieceDrop = ({
         duration: Animations.SLOT_TO_SPACE,
         easing: Easing.bounce,
       }
-    )
-  );
-};
-
-export const animatePieceReset = ({
-  boardPieceLocations,
-  wellPieceLocations,
-  wells,
-  pieces,
-  pieceAnimations,
-  duration = 500,
-}: {
-  boardPieceLocations: Record<string, string>;
-  wellPieceLocations: Record<string, string>;
-  wells: Record<Team, Record<string, CellLayout>>;
-  pieces: Record<string, PieceProps>;
-  pieceAnimations: Record<string, PieceAnimation>;
-  duration?: number;
-}) => {
-  "worklet";
-  const boardSnapshot = { ...boardPieceLocations };
-  const wellSnapshot = { ...wellPieceLocations };
-  const assignedThisReset = new Set<string>();
-
-  Object.values(boardSnapshot).forEach((pieceId) => {
-    const piece = pieces[pieceId];
-    if (!piece) return;
-    const teamWells = wells[piece.team] || {};
-    const targetWellId = Object.keys(teamWells).find(
-      (wid) => !wellSnapshot[wid] && !assignedThisReset.has(wid)
-    );
-    if (!targetWellId) return;
-    const targetLayout = teamWells[targetWellId];
-    const anim = pieceAnimations[pieceId];
-    if (!anim || !targetLayout) return;
-
-    cancelAnimation(anim.scaleX);
-    cancelAnimation(anim.scaleY);
-
-    setPieceScale({
-      scaleX: anim.scaleX,
-      scaleY: anim.scaleY,
-      zIndex: anim.zIndex,
-      location: "held",
-    });
-
-    anim.zIndex.value = PIECE_HELD_ZINDEX;
-
-    animateToSelectedCell({
-      translateX: anim.translateX,
-      translateY: anim.translateY,
-      selectedCell: {
-        layout: targetLayout,
-        id: pieceId,
-        type: CellType.Well as CellType,
-      },
-      scaleX: anim.scaleX,
-      scaleY: anim.scaleY,
-      zIndex: anim.zIndex,
-    });
-    assignedThisReset.add(targetWellId);
-  });
-};
-
-export const animatePiecePickup = ({
-  scaleX,
-  scaleY,
-  zIndex,
-}: {
-  scaleX: SharedValue<number>;
-  scaleY: SharedValue<number>;
-  zIndex: SharedValue<number>;
-}) => {
-  "worklet";
-  scaleX.value = withTiming(GameElements.PIECE_HELD_SCALE, { duration: 100 });
-  scaleY.value = withTiming(GameElements.PIECE_HELD_SCALE, { duration: 100 });
-  zIndex.value = 5000;
-};
-
-export const animatePieceRelease = ({
-  scaleX,
-  scaleY,
-  zIndex,
-}: {
-  scaleX: SharedValue<number>;
-  scaleY: SharedValue<number>;
-  zIndex: SharedValue<number>;
-}) => {
-  "worklet";
-
-  scaleX.value = withTiming(GameElements.PIECE_BOARD_SCALE, { duration: 120 });
-  scaleY.value = withTiming(GameElements.PIECE_BOARD_SCALE, { duration: 120 });
-  zIndex.value = withDelay(100, withTiming(500, { duration: 0 }));
-};
-
-export const animateBlockedPiece = ({
-  translateX,
-  translateY,
-  slotLayout,
-  currentWellLayout,
-  direction,
-  scaleX,
-  scaleY,
-  zIndex,
-}: {
-  translateX: SharedValue<number>;
-  translateY: SharedValue<number>;
-  slotLayout: CellLayout;
-  currentWellLayout: Board.CellLayout;
-  direction: Direction;
-  scaleX: SharedValue<number>;
-  scaleY: SharedValue<number>;
-  zIndex: SharedValue<number>;
-}) => {
-  "worklet";
-  const totalTime = 1300;
-  const slotCenterX =
-    slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS;
-  const slotCenterY =
-    slotLayout.pageY + slotLayout.height / 2 - GameElements.PIECE_RADIUS;
-  const well = currentWellLayout;
-  const wellCenterX = well.pageX + well.width / 2 - GameElements.PIECE_RADIUS;
-  const wellCenterY = well.pageY + well.height / 2 - GameElements.PIECE_RADIUS;
-
-  let bounceOffsetX = 0;
-  let bounceOffsetY = 0;
-
-  switch (direction) {
-    case Direction.Left:
-      bounceOffsetX = -10;
-      break;
-    case Direction.Right:
-      bounceOffsetX = 10;
-      break;
-    case Direction.Up:
-      bounceOffsetY = -10;
-      break;
-    case Direction.Down:
-      bounceOffsetY = 10;
-      break;
-  }
-
-  translateX.value = withSequence(
-    withTiming(
-      slotCenterX,
-      {
-        duration: totalTime * 0.23,
-        easing: Easing.inOut(Easing.quad),
-      },
-      () => {
-        setPieceScale({ scaleX, scaleY, zIndex, location: "board" });
-      }
-    ),
-    withTiming(slotCenterX + bounceOffsetX, {
-      duration: totalTime * 0.15,
-    }),
-    withTiming(
-      slotCenterX,
-      {
-        duration: totalTime * 0.15,
-      },
-      () => {
-        setPieceScale({ scaleX, scaleY, zIndex, location: "held" });
-      }
-    ),
-    withDelay(
-      totalTime * 0.23,
-      withTiming(
-        wellCenterX,
-        {
-          duration: totalTime * 0.23,
-          easing: Easing.inOut(Easing.quad),
-        },
-        () => {
-          setPieceScale({ scaleX, scaleY, zIndex, location: "well" });
-        }
-      )
-    )
-  );
-  translateY.value = withSequence(
-    withTiming(slotCenterY, {
-      duration: totalTime * 0.23,
-      easing: Easing.inOut(Easing.quad),
-    }),
-    withTiming(slotCenterY + bounceOffsetY, {
-      duration: totalTime * 0.15,
-    }),
-    withTiming(slotCenterY, {
-      duration: totalTime * 0.15,
-    }),
-    withDelay(
-      totalTime * 0.23,
-      withTiming(wellCenterY, {
-        duration: totalTime * 0.23,
-        easing: Easing.inOut(Easing.quad),
-      })
-    )
-  );
-};
-
-export const animateBlockingPiece = ({
-  translateX,
-  translateY,
-  blockedSpaceLayout,
-  direction,
-}: {
-  translateX: SharedValue<number>;
-  translateY: SharedValue<number>;
-  blockedSpaceLayout: CellLayout;
-  direction: Direction;
-}) => {
-  "worklet";
-  const totalTime = 1300;
-  const spaceCenterX =
-    blockedSpaceLayout.pageX +
-    blockedSpaceLayout.width / 2 -
-    GameElements.PIECE_RADIUS;
-  const spaceCenterY =
-    blockedSpaceLayout.pageY +
-    blockedSpaceLayout.height / 2 -
-    GameElements.PIECE_RADIUS;
-
-  let bounceOffsetX = 0;
-  let bounceOffsetY = 0;
-
-  switch (direction) {
-    case Direction.Left:
-      bounceOffsetX = -4;
-      break;
-    case Direction.Right:
-      bounceOffsetX = 4;
-      break;
-    case Direction.Up:
-      bounceOffsetY = -4;
-      break;
-    case Direction.Down:
-      bounceOffsetY = 4;
-      break;
-  }
-
-  translateX.value = withDelay(
-    totalTime * 0.38,
-    withSequence(
-      withTiming(spaceCenterX + bounceOffsetX, {
-        duration: totalTime * 0.15,
-      }),
-      withTiming(spaceCenterX, {
-        duration: totalTime * 0.15,
-      })
-    )
-  );
-  translateY.value = withDelay(
-    totalTime * 0.38,
-    withSequence(
-      withTiming(spaceCenterY + bounceOffsetY, {
-        duration: totalTime * 0.15,
-      }),
-      withTiming(spaceCenterY, {
-        duration: totalTime * 0.15,
-      })
     )
   );
 };

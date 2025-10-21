@@ -11,7 +11,7 @@ export type ColorThemeType = {
   WELL_BG_COLOR_TWO: string;
   SLOT_BORDER_COLOR: string;
   SLOT_FOREGROUND_COLOR: string;
-  SLOT_INSERT_COLOR: string;
+  PIECE_TO_SLOT_COLOR: string;
   ODD_SPACE_COLOR: string;
   EVEN_SPACE_COLOR: string;
   FELT_TOP: string;

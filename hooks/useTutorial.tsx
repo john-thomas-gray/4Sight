@@ -1,12 +1,12 @@
 import {
-  animatePieceDrop,
-  animatePiecePickup,
-  animatePieceRelease,
   animateToSelectedCell,
+  elevationPieceToHeld,
+  elevationPieceToSlot,
+  successfulPieceDrop,
 } from "@/animations/pieceAnimations";
 import TutorialModal from "@/components/TutorialModal";
 import TutorialOverlay, { HighlightRect } from "@/components/TutorialOverlay";
-import { SLOT_INSERT, SLOT_TO_SPACE } from "@/constants/animations";
+import { PIECE_TO_SLOT, SLOT_TO_SPACE } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { CellType, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
@@ -141,7 +141,7 @@ function useTutorial(): TutorialAPI {
 
           // 1) Mark move in progress and pick up
           logic.setMoveInProgress(true);
-          animatePiecePickup({
+          elevationPieceToHeld({
             scaleX: anim.scaleX,
             scaleY: anim.scaleY,
             zIndex: anim.zIndex,
@@ -161,12 +161,12 @@ function useTutorial(): TutorialAPI {
 
             // 3) Wait 500ms, release (sets placed scale), then drop into final space
             setTimeout(() => {
-              animatePieceRelease({
+              elevationPieceToSlot({
                 scaleX: anim.scaleX,
                 scaleY: anim.scaleY,
                 zIndex: anim.zIndex,
               });
-              animatePieceDrop({
+              successfulPieceDrop({
                 translateX: anim.translateX,
                 translateY: anim.translateY,
                 slotLayout,
@@ -174,7 +174,7 @@ function useTutorial(): TutorialAPI {
               });
 
               // 4) After drop animation finishes, update board mapping, trigger finish check, and resolve
-              const totalDropMs = SLOT_INSERT + SLOT_TO_SPACE;
+              const totalDropMs = PIECE_TO_SLOT + SLOT_TO_SPACE;
               setTimeout(() => {
                 logic.setBoardPieceLocations((prev) => {
                   const updated = { ...prev, [target]: pieceId } as Record<
@@ -554,7 +554,7 @@ function useTutorial(): TutorialAPI {
       setShowOverlay(false);
       if (step4PostActionRanRef.current) return;
       step4PostActionRanRef.current = true;
-      const delayMs = SLOT_INSERT + SLOT_TO_SPACE + 10;
+      const delayMs = PIECE_TO_SLOT + SLOT_TO_SPACE + 10;
       const t = setTimeout(() => {
         // After white placement animation finishes, drop a black piece from 0-4
         scriptDropFromSlot(Team.TeamTwo, "0-4").then(() => {
