@@ -1,8 +1,15 @@
 import { Animations, GameElements } from "@/constants";
-import { SLOT_INSERT, WINNER_V0, WINNER_V1 } from "@/constants/animations";
 import {
+  BOARD_SCALE_DURATION,
+  HELD_SCALE_DURATION,
+  SLOT_INSERT,
+  WELL_SCALE_DURATION,
+  WINNER_V0,
+  WINNER_V1,
+} from "@/constants/animations";
+import {
+  PIECE_BOARD_ZINDEX,
   PIECE_HELD_ZINDEX,
-  PIECE_PLACED_ZINDEX,
   PIECE_WELL_ZINDEX,
 } from "@/constants/gameElements";
 import type { PieceAnimation } from "@/hooks/usePieceAnimations";
@@ -34,26 +41,26 @@ export const setPieceScale = ({
   scaleX: SharedValue<number>;
   scaleY: SharedValue<number>;
   zIndex: SharedValue<number>;
-  location: "well" | "placed" | "held";
+  location: "well" | "board" | "held";
 }) => {
   "worklet";
 
   const scaleMap = {
     well: GameElements.PIECE_WELL_SCALE,
-    placed: GameElements.PIECE_PLACED_SCALE,
+    board: GameElements.PIECE_BOARD_SCALE,
     held: GameElements.PIECE_HELD_SCALE,
   };
 
   const zIndexMap = {
     well: PIECE_WELL_ZINDEX,
-    placed: PIECE_PLACED_ZINDEX,
+    board: PIECE_BOARD_ZINDEX,
     held: PIECE_HELD_ZINDEX,
   };
 
   const scaleDurationMap = {
-    well: 500,
-    placed: 200,
-    held: 100,
+    well: WELL_SCALE_DURATION,
+    board: BOARD_SCALE_DURATION,
+    held: HELD_SCALE_DURATION,
   };
 
   scaleX.value = withTiming(scaleMap[location as keyof typeof scaleMap], {
@@ -63,6 +70,62 @@ export const setPieceScale = ({
     duration: scaleDurationMap[location as keyof typeof scaleDurationMap],
   });
   zIndex.value = zIndexMap[location as keyof typeof zIndexMap];
+};
+
+export const animateZIndexPiece = ({
+  zIndex,
+  delay,
+  location,
+}: {
+  zIndex: SharedValue<number>;
+  delay: number;
+  location: "well" | "board" | "held";
+}) => {
+  "worklet";
+
+  const zIndexMap = {
+    well: PIECE_WELL_ZINDEX,
+    board: PIECE_BOARD_ZINDEX,
+    held: PIECE_HELD_ZINDEX,
+  };
+
+  zIndex.value = withDelay(
+    delay,
+    withTiming(zIndexMap[location as keyof typeof zIndexMap], {
+      duration: 0,
+    })
+  );
+};
+
+export const animateScalePiece = ({
+  scaleX,
+  scaleY,
+  location,
+}: {
+  scaleX: SharedValue<number>;
+  scaleY: SharedValue<number>;
+  location: "well" | "board" | "held";
+}) => {
+  "worklet";
+
+  const scaleMap = {
+    well: GameElements.PIECE_WELL_SCALE,
+    board: GameElements.PIECE_BOARD_SCALE,
+    held: GameElements.PIECE_HELD_SCALE,
+  };
+
+  const scaleDurationMap = {
+    well: WELL_SCALE_DURATION,
+    board: BOARD_SCALE_DURATION,
+    held: HELD_SCALE_DURATION,
+  };
+
+  scaleX.value = withTiming(scaleMap[location as keyof typeof scaleMap], {
+    duration: scaleDurationMap[location as keyof typeof scaleDurationMap],
+  });
+  scaleY.value = withTiming(scaleMap[location as keyof typeof scaleMap], {
+    duration: scaleDurationMap[location as keyof typeof scaleDurationMap],
+  });
 };
 
 export function animateWinner({
@@ -394,8 +457,8 @@ export const animatePieceRelease = ({
 }) => {
   "worklet";
 
-  scaleX.value = withTiming(GameElements.PIECE_PLACED_SCALE, { duration: 120 });
-  scaleY.value = withTiming(GameElements.PIECE_PLACED_SCALE, { duration: 120 });
+  scaleX.value = withTiming(GameElements.PIECE_BOARD_SCALE, { duration: 120 });
+  scaleY.value = withTiming(GameElements.PIECE_BOARD_SCALE, { duration: 120 });
   zIndex.value = withDelay(100, withTiming(500, { duration: 0 }));
 };
 
@@ -454,7 +517,7 @@ export const animateBlockedPiece = ({
         easing: Easing.inOut(Easing.quad),
       },
       () => {
-        setPieceScale({ scaleX, scaleY, zIndex, location: "placed" });
+        setPieceScale({ scaleX, scaleY, zIndex, location: "board" });
       }
     ),
     withTiming(slotCenterX + bounceOffsetX, {

@@ -4,7 +4,6 @@ import {
   animateMisplacedPiece,
   animatePieceDrop,
   animatePiecePickup,
-  animatePieceRelease,
   animateToSelectedCell,
 } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
@@ -278,11 +277,11 @@ const Piece = ({ team, id }: PieceProps) => {
         })
         .onEnd(() => {
           scheduleOnRN(setHover, null);
-          animatePieceRelease({
-            scaleX: animate.scaleX,
-            scaleY: animate.scaleY,
-            zIndex: animate.zIndex,
-          });
+          // animatePieceRelease({
+          //   scaleX: animate.scaleX,
+          //   scaleY: animate.scaleY,
+          //   zIndex: animate.zIndex,
+          // });
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,
