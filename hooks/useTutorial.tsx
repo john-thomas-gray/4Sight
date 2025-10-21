@@ -1,5 +1,4 @@
 import {
-  animateToSelectedCell,
   elevationPieceToHeld,
   elevationPieceToSlot,
   successfulPieceDrop,
@@ -8,7 +7,7 @@ import TutorialModal from "@/components/TutorialModal";
 import TutorialOverlay, { HighlightRect } from "@/components/TutorialOverlay";
 import { PIECE_TO_SLOT, SLOT_TO_SPACE } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
-import { CellType, Team } from "@/types/board";
+import { Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import React from "react";
 
@@ -149,15 +148,9 @@ function useTutorial(): TutorialAPI {
 
           // 2) Wait 500ms, move to slot center
           setTimeout(() => {
-            animateToSelectedCell({
-              translateX: anim.translateX,
-              translateY: anim.translateY,
-              selectedCell: {
-                id: slotId,
-                layout: slotLayout,
-                type: CellType.Slot,
-              } as any,
-            });
+            // animatePieceToWell({
+
+            // });
 
             // 3) Wait 500ms, release (sets placed scale), then drop into final space
             setTimeout(() => {
@@ -169,8 +162,11 @@ function useTutorial(): TutorialAPI {
               successfulPieceDrop({
                 translateX: anim.translateX,
                 translateY: anim.translateY,
-                slotLayout,
-                spaceLayout,
+                slotLayout: slotLayout,
+                spaceLayout: spaceLayout,
+                scaleX: anim.scaleX,
+                scaleY: anim.scaleY,
+                zIndex: anim.zIndex,
               });
 
               // 4) After drop animation finishes, update board mapping, trigger finish check, and resolve

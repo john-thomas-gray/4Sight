@@ -1,4 +1,4 @@
-import { animatePieceReset, animateWinner } from "@/animations/pieceAnimations";
+import { animateWinner, resetAllPieces } from "@/animations/pieceAnimations";
 import { GameElements, Logic } from "@/constants";
 import {
   WINNER_BASE_DELAY,
@@ -340,12 +340,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         animations: Record<string, PieceAnimation>;
       };
 
-      function setWinningPieces({
-        partials,
-        winners,
-        setPieces,
-        animations,
-      }: SetWinningPieces) {
+      function setWinningPieces({ winners, animations }: SetWinningPieces) {
         const updatePieceStatus = (
           groups: BoardPieces[],
           pieceStatus: PieceStatus
@@ -447,13 +442,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setMoveInProgress(false);
       setTurnCount(0);
 
-      animatePieceReset({
+      resetAllPieces({
         boardPieceLocations,
         wellPieceLocations,
         wells,
         pieces,
         pieceAnimations,
-        duration: 500,
       });
 
       setBoardPieceLocations({});

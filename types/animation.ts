@@ -1,7 +1,7 @@
 export const PIECE_TO_SLOT = 150;
 export const PIECE_TO_SLOT_ALT = 200;
 export const SLOT_TO_SPACE = 700;
-export const WELL_RETURN = 300;
+export const RETURN_TO_WELL = 300;
 export const BOARD_COLOR_CHANGE = SLOT_TO_SPACE + 100;
 
 export const WINNER_V1_DELAY = 1000;
@@ -15,7 +15,7 @@ export const WINNER_BASE_DELAY = 500;
 export const GRAVITY_IN_PROGRESS = BOARD_COLOR_CHANGE;
 
 /* COMPLETE ANIMATIONS */
-export const ANIMATE_MISPLACED_PIECE = WELL_RETURN;
+export const RETURN_TO_WELL = RETURN_TO_WELL;
 export const ANIMATE_TO_SELECTED_CELL = 200;
 export const ANIMATE_PIECE_DROP =
   PIECE_TO_SLOT + SLOT_TO_SPACE + BOARD_COLOR_CHANGE;
