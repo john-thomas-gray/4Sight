@@ -7,7 +7,10 @@ Final:
 - Menues styled by theme
 - disconnect piece enabled from whose turn it is somehow, make it enabled early.
   can do this with an "or" statement in enabled
+  broken right now. It has to only enable the player whose turn it is next to move.
+
 would be nice:
+
 
 - The glitch where two pieces occupy the same well sometimes occurs still
 - Pieces jiggle
