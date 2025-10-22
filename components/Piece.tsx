@@ -7,10 +7,14 @@ import {
   successfulPieceDrop,
 } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
-import { ANIMATE_PIECE_DROP, RETURN_TO_WELL } from "@/constants/animations";
+import {
+  ANIMATE_PIECE_DROP,
+  PIECE_WELL_ZINDEX,
+  RETURN_TO_WELL,
+} from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction, Team } from "@/types/board";
-import { PieceProps, PieceStatus } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
@@ -40,9 +44,6 @@ const Piece = ({ team, id }: PieceProps) => {
   const status = useMemo(() => {
     return logic.pieceStatusMap[id];
   }, [logic.pieceStatusMap, id]);
-  if (!animate) {
-    throw new Error(`No animation found for piece id ${id}`);
-  }
 
   useEffect(() => {
     if (team === Team.TeamOne) {
@@ -160,13 +161,13 @@ const Piece = ({ team, id }: PieceProps) => {
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
-        // .enabled(
-        //   logic.gameState !== GameState.Finished &&
-        //     logic.gameState !== GameState.PostGame &&
-        //     logic.currentTeam === team &&
-        //     (status === PieceStatus.isHeld ||
-        //       (status === PieceStatus.inWell && logic.moveInProgress === false))
-        // )
+        .enabled(
+          logic.gameState !== GameState.Finished &&
+            logic.gameState !== GameState.PostGame &&
+            logic.currentTeam === team &&
+            (status === PieceStatus.isHeld ||
+              (status === PieceStatus.inWell && logic.moveInProgress === false))
+        )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           elevationPieceToHeld({
@@ -493,7 +494,6 @@ const Piece = ({ team, id }: PieceProps) => {
 
               scheduleOnRN(setBPLUI, id);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
-
               scheduleOnRN(unsetMoveInProgress, ANIMATE_PIECE_DROP);
               return;
             } else if (isWell) {
@@ -534,7 +534,7 @@ const Piece = ({ team, id }: PieceProps) => {
                 scaleY: animate.scaleY,
                 zIndex: animate.zIndex,
               });
-
+              scheduleOnRN(updateStatus, PieceStatus.inWell);
               scheduleOnRN(setWPLUI, selectedCell.id);
               scheduleOnRN(unsetMoveInProgress, RETURN_TO_WELL);
               return;
@@ -612,7 +612,7 @@ const Piece = ({ team, id }: PieceProps) => {
             baseStyle,
             animatedStyles,
             status === PieceStatus.inWell
-              ? { zIndex: GameElements.PIECE_WELL_ZINDEX }
+              ? { zIndex: PIECE_WELL_ZINDEX }
               : null,
             logic.previewHiddenPieces[id] ? { opacity: 0 } : null,
           ]}

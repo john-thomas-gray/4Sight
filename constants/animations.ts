@@ -28,3 +28,16 @@ export const WELL_ZINDEX_DELAY = 500;
 export const BOARD_ZINDEX_DELAY = 200;
 export const HELD_ZINDEX_DELAY = 0;
 export const RESET_PIECE_DELAY = 500;
+
+export const PIECE_HELD_SCALE: number = 1.5;
+export const PIECE_WELL_SCALE: number = 1.1;
+export const PIECE_BOARD_SCALE: number = 1;
+export const PIECE_HELD_ZINDEX: number = 5000;
+export const PIECE_WELL_ZINDEX: number = 500;
+export const PIECE_BOARD_ZINDEX: number = 500;
+export const PIECE_WINNER_ZINDEX: number = 5000;
+
+export const PLAYER_ONE_HOLD_OFFSET_Y: number = -65;
+export const PLAYER_TWO_HOLD_OFFSET_Y: number = 50;
+export const PLAYER_ONE_HOLD_OFFSET_X: number = -15;
+export const PLAYER_TWO_HOLD_OFFSET_X: number = -10;

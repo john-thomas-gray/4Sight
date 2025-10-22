@@ -1,42 +1,27 @@
-4 Player:
+Final:
 
-- turns handled differently
-- can only drop from one side
-  $ Available slot visual
-- can only pull from one side
-- rotate function
-- rotate animation: long touch, pan, flick
-- Board lifts up when you hold down on a corner
-- Split wells so each player is near one
-
-Win State:
-
-- Pieces jiggle
-- If it's a tie, the person who shifted gravity's pieces light up first, then the other players pieces light up. A little "gotcha". Only then do the corners change to alternating / both colors
-
-Theme:
-
-- Purchasable theme
-- Entire app is styled by Theme
-
-Polish:
-
-- Pieces aren't returned to wells properly
 - Turn change delay builds up each time a game is won\*
 - loading screen glitch\*
-- set winner z index to 5000 so they don't go under slots
-- Can't grab piece directly after moving another.
-- Can't grab piece directly after turn changes
-
-- When you drop a piece on a square, its animation doesn't work with the slot rim.
-
-- exiting to the menu and making a new game switches who plays first
-
 - Animate tutorial messages
-
 - Reorder tutorial more elegantly
+- Menues styled by theme
 
+would be nice:
+
+- The glitch where two pieces occupy the same well sometimes occurs still
+- Pieces jiggle
+- If it's a tie, the person who shifted gravity's pieces light up first, then the other players pieces light up. A little "gotcha". Only then do the corners change to alternating / both colors
+- Purchasable theme
+- Entire app is styled by Theme
+- A piece's well location is not updated when you move it to another well, causing
+  an illegal move to move it to the well it was originally in, not the well
+  it was in before the move
+- exiting to the menu and making a new game switches who plays first
+- Send game to a friend / review game (continue changes to 'review' when the game is over and you hit menu)
+- Loading screen lags
+- Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
 - Winner aura and color fades immediately when reset is called, not once the pieces reach the well
+- set winner z index to 5000 so they don't go under slots (mind the glass)
 
 - Animated screen transitions
 
@@ -52,13 +37,17 @@ Polish:
 - Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
   slight pulsing. Highlight undulates and shimmers.
 - prevent winner intro animation from playing again, unless a new piece is added to the row
-- Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
 
-- Loading screen lags
+4 Player:
 
-- Send game to a friend / review game (continue changes to 'review' when the game is over and you hit menu)
-
-- Restart well glitch\*
+- turns handled differently
+- can only drop from one side
+  $ Available slot visual
+- can only pull from one side
+- rotate function
+- rotate animation: long touch, pan, flick
+- Board lifts up when you hold down on a corner
+- Split wells so each player is near one
 
 Tests
 

@@ -1,7 +1,5 @@
-import {
-  INITIAL_PIECE_POSITIONS,
-  PIECE_WELL_SCALE,
-} from "@/constants/gameElements";
+import { PIECE_WELL_SCALE } from "@/constants/animations";
+import { INITIAL_PIECE_POSITIONS } from "@/constants/gameElements";
 import { SharedValue, useSharedValue } from "react-native-reanimated";
 
 export type PieceAnimation = {

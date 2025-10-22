@@ -108,6 +108,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   React.useEffect(() => {
     pieceAnimationsRef.current = pieceAnimations;
   }, [pieceAnimations]);
+  // Track any winner cascade timers so we can clear them on reset
+  const winnerTimeoutsRef = useRef<number[]>([]);
   const [moveInProgress, setMoveInProgress] = useState(false);
   const setMIP = ({ setting, delay }: { setting: boolean; delay?: number }) => {
     setTimeout(() => setMoveInProgress(setting), delay || 0);
@@ -352,7 +354,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
           groups.forEach((group) => {
             group.forEach((boardPiece: BoardPiece) => {
               const delay = WINNER_BASE_DELAY + pieceIdx * CASCADE_STEP;
-              setTimeout(() => {
+              const timeoutId = setTimeout(() => {
                 setPieceStatusMap((prev) => ({
                   ...prev,
                   [boardPiece.pieceId]: pieceStatus,
@@ -360,7 +362,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
                 animateWinner({
                   ...pieceAnims[boardPiece.pieceId],
                 });
-              }, delay);
+              }, delay) as unknown as number;
+              winnerTimeoutsRef.current.push(timeoutId);
               pieceIdx += 1;
             });
           });
@@ -421,6 +424,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const resetGame = useCallback(
     (startingPlayersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => {
+      // Clear any pending winner cascade timers from previous game
+      try {
+        winnerTimeoutsRef.current.forEach((id) => {
+          clearTimeout(id);
+        });
+      } catch {}
+      winnerTimeoutsRef.current = [];
       rehydratedRef.current = false;
       rehydrationPositionsAppliedRef.current = false;
       const baseStartingTurn =
@@ -463,13 +473,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         const rebuiltPieces: Record<string, PieceProps> = {};
 
         const teamOneWells = Object.keys(wells[Team.TeamOne] || {});
-        teamOneWells.forEach((wellId, idx) => {
+        teamOneWells.forEach((idx) => {
           const id = `${0 + idx}`;
           rebuiltPieces[id] = { id, team: Team.TeamOne };
         });
 
         const teamTwoWells = Object.keys(wells[Team.TeamTwo] || {});
-        teamTwoWells.forEach((wellId, idx) => {
+        teamTwoWells.forEach((idx) => {
           const id = `${24 + idx}`;
           rebuiltPieces[id] = { id, team: Team.TeamTwo };
         });

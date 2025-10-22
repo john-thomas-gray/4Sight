@@ -3,18 +3,19 @@ import {
   BOARD_SCALE_DURATION,
   HELD_SCALE_DURATION,
   HELD_ZINDEX_DELAY,
+  PIECE_BOARD_SCALE,
+  PIECE_BOARD_ZINDEX,
+  PIECE_HELD_SCALE,
+  PIECE_HELD_ZINDEX,
   PIECE_TO_SLOT,
+  PIECE_WELL_SCALE,
+  PIECE_WELL_ZINDEX,
   RESET_PIECE_DELAY,
   WELL_SCALE_DURATION,
   WELL_ZINDEX_DELAY,
   WINNER_V0,
   WINNER_V1,
 } from "@/constants/animations";
-import {
-  PIECE_BOARD_ZINDEX,
-  PIECE_HELD_ZINDEX,
-  PIECE_WELL_ZINDEX,
-} from "@/constants/gameElements";
 import type { PieceAnimation } from "@/hooks/usePieceAnimations";
 import { Board } from "@/types";
 import { CellLayout, Direction, EachCellType, Team } from "@/types/board";
@@ -43,9 +44,9 @@ export const setPieceScale = ({
   "worklet";
 
   const scaleMap = {
-    well: GameElements.PIECE_WELL_SCALE,
-    board: GameElements.PIECE_BOARD_SCALE,
-    held: GameElements.PIECE_HELD_SCALE,
+    well: PIECE_WELL_SCALE,
+    board: PIECE_BOARD_SCALE,
+    held: PIECE_HELD_SCALE,
   };
 
   const zIndexMap = {
@@ -106,9 +107,9 @@ export const animateScalePiece = ({
   "worklet";
 
   const scaleMap = {
-    well: GameElements.PIECE_WELL_SCALE,
-    board: GameElements.PIECE_BOARD_SCALE,
-    held: GameElements.PIECE_HELD_SCALE,
+    well: PIECE_WELL_SCALE,
+    board: PIECE_BOARD_SCALE,
+    held: PIECE_HELD_SCALE,
   };
 
   const scaleDurationMap = {
@@ -514,6 +515,7 @@ export function animateWinner({
   translateY,
   scaleX,
   scaleY,
+  zIndex,
   skewX,
   skewY,
   rotation,
@@ -527,6 +529,7 @@ export function animateWinner({
   translateY: SharedValue<number>;
   scaleX: SharedValue<number>;
   scaleY: SharedValue<number>;
+  zIndex: SharedValue<number>;
   skewX: SharedValue<number>;
   skewY: SharedValue<number>;
   rotation: SharedValue<number>;
@@ -579,9 +582,13 @@ export function animateWinner({
       })
     );
   };
-
+  // TODO: fix this, it's not working as expected !@#
+  // zIndex.value = PIECE_WINNER_ZINDEX;
   animation({ svx: translateX, svy: translateY, v0: trans[0], v1: trans[1] });
   animation({ svx: scaleX, svy: scaleY, v0: scale[0], v1: scale[1] });
+  // setTimeout(() => {
+  //   zIndex.value = PIECE_WINNER_ZINDEX;
+  // }, WINNER_V1);
 
   color.value = withTiming(winnerColor.value, {
     duration: WINNER_V1,
