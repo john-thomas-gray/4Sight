@@ -171,7 +171,6 @@ const Piece = ({ team, id }: PieceProps) => {
         )
         .hitSlop({ left: 35, right: 35, top: 35, bottom: 35 })
         .onStart(() => {
-          a;
           console.log(
             "team",
             logic.currentTeam,

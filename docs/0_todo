@@ -8,6 +8,7 @@ Final:
 - disconnect piece enabled from whose turn it is somehow, make it enabled early.
   can do this with an "or" statement in enabled
   broken right now. It has to only enable the player whose turn it is next to move.
+  Fix util so it outputs the correct turn. Correct offset function to account for whose Piece is being picked up.
 
 would be nice:
 
