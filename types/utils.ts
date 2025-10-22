@@ -5,3 +5,8 @@ export interface LayoutCells {
   slots: Record<string, CellLayout>;
   spaces: Record<string, CellLayout>;
 }
+
+export interface EarlyEnableTimeoutProps {
+  moveType: "slot" | "space" | "gravity";
+  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<boolean>>;
+}

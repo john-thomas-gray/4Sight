@@ -164,11 +164,10 @@ const Piece = ({ team, id }: PieceProps) => {
         .enabled(
           logic.gameState !== GameState.Finished &&
             logic.gameState !== GameState.PostGame &&
-            logic.currentTeam === team &&
-            (status === PieceStatus.isHeld ||
-              (status === PieceStatus.inWell && logic.moveInProgress === false))
+            (logic.currentTeam === team || logic.earlyPieceEnable)
+          // (status === PieceStatus.isHeld || (status === PieceStatus.inWell && logic.moveInProgress === false))
         )
-        .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
+        .hitSlop({ left: 35, right: 35, top: 35, bottom: 35 })
         .onStart(() => {
           elevationPieceToHeld({
             scaleX: animate.scaleX,
@@ -273,6 +272,7 @@ const Piece = ({ team, id }: PieceProps) => {
           }
         })
         .onEnd(() => {
+          console.log("enabled", logic.earlyPieceEnable);
           scheduleOnRN(setHover, null);
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,

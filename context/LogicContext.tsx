@@ -89,6 +89,8 @@ export type LogicContextType = {
   >;
   restrictGravityToDown: boolean;
   setRestrictGravityToDown: React.Dispatch<React.SetStateAction<boolean>>;
+  earlyPieceEnable: boolean;
+  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -102,6 +104,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
+  const [earlyPieceEnable, setEarlyPieceEnable] = useState<boolean>(false);
   const { wells, layoutReady } = useLayout();
   const pieceAnimations = usePieceAnimations();
   const pieceAnimationsRef = useRef(pieceAnimations);
@@ -572,6 +575,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setLastGravityDirection,
       restrictGravityToDown,
       setRestrictGravityToDown,
+      earlyPieceEnable,
+      setEarlyPieceEnable,
     }),
     [
       gameMode,
@@ -612,7 +617,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     return () => clearTimeout(t);
   }, [layoutReady]);
 
-  console.log("Turn", turnCount);
   return (
     <LogicContext.Provider value={contextValue}>
       {children}

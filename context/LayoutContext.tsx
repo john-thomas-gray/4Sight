@@ -30,7 +30,6 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
   const [corners, setCorners] = useState<Record<string, CellLayout>>({});
-
   const layoutReady =
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&

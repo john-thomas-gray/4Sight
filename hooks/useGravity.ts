@@ -1,6 +1,7 @@
 import { GRAVITY_IN_PROGRESS } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction } from "@/types/board";
+import earlyEnableTimeout from "@/utils/earlyEnableTimeout";
 
 type GravityProps = {
   direction: Direction.Up | Direction.Down | Direction.Left | Direction.Right;
@@ -8,6 +9,7 @@ type GravityProps = {
 
 export const useGravity = () => {
   const { logic } = useGameContext();
+
   const applyGravity = (direction: GravityProps["direction"]) => {
     if (logic.moveInProgress) {
       return;
@@ -17,6 +19,11 @@ export const useGravity = () => {
     setTimeout(() => {
       logic.setMoveInProgress(false);
     }, GRAVITY_IN_PROGRESS);
+
+    earlyEnableTimeout({
+      moveType: "gravity",
+      setEarlyPieceEnable: logic.setEarlyPieceEnable,
+    });
 
     const updatedPieceLocations = { ...logic.boardPieceLocations };
     let hasMoves = false;

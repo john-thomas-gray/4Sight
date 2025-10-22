@@ -5,7 +5,8 @@ Final:
 - Animate tutorial messages
 - Reorder tutorial more elegantly
 - Menues styled by theme
-
+- disconnect piece enabled from whose turn it is somehow, make it enabled early.
+  can do this with an "or" statement in enabled
 would be nice:
 
 - The glitch where two pieces occupy the same well sometimes occurs still
