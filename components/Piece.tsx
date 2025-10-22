@@ -14,7 +14,7 @@ import {
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction, Team } from "@/types/board";
-import { GameState, PieceProps, PieceStatus } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus, Turn } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
@@ -164,11 +164,20 @@ const Piece = ({ team, id }: PieceProps) => {
         .enabled(
           logic.gameState !== GameState.Finished &&
             logic.gameState !== GameState.PostGame &&
-            (logic.currentTeam === team || logic.earlyPieceEnable)
-          // (status === PieceStatus.isHeld || (status === PieceStatus.inWell && logic.moveInProgress === false))
+            (logic.currentTeam === team ||
+              (logic.earlyPieceEnable === Turn.Two && team === Team.TeamOne) ||
+              (logic.earlyPieceEnable === Turn.One && team === Team.TeamTwo))
+          // && (status === PieceStatus.isHeld || (status === PieceStatus.inWell && logic.moveInProgress === false))
         )
         .hitSlop({ left: 35, right: 35, top: 35, bottom: 35 })
         .onStart(() => {
+          a;
+          console.log(
+            "team",
+            logic.currentTeam,
+            "logic.earlyPieceEnable",
+            logic.earlyPieceEnable
+          );
           elevationPieceToHeld({
             scaleX: animate.scaleX,
             scaleY: animate.scaleY,
@@ -272,7 +281,6 @@ const Piece = ({ team, id }: PieceProps) => {
           }
         })
         .onEnd(() => {
-          console.log("enabled", logic.earlyPieceEnable);
           scheduleOnRN(setHover, null);
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,

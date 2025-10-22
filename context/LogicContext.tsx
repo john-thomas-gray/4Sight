@@ -13,6 +13,7 @@ import {
   PieceProps,
   PieceStatus,
   PieceStatusMap,
+  Turn,
 } from "@/types/logic";
 import findPieceRelationships, {
   BoardPiece,
@@ -89,8 +90,8 @@ export type LogicContextType = {
   >;
   restrictGravityToDown: boolean;
   setRestrictGravityToDown: React.Dispatch<React.SetStateAction<boolean>>;
-  earlyPieceEnable: boolean;
-  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<boolean>>;
+  earlyPieceEnable: Turn | undefined;
+  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<Turn | undefined>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -104,7 +105,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
-  const [earlyPieceEnable, setEarlyPieceEnable] = useState<boolean>(false);
+  const [earlyPieceEnable, setEarlyPieceEnable] = useState<Turn | undefined>(
+    undefined
+  );
   const { wells, layoutReady } = useLayout();
   const pieceAnimations = usePieceAnimations();
   const pieceAnimationsRef = useRef(pieceAnimations);
@@ -600,6 +603,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       isGlobalLoading,
       lastGravityDirection,
       restrictGravityToDown,
+      earlyPieceEnable,
+      highlightPulse,
+      isPreviewingGravity,
     ]
   );
 

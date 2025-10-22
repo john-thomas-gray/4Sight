@@ -1,4 +1,5 @@
 import { CellLayout } from "@/types/board";
+import { GameMode, Turn } from "@/types/logic";
 
 export interface LayoutCells {
   wells: Record<string, Record<string, CellLayout>>;
@@ -8,5 +9,7 @@ export interface LayoutCells {
 
 export interface EarlyEnableTimeoutProps {
   moveType: "slot" | "space" | "gravity";
-  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<boolean>>;
+  gameMode: GameMode;
+  playersTurn: Turn;
+  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<Turn | undefined>>;
 }

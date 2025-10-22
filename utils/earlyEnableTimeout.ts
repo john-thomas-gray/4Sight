@@ -1,8 +1,11 @@
 import { SLOT_TO_SPACE } from "@/constants/animations";
+import { GameMode, Turn } from "@/types/logic";
 import { EarlyEnableTimeoutProps } from "@/types/utils";
 
 const earlyEnableTimeout = ({
   moveType,
+  gameMode,
+  playersTurn,
   setEarlyPieceEnable,
 }: EarlyEnableTimeoutProps) => {
   const timeout =
@@ -15,22 +18,34 @@ const earlyEnableTimeout = ({
       : SLOT_TO_SPACE;
   let firstTimeoutId: ReturnType<typeof setTimeout> | null = null;
   let secondTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
+  console.log("playersTurn", playersTurn);
   firstTimeoutId = setTimeout(() => {
-    setEarlyPieceEnable(true);
+    if (gameMode === GameMode.TwoPlayer) {
+      const oppositeTurn =
+        playersTurn === Turn.One || playersTurn === Turn.Three
+          ? Turn.Two
+          : playersTurn === Turn.Two || playersTurn === Turn.Four
+          ? Turn.One
+          : undefined;
+      console.log("oppositeTurn", oppositeTurn);
+      setEarlyPieceEnable(1);
+    } else {
+      // Future: define behavior for four-player if needed
+      setEarlyPieceEnable(undefined);
+    }
     if (firstTimeoutId !== null) {
       clearTimeout(firstTimeoutId);
       firstTimeoutId = null;
     }
     console.log("early enable timeout first timeout");
-    secondTimeoutId = setTimeout(() => {
-      setEarlyPieceEnable(false);
-      if (secondTimeoutId !== null) {
-        clearTimeout(secondTimeoutId);
-        secondTimeoutId = null;
-      }
-      console.log("early enable timeout second timeout");
-    }, 5000);
+    // secondTimeoutId = setTimeout(() => {
+    //   setEarlyPieceEnable(undefined);
+    //   if (secondTimeoutId !== null) {
+    //     clearTimeout(secondTimeoutId);
+    //     secondTimeoutId = null;
+    //   }
+    //   console.log("early enable timeout second timeout");
+    // }, 3000);
   }, timeout);
 
   return () => {

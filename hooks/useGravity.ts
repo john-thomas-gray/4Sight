@@ -1,6 +1,7 @@
 import { GRAVITY_IN_PROGRESS } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction } from "@/types/board";
+import { Turn } from "@/types/logic";
 import earlyEnableTimeout from "@/utils/earlyEnableTimeout";
 
 type GravityProps = {
@@ -22,6 +23,8 @@ export const useGravity = () => {
 
     earlyEnableTimeout({
       moveType: "gravity",
+      gameMode: logic.gameMode,
+      playersTurn: logic.playersTurn as Turn,
       setEarlyPieceEnable: logic.setEarlyPieceEnable,
     });
 
