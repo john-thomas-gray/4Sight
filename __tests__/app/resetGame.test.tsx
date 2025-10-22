@@ -6,11 +6,36 @@ import { LogicProvider, useLogic } from "@/context/LogicContext";
 import { Team } from "@/types/board";
 import { GameState, PieceStatus } from "@/types/logic";
 
-// Mock animations to avoid running real reanimated timelines during tests
-jest.mock("@/animations/pieceAnimations", () => ({
-  animateWinner: jest.fn(),
-  resetAllPieces: jest.fn(),
-}));
+// Mock reanimated to stable values in Jest before importing animations
+jest.mock("react-native-reanimated", () => {
+  const noOp = () => {};
+  return {
+    __esModule: true,
+    useSharedValue: (initial: any) => ({ value: initial }),
+    withTiming: (v: any) => v,
+    withSequence: (...args: any[]) => args[args.length - 1],
+    withRepeat: (v: any) => v,
+    withDelay: (_d: any, v: any) => v,
+    Easing: {
+      inOut: () => noOp,
+      out: () => noOp,
+      exp: {},
+      bounce: {},
+      quad: {},
+    },
+    cancelAnimation: noOp,
+  };
+});
+
+// Partially mock animations: use real resetAllPieces, stub animateWinner only
+jest.mock("@/animations/pieceAnimations", () => {
+  const actual = jest.requireActual("@/animations/pieceAnimations");
+  return {
+    __esModule: true,
+    ...actual,
+    animateWinner: jest.fn(),
+  };
+});
 
 // Provide a lightweight mock for LayoutContext consumed by LogicProvider
 // Ensure layoutReady is true and each team has 24 wells
@@ -51,23 +76,8 @@ jest.mock("@/context/LayoutContext", () => {
   };
 });
 
-// Optional: mock reanimated to stable values in Jest without using require()
-jest.mock("react-native-reanimated", () => {
-  const noOp = () => {};
-  return {
-    __esModule: true,
-    useSharedValue: (initial: any) => ({ value: initial }),
-    withTiming: (v: any) => v,
-    withSequence: (...args: any[]) => args[args.length - 1],
-    withRepeat: (v: any) => v,
-    Easing: {
-      inOut: () => noOp,
-      out: () => noOp,
-      quad: {},
-    },
-    cancelAnimation: noOp,
-  };
-});
+// Use fake timers to surface async timer crashes during reset
+jest.useFakeTimers();
 
 const Harness: React.FC = () => {
   const logic = useLogic();
@@ -81,6 +91,8 @@ const Harness: React.FC = () => {
     wellCount: number;
   }>(null);
   const [postResetReady, setPostResetReady] = React.useState(false);
+  const [idsValid, setIdsValid] = React.useState(false);
+  const [animsAligned, setAnimsAligned] = React.useState(false);
 
   // When pieces are built, ensure Ready state, then capture snapshot and trigger win
   React.useEffect(() => {
@@ -152,6 +164,18 @@ const Harness: React.FC = () => {
         capturedInitial.wellCount
     ) {
       setPostResetReady(true);
+
+      // Validate piece ids are numeric 0..47 and animations exist for each
+      const ids = Object.keys(logic.pieces || {});
+      const numeric = ids.every((id) => /^\d+$/.test(id));
+      const expected = new Set(Array.from({ length: 48 }, (_, i) => String(i)));
+      const allPresent =
+        ids.length === 48 && ids.every((id) => expected.has(id));
+      setIdsValid(numeric && allPresent);
+
+      const animKeys = new Set(Object.keys(logic.pieceAnimations || {}));
+      const animsOk = ids.every((id) => animKeys.has(id));
+      setAnimsAligned(animsOk);
     }
   }, [
     logic,
@@ -169,6 +193,8 @@ const Harness: React.FC = () => {
       <Text testID="playersTurn">{String(logic.playersTurn)}</Text>
       <Text testID="initialReady">{String(!!capturedInitial)}</Text>
       <Text testID="postResetReady">{String(postResetReady)}</Text>
+      <Text testID="postResetIdsValid">{String(idsValid)}</Text>
+      <Text testID="postResetAnimsAligned">{String(animsAligned)}</Text>
       <Text testID="initialEqualsPost">
         {capturedInitial &&
         postResetReady &&
@@ -202,6 +228,13 @@ describe("resetGame", () => {
     await waitFor(() =>
       expect(getByTestId("postResetReady").props.children).toBe("true")
     );
+
+    // Flush any pending timers to surface potential async errors from reset
+    jest.runOnlyPendingTimers();
+
+    // Validate piece ids and animations alignment
+    expect(getByTestId("postResetIdsValid").props.children).toBe("true");
+    expect(getByTestId("postResetAnimsAligned").props.children).toBe("true");
 
     // After TeamOne win, playersTurn should be 1
     expect(getByTestId("playersTurn").props.children).toBe("1");
