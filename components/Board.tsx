@@ -89,7 +89,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       }
       // Advance turns after gravity or a piece placement drop
       if (isMoving.current || logic.moveInProgress) {
-        logic.checkGameFinished(logic.boardPieceLocations);
+        logic.scheduleNextTurn(logic.boardPieceLocations);
       }
     }, 300);
     return () => {

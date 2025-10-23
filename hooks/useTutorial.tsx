@@ -178,7 +178,7 @@ function useTutorial(): TutorialAPI {
                     string
                   >;
                   try {
-                    logic.checkGameFinished(updated);
+                    logic.scheduleNextTurn(updated);
                   } catch {}
                   return updated;
                 });

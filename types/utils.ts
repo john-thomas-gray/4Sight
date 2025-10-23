@@ -11,5 +11,5 @@ export interface EarlyEnableTimeoutProps {
   moveType: "slot" | "space" | "gravity";
   gameMode: GameMode;
   playersTurn: Turn;
-  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<Turn | undefined>>;
+  setTurnEnabledEarly: React.Dispatch<React.SetStateAction<Turn | undefined>>;
 }

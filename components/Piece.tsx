@@ -11,11 +11,14 @@ import {
   ANIMATE_PIECE_DROP,
   PIECE_WELL_ZINDEX,
   RETURN_TO_WELL,
+  SLOT_TO_SPACE,
 } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
 import { Direction, Team } from "@/types/board";
-import { GameState, PieceProps, PieceStatus, Turn } from "@/types/logic";
+import { PieceProps, PieceStatus, Turn } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
+// import earlyEnableTimeout from "@/utils/earlyEnableTimeout";
+import { EarlyEnableTimeoutProps } from "@/types/utils";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
 import React, { memo, useEffect, useMemo } from "react";
@@ -30,6 +33,72 @@ import Highlight from "./Highlight";
 
 const Piece = ({ team, id }: PieceProps) => {
   const { layout, logic, settings } = useGameContext();
+
+  const earlyEnableTimeout = ({
+    moveType,
+    gameMode,
+    playersTurn,
+    setTurnEnabledEarly,
+  }: EarlyEnableTimeoutProps) => {
+    const timeout =
+      moveType === "slot"
+        ? SLOT_TO_SPACE
+        : moveType === "space"
+        ? SLOT_TO_SPACE
+        : moveType === "gravity"
+        ? SLOT_TO_SPACE
+        : SLOT_TO_SPACE;
+    let firstTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let secondTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    console.log("pt", playersTurn);
+    const isOnesTurn = playersTurn === Turn.One || playersTurn === Turn.Three;
+    const isTwosTurn = playersTurn === Turn.Two || playersTurn === Turn.Four;
+    const turnEnabledEarly = isOnesTurn
+      ? Turn.Two
+      : isTwosTurn
+      ? Turn.One
+      : undefined;
+    setTurnEnabledEarly(turnEnabledEarly);
+    // firstTimeoutId = setTimeout(() => {
+    //   if (gameMode === GameMode.TwoPlayer) {
+    //     const oppositeTurn =
+    //       playersTurn === Turn.One || playersTurn === Turn.Three
+    //         ? Turn.Two
+    //         : playersTurn === Turn.Two || playersTurn === Turn.Four
+    //         ? Turn.One
+    //         : undefined;
+    //     console.log("oppositeTurn", oppositeTurn);
+    //     setTurnEnabledEarly(oppositeTurn);
+    //   } else {
+    //     // Future: define behavior for four-player if needed
+    //     setTurnEnabledEarly(undefined);
+    //   }
+    //   if (firstTimeoutId !== null) {
+    //     clearTimeout(firstTimeoutId);
+    //     firstTimeoutId = null;
+    //   }
+    //   console.log("First timeout EPE:", team, logic.turnEnabledEarly);
+    //   secondTimeoutId = setTimeout(() => {
+    //     setTurnEnabledEarly(undefined);
+    //     if (secondTimeoutId !== null) {
+    //       clearTimeout(secondTimeoutId);
+    //       secondTimeoutId = null;
+    //     }
+    //     console.log("Second timeout, EPE:", team, logic.turnEnabledEarly);
+    //   }, 5000);
+    // }, timeout);
+
+    return () => {
+      if (firstTimeoutId !== null) {
+        clearTimeout(firstTimeoutId);
+        firstTimeoutId = null;
+      }
+      if (secondTimeoutId !== null) {
+        clearTimeout(secondTimeoutId);
+        secondTimeoutId = null;
+      }
+    };
+  };
 
   const unsetMoveInProgress = (delay = 0) => {
     if (delay > 0) {
@@ -116,6 +185,15 @@ const Piece = ({ team, id }: PieceProps) => {
     }));
   };
 
+  const runEarlyEnableTimeout = (moveType: "slot" | "space" | "gravity") => {
+    earlyEnableTimeout({
+      moveType,
+      gameMode: logic.gameMode,
+      playersTurn: logic.playersTurn as Turn,
+      setTurnEnabledEarly: logic.setTurnEnabledEarly,
+    });
+  };
+
   const deleteWPLUI = () => {
     if (currentWellId) {
       logic.setWellPieceLocations((prev) => {
@@ -161,22 +239,24 @@ const Piece = ({ team, id }: PieceProps) => {
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(
-          logic.gameState !== GameState.Finished &&
-            logic.gameState !== GameState.PostGame &&
-            (logic.currentTeam === team ||
-              (logic.earlyPieceEnable === Turn.Two && team === Team.TeamOne) ||
-              (logic.earlyPieceEnable === Turn.One && team === Team.TeamTwo))
-          // && (status === PieceStatus.isHeld || (status === PieceStatus.inWell && logic.moveInProgress === false))
-        )
+        // .enabled(
+        //   logic.gameState !== GameState.Finished &&
+        //     logic.gameState !== GameState.PostGame &&
+        //     (logic.currentTeam === team ||
+        //       (logic.turnEnabledEarly === Turn.One && team === Team.TeamOne) ||
+        //       (logic.turnEnabledEarly === Turn.Two && team === Team.TeamTwo))
+        //   // && (status === PieceStatus.isHeld || (status === PieceStatus.inWell && logic.moveInProgress === false))
+        // )
         .hitSlop({ left: 35, right: 35, top: 35, bottom: 35 })
         .onStart(() => {
-          console.log(
-            "team",
-            logic.currentTeam,
-            "logic.earlyPieceEnable",
-            logic.earlyPieceEnable
-          );
+          console.log("EPE:", logic.turnEnabledEarly, "team:", team);
+
+          if (logic.turnEnabledEarly === Turn.Two && team === Team.TeamTwo) {
+            console.log("EPE 2");
+          }
+          if (logic.turnEnabledEarly === Turn.One && team === Team.TeamOne) {
+            console.log("EPE 1");
+          }
           elevationPieceToHeld({
             scaleX: animate.scaleX,
             scaleY: animate.scaleY,
@@ -189,7 +269,7 @@ const Piece = ({ team, id }: PieceProps) => {
         .onUpdate((event) => {
           pieceHoldOffset(
             logic.gameMode,
-            logic.playersTurn,
+            team,
             animate.translateX,
             animate.translateY,
             event.absoluteX,
@@ -396,7 +476,7 @@ const Piece = ({ team, id }: PieceProps) => {
                     }
                   }
                 }
-                // Return status to inWell since placement didn't occur
+
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
                 if (
                   currentWellDataSV.value &&
@@ -427,6 +507,7 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(setBPLUI, finalSpaceId);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
               scheduleOnRN(unsetMoveInProgress, ANIMATE_PIECE_DROP);
+              scheduleOnRN(runEarlyEnableTimeout, "space");
               return;
             } else if (isSpace) {
               const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
@@ -502,6 +583,7 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(setBPLUI, id);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
               scheduleOnRN(unsetMoveInProgress, ANIMATE_PIECE_DROP);
+              scheduleOnRN(runEarlyEnableTimeout, "slot");
               return;
             } else if (isWell) {
               const isOccupied = logic.wellPieceLocations[id] !== undefined;

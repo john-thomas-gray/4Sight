@@ -12,6 +12,7 @@ export const useGravity = () => {
   const { logic } = useGameContext();
 
   const applyGravity = (direction: GravityProps["direction"]) => {
+    console.log("applyGravity", direction);
     if (logic.moveInProgress) {
       return;
     }
@@ -25,7 +26,7 @@ export const useGravity = () => {
       moveType: "gravity",
       gameMode: logic.gameMode,
       playersTurn: logic.playersTurn as Turn,
-      setEarlyPieceEnable: logic.setEarlyPieceEnable,
+      setTurnEnabledEarly: logic.setTurnEnabledEarly,
     });
 
     const updatedPieceLocations = { ...logic.boardPieceLocations };

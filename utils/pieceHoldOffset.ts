@@ -4,12 +4,13 @@ import {
   PLAYER_TWO_HOLD_OFFSET_X,
   PLAYER_TWO_HOLD_OFFSET_Y,
 } from "@/constants/animations";
+import { Team } from "@/types/board";
 import { SharedValue } from "react-native-reanimated";
 import { GameMode } from "../types/logic";
 
 export const pieceHoldOffset = (
   gameMode: GameMode,
-  playersTurn: number,
+  team: Team,
   translateX: SharedValue<number>,
   translateY: SharedValue<number>,
   eventX: number,
@@ -19,23 +20,24 @@ export const pieceHoldOffset = (
 ) => {
   "worklet";
   if (!active) return;
+
   if (gameMode === GameMode.TwoPlayer) {
-    if (playersTurn % 2 === 1) {
+    if (team === Team.TeamOne) {
       translateX.value = eventX + PLAYER_ONE_HOLD_OFFSET_X;
       translateY.value = eventY + PLAYER_ONE_HOLD_OFFSET_Y;
-    } else if (playersTurn % 2 === 0) {
+    } else if (team === Team.TeamTwo) {
       translateX.value = eventX + PLAYER_TWO_HOLD_OFFSET_X;
       translateY.value = eventY + PLAYER_TWO_HOLD_OFFSET_Y;
     }
   }
   // else {
-  //   if (playersTurn === 1) {
+  //   if (team ===  1) {
   //     translateX.value = eventX - pieceRadius;
   //     translateY.value = eventY - pieceRadius - 40;
-  //   } else if (playersTurn === 2) {
+  //   } else if (team === 2) {
   //     translateX.value = eventX - pieceRadius - 40;
   //     translateY.value = eventY - pieceRadius;
-  //   } else if (playersTurn === 3) {
+  //   } else if (team === 3) {
   //     translateX.value = eventX - pieceRadius;
   //     translateY.value = eventY - pieceRadius + 40;
   //   } else {

@@ -47,7 +47,7 @@ export type LogicContextType = {
   setTurnCount: React.Dispatch<React.SetStateAction<number>>;
   currentTeam: Team;
   nextTurn: () => void;
-  checkGameFinished: (updatedBoard: Record<string, string>) => void;
+  scheduleNextTurn: (updatedBoard: Record<string, string>) => void;
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
   winner: Team;
@@ -90,8 +90,8 @@ export type LogicContextType = {
   >;
   restrictGravityToDown: boolean;
   setRestrictGravityToDown: React.Dispatch<React.SetStateAction<boolean>>;
-  earlyPieceEnable: Turn | undefined;
-  setEarlyPieceEnable: React.Dispatch<React.SetStateAction<Turn | undefined>>;
+  turnEnabledEarly: Turn | undefined;
+  setTurnEnabledEarly: React.Dispatch<React.SetStateAction<Turn | undefined>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -105,7 +105,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
-  const [earlyPieceEnable, setEarlyPieceEnable] = useState<Turn | undefined>(
+  const [turnEnabledEarly, setTurnEnabledEarly] = useState<Turn | undefined>(
     undefined
   );
   const { wells, layoutReady } = useLayout();
@@ -328,7 +328,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const currentTeam = playersTurn % 2 === 0 ? Team.TeamTwo : Team.TeamOne;
 
-  const checkGameFinished = useCallback(
+  const scheduleNextTurn = useCallback(
     (updatedBoardPieceLocations: Record<string, string>) => {
       const pieceRelationships = findPieceRelationships({
         boardPieceLocations: updatedBoardPieceLocations,
@@ -423,9 +423,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       } else {
         nextTurn();
       }
-      console.log(gameState);
     },
-    [pieces, pieceAnimations, nextTurn]
+    []
   );
 
   const resetGame = useCallback(
@@ -528,7 +527,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setTurnCount,
       currentTeam,
       nextTurn,
-      checkGameFinished,
+      scheduleNextTurn,
       gameState,
       setGameState,
       winner,
@@ -578,8 +577,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setLastGravityDirection,
       restrictGravityToDown,
       setRestrictGravityToDown,
-      earlyPieceEnable,
-      setEarlyPieceEnable,
+      turnEnabledEarly,
+      setTurnEnabledEarly,
     }),
     [
       gameMode,
@@ -595,7 +594,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       wellPieceLocations,
       boardPieceLocations,
       nextTurn,
-      checkGameFinished,
+      scheduleNextTurn,
       resetGame,
       previewHiddenPieces,
       nextTurnWins,
@@ -603,7 +602,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       isGlobalLoading,
       lastGravityDirection,
       restrictGravityToDown,
-      earlyPieceEnable,
+      turnEnabledEarly,
       highlightPulse,
       isPreviewingGravity,
     ]

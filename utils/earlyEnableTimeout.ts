@@ -6,7 +6,7 @@ const earlyEnableTimeout = ({
   moveType,
   gameMode,
   playersTurn,
-  setEarlyPieceEnable,
+  setTurnEnabledEarly,
 }: EarlyEnableTimeoutProps) => {
   const timeout =
     moveType === "slot"
@@ -28,24 +28,24 @@ const earlyEnableTimeout = ({
           ? Turn.One
           : undefined;
       console.log("oppositeTurn", oppositeTurn);
-      setEarlyPieceEnable(1);
+      setTurnEnabledEarly(oppositeTurn);
     } else {
       // Future: define behavior for four-player if needed
-      setEarlyPieceEnable(undefined);
+      setTurnEnabledEarly(undefined);
     }
     if (firstTimeoutId !== null) {
       clearTimeout(firstTimeoutId);
       firstTimeoutId = null;
     }
     console.log("early enable timeout first timeout");
-    // secondTimeoutId = setTimeout(() => {
-    //   setEarlyPieceEnable(undefined);
-    //   if (secondTimeoutId !== null) {
-    //     clearTimeout(secondTimeoutId);
-    //     secondTimeoutId = null;
-    //   }
-    //   console.log("early enable timeout second timeout");
-    // }, 3000);
+    secondTimeoutId = setTimeout(() => {
+      setTurnEnabledEarly(undefined);
+      if (secondTimeoutId !== null) {
+        clearTimeout(secondTimeoutId);
+        secondTimeoutId = null;
+      }
+      console.log("early enable timeout second timeout");
+    }, 5000);
   }, timeout);
 
   return () => {

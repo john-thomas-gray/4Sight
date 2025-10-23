@@ -127,7 +127,7 @@ const Harness: React.FC = () => {
       "1-4": "3",
     };
     logic.setBoardPieceLocations(winningBoard);
-    logic.checkGameFinished(winningBoard);
+    logic.scheduleNextTurn(winningBoard);
   }, [
     logic,
     logic.pieces,
