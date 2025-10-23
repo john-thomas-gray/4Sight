@@ -33,3 +33,8 @@ export const PLAYER_ONE_HOLD_OFFSET_X = -15;
 export const PLAYER_ONE_HOLD_OFFSET_Y = -65;
 export const PLAYER_TWO_HOLD_OFFSET_X = -10;
 export const PLAYER_TWO_HOLD_OFFSET_Y = 50;
+
+export const PLAYER_ONE_HOVER_OFFSET_X = 0;
+export const PLAYER_ONE_HOVER_OFFSET_Y = 0;
+export const PLAYER_TWO_HOVER_OFFSET_X = -10;
+export const PLAYER_TWO_HOVER_OFFSET_Y = 40;

@@ -49,7 +49,7 @@ export const pieceHoldOffset = (
 
 export const pointerHoverOffset = (
   gameMode: GameMode,
-  playersTurn: number,
+  team: Team,
   eventX: number,
   eventY: number
 ) => {
@@ -58,22 +58,25 @@ export const pointerHoverOffset = (
   let adjustedY = eventY;
 
   if (gameMode === GameMode.TwoPlayer) {
-    if (playersTurn % 2 === 1) {
-      adjustedY = eventY - 40;
-    } else if (playersTurn % 2 === 0) {
-      adjustedY = eventY + 40;
-    }
-  } else {
-    if (playersTurn === 1) {
-      adjustedY = eventY - 40;
-    } else if (playersTurn === 2) {
-      adjustedX = eventX - 40;
-    } else if (playersTurn === 3) {
-      adjustedY = eventY + 40;
-    } else {
-      adjustedX = eventX + 40;
+    if (team === Team.TeamOne) {
+      adjustedY = eventY - 50;
+      // adjustedX = eventX - 15;
+    } else if (team === Team.TeamTwo) {
+      adjustedY = eventY + 65;
+      adjustedX = eventX + 7;
     }
   }
+  // else {
+  //   if (playersTurn === 1) {
+  //     adjustedY = eventY - 40;
+  //   } else if (playersTurn === 2) {
+  //     adjustedX = eventX - 40;
+  //   } else if (playersTurn === 3) {
+  //     adjustedY = eventY + 40;
+  //   } else {
+  //     adjustedX = eventX + 40;
+  //   }
+  // }
 
   return { adjustedX, adjustedY };
 };

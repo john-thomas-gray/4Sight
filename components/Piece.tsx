@@ -195,7 +195,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
             const { adjustedX, adjustedY } = pointerHoverOffset(
               logic.gameMode,
-              logic.playersTurn,
+              team,
               event.absoluteX,
               event.absoluteY
             );
