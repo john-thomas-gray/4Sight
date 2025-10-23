@@ -181,7 +181,7 @@ const Piece = ({ team, id }: PieceProps) => {
         .onUpdate((event) => {
           pieceHoldOffset(
             logic.gameMode,
-            logic.playersTurn,
+            team,
             animate.translateX,
             animate.translateY,
             event.absoluteX,

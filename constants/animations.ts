@@ -28,3 +28,8 @@ export const WELL_ZINDEX_DELAY = 500;
 export const BOARD_ZINDEX_DELAY = 200;
 export const HELD_ZINDEX_DELAY = 0;
 export const RESET_PIECE_DELAY = 500;
+
+export const PLAYER_ONE_HOLD_OFFSET_X = -15;
+export const PLAYER_ONE_HOLD_OFFSET_Y = -65;
+export const PLAYER_TWO_HOLD_OFFSET_X = -10;
+export const PLAYER_TWO_HOLD_OFFSET_Y = 50;
