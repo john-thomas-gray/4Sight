@@ -1,10 +1,8 @@
 Final:
 
 - Turn change delay builds up each time a game is won\*
-- loading screen glitch\*
 - Animate tutorial messages
 - Reorder tutorial more elegantly
-- Menues styled by theme
 - disconnect piece enabled from whose turn it is. Make an independent
   variable responsible for when each team can move. Either that or have piece enabled
   turn dependent but make boardColor change on a timeout.
