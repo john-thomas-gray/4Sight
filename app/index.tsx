@@ -75,24 +75,62 @@ function InnerIndexLayout() {
   const onPressSettings = useDebouncedPress(() => router.push("/settings"));
 
   return (
-    <View className="flex-1 border-2 border-red-50 items-center justify-evenly bg-white">
+    <View
+      className="flex-1 items-center justify-evenly"
+      style={{
+        backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
+      }}
+    >
       <View className="flex-row items-end items-center">
-        <Text className="text-black font-bold text-[128px] mb-4">4</Text>
-        <Text className="text-black font-bold text-8xl ml-2">Sight</Text>
+        <Text
+          className="font-bold text-[128px] mb-4"
+          style={{
+            color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
+          }}
+        >
+          4
+        </Text>
+        <Text
+          className="font-bold text-8xl ml-2"
+          style={{
+            color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
+          }}
+        >
+          Sight
+        </Text>
       </View>
       <View className="flex-col items-center space-y-4">
         <Pressable onPress={onPressPlay}>
-          <Text className="text-3xl">
+          <Text
+            className="text-3xl"
+            style={{
+              color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
+            }}
+          >
             {settings.tutorialEnabled ? "Tutorial" : "New Game"}
           </Text>
         </Pressable>
         {hasSavedGame && (
           <Pressable onPress={onPressContinue}>
-            <Text className="text-3xl">Continue</Text>
+            <Text
+              className="text-3xl"
+              style={{
+                color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
+              }}
+            >
+              Continue
+            </Text>
           </Pressable>
         )}
         <Pressable onPress={onPressSettings}>
-          <Text className="text-3xl">Settings</Text>
+          <Text
+            className="text-3xl"
+            style={{
+              color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
+            }}
+          >
+            Settings
+          </Text>
         </Pressable>
       </View>
     </View>
