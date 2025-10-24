@@ -21,6 +21,7 @@ Theme:
 
 Polish:
 
+- can put pieces in enemy well
 - Pieces aren't returned to wells properly
 - Turn change delay builds up each time a game is won\*
 - loading screen glitch\*
