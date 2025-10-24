@@ -55,9 +55,9 @@ export type LogicContextType = {
   setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
   pieceAnimations: Record<string, PieceAnimation>;
   pieceStatusMap: PieceStatusMap;
+  setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
   playersTurn: 1 | 2 | 3 | 4;
   setPlayersTurn: React.Dispatch<React.SetStateAction<1 | 2 | 3 | 4>>;
-  setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
   moveInProgress: boolean;
   setMoveInProgress: React.Dispatch<React.SetStateAction<boolean>>;
   setMIP: ({ setting, delay }: { setting: boolean; delay?: number }) => void;
@@ -104,7 +104,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
   const [moveInProgress, setMoveInProgress] = useState(false);
   const setMIP = ({ setting, delay }: { setting: boolean; delay?: number }) => {
-    setTimeout(() => setMoveInProgress(setting), delay || 0);
+    const id = setTimeout(() => setMoveInProgress(setting), delay || 0);
+    return () => clearTimeout(id);
   };
 
   /* Piece Trackers */
@@ -116,7 +117,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     Record<string, string>
   >({});
 
-  const { spaces } = useLayout();
   const { wells, layoutReady } = useLayout();
 
   /* When a dropped piece makes a space activate highlightPulse,
@@ -177,61 +177,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   // Tracks whether we rehydrated from saved state to avoid overwriting
   const rehydratedRef = useRef(false);
   // Ensure we only snap positions once after rehydration
-  const rehydrationPositionsAppliedRef = useRef(false);
-
-  // Ensure animations match saved locations once layout is ready
-  React.useEffect(() => {
-    if (!layoutReady) return;
-    if (!rehydratedRef.current) return;
-    if (rehydrationPositionsAppliedRef.current) return;
-
-    try {
-      Object.entries(pieces).forEach(([pieceId, p]) => {
-        const anim = pieceAnimations[pieceId];
-        if (!anim) return;
-
-        // On-board position
-        const onBoardEntry = Object.entries(boardPieceLocations).find(
-          ([, id]) => id === pieceId
-        );
-        if (onBoardEntry) {
-          const [spaceId] = onBoardEntry;
-          const spaceLayout = spaces[spaceId];
-          if (spaceLayout) {
-            anim.translateX.value =
-              spaceLayout.pageX +
-              spaceLayout.width / 2 -
-              GameElements.PIECE_RADIUS;
-            anim.translateY.value =
-              spaceLayout.pageY +
-              spaceLayout.height / 2 -
-              GameElements.PIECE_RADIUS;
-          }
-          return;
-        }
-
-        // In-well position
-        const inWellEntry = Object.entries(wellPieceLocations).find(
-          ([, id]) => id === pieceId
-        );
-        if (inWellEntry) {
-          const [wellId] = inWellEntry;
-          const wellLayout = wells[p.team]?.[wellId];
-          if (wellLayout) {
-            anim.translateX.value =
-              wellLayout.pageX +
-              wellLayout.width / 2 -
-              GameElements.PIECE_RADIUS;
-            anim.translateY.value =
-              wellLayout.pageY +
-              wellLayout.height / 2 -
-              GameElements.PIECE_RADIUS;
-          }
-        }
-      });
-      rehydrationPositionsAppliedRef.current = true;
-    } catch {}
-  }, [layoutReady, spaces, wells, pieces, pieceAnimations]);
+  // const rehydrationPositionsAppliedRef = useRef(false);
+  // Holds cleanup for any scheduled winner timeouts so we can clear them on reset/new schedules
+  const winnerCleanupRef = useRef<null | (() => void)>(null);
 
   const buildTeamPieces = React.useCallback(
     (
@@ -304,7 +252,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     initialPieceStatusMap
   );
 
-  /* Look into logical strategies for implementing two game modes */
   const getNextPlayersTurn = (currentTurn: number): 1 | 2 | 3 | 4 => {
     return ((currentTurn % 4) + 1) as 1 | 2 | 3 | 4;
   };
@@ -321,6 +268,11 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const checkGameFinished = useCallback(
     (updatedBoardPieceLocations: Record<string, string>) => {
+      // Clear any prior scheduled winner animations to avoid accumulation across games
+      if (winnerCleanupRef.current) {
+        winnerCleanupRef.current();
+        winnerCleanupRef.current = null;
+      }
       const pieceRelationships = findPieceRelationships({
         boardPieceLocations: updatedBoardPieceLocations,
         winLen: Logic.WIN_LENGTH,
@@ -340,18 +292,18 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       };
 
       function setWinningPieces({ winners, animations }: SetWinningPieces) {
+        const timeoutIds: ReturnType<typeof setTimeout>[] = [];
         const updatePieceStatus = (
           groups: BoardPieces[],
           pieceStatus: PieceStatus
         ) => {
           const pieceAnims = animations;
-          // Keep step equal to actual winner duration to maintain synchrony
           const CASCADE_STEP = WINNER_V1 + WINNER_V0;
           let pieceIdx = 0;
           groups.forEach((group) => {
             group.forEach((boardPiece: BoardPiece) => {
               const delay = WINNER_BASE_DELAY + pieceIdx * CASCADE_STEP;
-              setTimeout(() => {
+              const id = setTimeout(() => {
                 setPieceStatusMap((prev) => ({
                   ...prev,
                   [boardPiece.pieceId]: pieceStatus,
@@ -360,6 +312,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
                   ...pieceAnims[boardPiece.pieceId],
                 });
               }, delay);
+              timeoutIds.push(id);
               pieceIdx += 1;
             });
           });
@@ -367,17 +320,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
         const winnersOne = winners.teamOne;
         const winnersTwo = winners.teamTwo;
-        // const partialsOne = partials.teamOne;
-        // const partialsTwo = partials.teamTwo;
 
         updatePieceStatus(winnersOne, PieceStatus.winner);
         updatePieceStatus(winnersTwo, PieceStatus.winner);
-        // updatePieceStatus(partialsOne, PieceStatus.partial);
-        // updatePieceStatus(partialsTwo, PieceStatus.partial);
+        return () => timeoutIds.forEach((id) => clearTimeout(id));
       }
-      // console.log("pieceR", pieceRelationships)
 
-      setWinningPieces({
+      winnerCleanupRef.current = setWinningPieces({
         partials: pieceRelationships.partials,
         winners: pieceRelationships.winners,
         setPieces,
@@ -421,7 +370,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const resetGame = useCallback(
     (startingPlayersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => {
       rehydratedRef.current = false;
-      rehydrationPositionsAppliedRef.current = false;
       const baseStartingTurn =
         gameState === GameState.PostGame || gameState === GameState.Finished
           ? winner === Team.TeamOne
@@ -435,6 +383,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       const nextPlayersTurn = forfeit
         ? getNextPlayersTurn(baseStartingTurn)
         : baseStartingTurn;
+
+      // Clear any previously scheduled winner animations before resetting
+      if (winnerCleanupRef.current) {
+        winnerCleanupRef.current();
+        winnerCleanupRef.current = null;
+      }
 
       setWinner(Team.Unassigned);
       setGameState(GameState.Ready);
@@ -451,6 +405,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
       setBoardPieceLocations({});
       setWellPieceLocations({});
+      cancelAnimation(highlightPulse);
 
       const freshPieceStatusMap: PieceStatusMap = {};
       for (let i = 0; i < 48; i++) {
@@ -500,6 +455,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       gameState,
       playersTurn,
       winner,
+      highlightPulse,
     ]
   );
 
@@ -535,7 +491,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setPreviewPieces,
       rehydrateFromSavedState: (state: PersistedAppState) => {
         rehydratedRef.current = true;
-        rehydrationPositionsAppliedRef.current = false;
         if (state.gameMode !== undefined) setGameMode(state.gameMode);
         if (state.pieces !== undefined) setPieces(state.pieces);
         if (state.pieceStatusMap !== undefined)
