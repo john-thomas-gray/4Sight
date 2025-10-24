@@ -70,8 +70,8 @@ export type LogicContextType = {
     React.SetStateAction<Record<string, string>>
   >;
   resetGame: (playersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => void;
-  previewHiddenPieces: Record<string, boolean>;
-  setPreviewHiddenPieces: React.Dispatch<
+  previewPieces: Record<string, boolean>;
+  setPreviewPieces: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
   rehydrateFromSavedState: (state: PersistedAppState) => void;
@@ -97,22 +97,18 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [gameMode, setGameMode] = useState<GameMode>(GameMode.TwoPlayer);
+
   const [playersTurn, setPlayersTurn] = useState<1 | 2 | 3 | 4>(1);
   const [turnCount, setTurnCount] = useState<number>(0);
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
   const [winner, setWinner] = useState<Team>(Team.Unassigned);
-  const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
-  const { wells, layoutReady } = useLayout();
-  const pieceAnimations = usePieceAnimations();
-  const pieceAnimationsRef = useRef(pieceAnimations);
-  React.useEffect(() => {
-    pieceAnimationsRef.current = pieceAnimations;
-  }, [pieceAnimations]);
   const [moveInProgress, setMoveInProgress] = useState(false);
   const setMIP = ({ setting, delay }: { setting: boolean; delay?: number }) => {
     setTimeout(() => setMoveInProgress(setting), delay || 0);
   };
 
+  /* Piece Trackers */
+  const [pieces, setPieces] = useState<Record<string, PieceProps>>({});
   const [wellPieceLocations, setWellPieceLocations] = useState<
     Record<string, string>
   >({});
@@ -120,9 +116,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     Record<string, string>
   >({});
 
-  const [previewHiddenPieces, setPreviewHiddenPieces] = useState<
-    Record<string, boolean>
-  >({});
+  const { spaces } = useLayout();
+  const { wells, layoutReady } = useLayout();
 
   /* When a dropped piece makes a space activate highlightPulse,
   that space's highlightPulse -- and only that space's highlightPulse --
@@ -131,18 +126,21 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
    next time highlightPulse.value reaches 0 after the newest piece's
    animation has fully stopped. */
 
-  // Spaces that result in a win on the next turn (for either team)
+  /* Visual Effects */
+  const pieceAnimations = usePieceAnimations();
+  const pieceAnimationsRef = useRef(pieceAnimations);
+  React.useEffect(() => {
+    pieceAnimationsRef.current = pieceAnimations;
+  }, [pieceAnimations]);
   const [nextTurnWins, setNextTurnWins] = useState<Record<string, boolean>>({});
-
-  // Global pulse shared value to keep all highlights perfectly in sync
   const highlightPulse = useSharedValue(0);
-
-  // Whether the user is currently long-press previewing a gravity shift
+  const [previewPieces, setPreviewPieces] = useState<Record<string, boolean>>(
+    {}
+  );
   const [isPreviewingGravity, setIsPreviewingGravity] = useState(false);
-  // Whether the gravity pull animation is currently running
   const [gravityAnimating, setGravityAnimating] = useState(false);
-  // Global loading overlay across screens
-  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+  /* Tutorial Only */
   const [lastGravityDirection, setLastGravityDirection] = useState<
     Direction | undefined
   >(undefined);
@@ -174,9 +172,10 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [isPreviewingGravity, gravityAnimating, gameState, nextTurnWins]);
 
+  ///* Big Game Logic */
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   // Tracks whether we rehydrated from saved state to avoid overwriting
   const rehydratedRef = useRef(false);
-  const { spaces } = useLayout();
   // Ensure we only snap positions once after rehydration
   const rehydrationPositionsAppliedRef = useRef(false);
 
@@ -532,8 +531,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       boardPieceLocations,
       setBoardPieceLocations,
       resetGame,
-      previewHiddenPieces,
-      setPreviewHiddenPieces,
+      previewPieces,
+      setPreviewPieces,
       rehydrateFromSavedState: (state: PersistedAppState) => {
         rehydratedRef.current = true;
         rehydrationPositionsAppliedRef.current = false;
@@ -579,7 +578,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       nextTurn,
       checkGameFinished,
       resetGame,
-      previewHiddenPieces,
+      previewPieces,
       nextTurnWins,
       gravityAnimating,
       isGlobalLoading,

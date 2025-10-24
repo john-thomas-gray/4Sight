@@ -255,12 +255,12 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const gravityPreview = (side: "up" | "down" | "left" | "right") => {
     if (!settings.shiftPreviews) {
       setGravityPreviewPieces(null);
-      logic.setPreviewHiddenPieces({});
+      logic.setPreviewPieces({});
       return;
     }
     if (logic.gameState !== GameState.Playing || logic.moveInProgress) {
       setGravityPreviewPieces(null);
-      logic.setPreviewHiddenPieces({});
+      logic.setPreviewPieces({});
       return;
     }
     const opposite: Direction =
@@ -274,7 +274,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     const { previews, hasMoves } = computePreview(opposite);
     if (!hasMoves) {
       setGravityPreviewPieces(null);
-      logic.setPreviewHiddenPieces({});
+      logic.setPreviewPieces({});
       return;
     }
     const toHide: Record<string, boolean> = {};
@@ -285,7 +285,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       toHide[pieceId] = !wellPieceIds.has(pieceId);
     });
     setGravityPreviewPieces(previews);
-    logic.setPreviewHiddenPieces(toHide);
+    logic.setPreviewPieces(toHide);
   };
 
   const longPressDurationMS = 0;
@@ -335,7 +335,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setPreviewPieces, {});
       if (settings.shiftPreviews)
         scheduleOnRN(logic.setIsPreviewingGravity, false);
     });
@@ -379,7 +379,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setPreviewPieces, {});
       if (settings.shiftPreviews)
         scheduleOnRN(logic.setIsPreviewingGravity, false);
     });
@@ -423,7 +423,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setPreviewPieces, {});
       if (settings.shiftPreviews)
         scheduleOnRN(logic.setIsPreviewingGravity, false);
     });
@@ -467,7 +467,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewHiddenPieces, {});
+      scheduleOnRN(logic.setPreviewPieces, {});
       if (settings.shiftPreviews)
         scheduleOnRN(logic.setIsPreviewingGravity, false);
     });

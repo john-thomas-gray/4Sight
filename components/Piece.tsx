@@ -150,7 +150,7 @@ const Piece = ({ team, id }: PieceProps) => {
     }
   }, [status]);
 
-  //#region PIECE MOVEMENT LOGIC
+  // #region PIECE MOVEMENT LOGIC
 
   const [hoverSpaceId, setHoverSpaceId] = React.useState<string | null>(null);
   const setHover = (spaceId: string | null) => {
@@ -163,7 +163,7 @@ const Piece = ({ team, id }: PieceProps) => {
         // .enabled(
         //   logic.gameState !== GameState.Finished &&
         //     logic.gameState !== GameState.PostGame &&
-        //     logic.currentTeam === team &&
+        //     logic.thisPlayerCanMove === team &&
         //     (status === PieceStatus.isHeld ||
         //       (status === PieceStatus.inWell && logic.moveInProgress === false))
         // )
@@ -569,7 +569,7 @@ const Piece = ({ team, id }: PieceProps) => {
         }),
     [logic.gameState, logic.currentTeam, status, logic.moveInProgress]
   );
-  //#endregion
+  // #endregion
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
       { translateX: animate.translateX.value },
@@ -614,7 +614,7 @@ const Piece = ({ team, id }: PieceProps) => {
             status === PieceStatus.inWell
               ? { zIndex: GameElements.PIECE_WELL_ZINDEX }
               : null,
-            logic.previewHiddenPieces[id] ? { opacity: 0 } : null,
+            logic.previewPieces[id] ? { opacity: 0 } : null,
           ]}
         >
           <Highlight pieceId={id} />

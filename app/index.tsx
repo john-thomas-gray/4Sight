@@ -25,8 +25,6 @@ function InnerIndexLayout() {
       saved.boardPieceLocations &&
         Object.keys(saved.boardPieceLocations).length > 0
     );
-    console.log("boardpieces", saved.boardPieceLocations);
-    console.log(hasBoard);
     return hasBoard;
   }, []);
 
@@ -35,7 +33,6 @@ function InnerIndexLayout() {
     (async () => {
       const saved = await loadAppState();
       const has = computeHasSavedGame(saved as PersistedAppState);
-      console.log("has", has);
       if (mounted) setHasSavedGame(has);
     })();
     return () => {
@@ -76,7 +73,6 @@ function InnerIndexLayout() {
   const onPressPlay = useDebouncedPress(handlePlay);
   const onPressContinue = useDebouncedPress(handleContinue);
   const onPressSettings = useDebouncedPress(() => router.push("/settings"));
-  const onPressHowTo = useDebouncedPress(() => router.push("/howToPlay"));
 
   return (
     <View className="flex-1 border-2 border-red-50 items-center justify-evenly bg-white">
