@@ -1,0 +1,55 @@
+Isolate issue == remove reset and save/reload
+Rebuild reset - list every variable to be reset. List default values.
+
+winner:
+logic.gameState:
+setMoveInProgress() ?
+setTurnCount()
+setBoardPieceLocations()
+setWellPieceLocations
+reset value the pieces and wells hold
+do I need to reset pieceAnimations?
+cancel the highlightPulse
+
+
+Things I probably don't need:
+
+const freshPieceStatusMap: PieceStatusMap = {};
+      for (let i = 0; i < 48; i++) {
+        freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
+      }
+      setPieceStatusMap(freshPieceStatusMap);
+
+      if (layoutReady) {
+        const rebuiltPieces: Record<string, PieceProps> = {};
+
+        const teamOneWells = Object.keys(wells[Team.TeamOne] || {});
+        teamOneWells.forEach((wellId, idx) => {
+          const id = `${0 + idx}`;
+          rebuiltPieces[id] = { id, team: Team.TeamOne };
+        });
+
+        const teamTwoWells = Object.keys(wells[Team.TeamTwo] || {});
+        teamTwoWells.forEach((wellId, idx) => {
+          const id = `${24 + idx}`;
+          rebuiltPieces[id] = { id, team: Team.TeamTwo };
+        });
+
+        const newWellPieceLocations: Record<string, string> = {};
+        teamOneWells.forEach((wellId, idx) => {
+          newWellPieceLocations[wellId] = `${0 + idx}`;
+        });
+        teamTwoWells.forEach((wellId, idx) => {
+          newWellPieceLocations[wellId] = `${24 + idx}`;
+        });
+
+        setPieces(rebuiltPieces);
+        setWellPieceLocations(newWellPieceLocations);
+      } else {
+        setPieces({});
+      }
+
+
+Make jest test to automatically test lag after x resets
+Implement save and continue
+Rethink logic context. Pieces/spcaes should hold the innfo about them, referenceable by an ID

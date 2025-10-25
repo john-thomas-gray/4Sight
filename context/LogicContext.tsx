@@ -399,41 +399,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setWellPieceLocations({});
       cancelAnimation(highlightPulse);
 
-      const freshPieceStatusMap: PieceStatusMap = {};
-      for (let i = 0; i < 48; i++) {
-        freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
-      }
-      setPieceStatusMap(freshPieceStatusMap);
-
-      if (layoutReady) {
-        const rebuiltPieces: Record<string, PieceProps> = {};
-
-        const teamOneWells = Object.keys(wells[Team.TeamOne] || {});
-        teamOneWells.forEach((wellId, idx) => {
-          const id = `${0 + idx}`;
-          rebuiltPieces[id] = { id, team: Team.TeamOne };
-        });
-
-        const teamTwoWells = Object.keys(wells[Team.TeamTwo] || {});
-        teamTwoWells.forEach((wellId, idx) => {
-          const id = `${24 + idx}`;
-          rebuiltPieces[id] = { id, team: Team.TeamTwo };
-        });
-
-        const newWellPieceLocations: Record<string, string> = {};
-        teamOneWells.forEach((wellId, idx) => {
-          newWellPieceLocations[wellId] = `${0 + idx}`;
-        });
-        teamTwoWells.forEach((wellId, idx) => {
-          newWellPieceLocations[wellId] = `${24 + idx}`;
-        });
-
-        setPieces(rebuiltPieces);
-        setWellPieceLocations(newWellPieceLocations);
-      } else {
-        setPieces({});
-      }
-
       setPlayersTurn(nextPlayersTurn);
       firstTurn.current = true;
     },
