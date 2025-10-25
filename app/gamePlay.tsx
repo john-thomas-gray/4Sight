@@ -6,7 +6,7 @@ import Piece from "@/components/Piece";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import { useGameContext } from "@/context/GameContext";
-import { useShake } from "@/hooks/useShake";
+import useShake from "@/hooks/useShake";
 import { Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
@@ -17,18 +17,17 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import useTutorial from "../hooks/useTutorial";
 
 const GamePlay = () => {
   const { layout, logic, settings } = useGameContext();
   const router = useRouter();
   useShake({
     enabled:
-      logic.gameState === GameState.PostGame ||
       logic.gameState === GameState.Finished ||
       logic.gameState === GameState.Playing,
     onShake: () => {
-      logic.resetGame(logic.playersTurn, false);
+      // logic.resetGame(logic.playersTurn, false);
+      console.log("Shake for reset");
     },
   });
   const piecesToRender = React.useMemo(
@@ -37,7 +36,7 @@ const GamePlay = () => {
   );
 
   const [loadTimer, setLoadTimer] = useState(true);
-  const loadAnimationLoops = 1.5;
+  const loadAnimationLoops = 0;
 
   useEffect(() => {
     setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);
@@ -90,7 +89,7 @@ const GamePlay = () => {
       <LoadingScreen visible={!layout.layoutReady || loadTimer} />
 
       {/* Tutorial overlay and modal render above gameplay UI */}
-      {layout.layoutReady && !loadTimer && <TutorialMount />}
+      {/* {layout.layoutReady && !loadTimer && <TutorialMount />} */}
 
       {layout.layoutReady && !loadTimer && (
         <Animated.View
@@ -108,7 +107,7 @@ const GamePlay = () => {
 export default GamePlay;
 
 // Separate child to safely use hooks conditionally above the rest of the UI
-const TutorialMount = () => {
+/* const TutorialMount = () => {
   const tutorial = useTutorial();
   return (
     <>
@@ -117,3 +116,4 @@ const TutorialMount = () => {
     </>
   );
 };
+ */

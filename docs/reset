@@ -1,0 +1,5 @@
+Isolate issue == remove reset and save/reload
+Rebuild reset - list every variable to be reset. List default values.
+Make jest test to automatically test lag after x resets
+Implement save and continue
+Rethink logic context. Pieces/spcaes should hold the innfo about them, referenceable by an ID

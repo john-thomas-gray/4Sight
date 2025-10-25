@@ -138,15 +138,15 @@ const Harness: React.FC = () => {
   ]);
 
   // Once winner is detected, reset the game (no forfeit)
-  React.useEffect(() => {
-    if (!capturedInitial) return;
-    if (
-      logic.winner === Team.TeamOne &&
-      logic.gameState === GameState.Finished
-    ) {
-      logic.resetGame(1, false);
-    }
-  }, [logic, logic.winner, logic.gameState, capturedInitial]);
+  // React.useEffect(() => {
+  //   if (!capturedInitial) return;
+  //   if (
+  //     logic.winner === Team.TeamOne &&
+  //     logic.gameState === GameState.Finished
+  //   ) {
+  //     logic.resetGame(1, false);
+  //   }
+  // }, [logic, logic.winner, logic.gameState, capturedInitial]);
 
   // Mark when post-reset state is achieved
   React.useEffect(() => {

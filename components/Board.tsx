@@ -102,7 +102,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const executePull = (direction: Direction) => {
     // If game is finished, fling should reset instead of pulling
     if (logic.gameState === GameState.Finished) {
-      logic.resetGame(logic.playersTurn, false);
+      console.log("Pull for reset. GameState:", logic.gameState);
+      // logic.resetGame(logic.playersTurn, false);
       return;
     }
     if (logic.gameState === GameState.Ready || isMoving.current) return;
@@ -120,20 +121,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
   const handleFling = (direction: Direction, gameState: GameState) => {
     if (gameState === GameState.Playing) {
-      // If tutorial restricts to down-only, ignore other directions
-      if (logic.restrictGravityToDown && direction !== Direction.Down) {
-        return;
-      }
-      console.log("pull");
-      try {
-        logic.setLastGravityDirection &&
-          logic.setLastGravityDirection(direction);
-      } catch {}
       executePull(direction);
-    } else if (
-      gameState === GameState.PostGame ||
-      gameState === GameState.Finished
-    ) {
+    } else if (gameState === GameState.Finished) {
       logic.resetGame(logic.playersTurn, false);
     }
   };

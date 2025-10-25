@@ -6,13 +6,14 @@ import {
   WINNER_V1,
 } from "@/constants/animations";
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
-import { Direction, Team } from "@/types/board";
+import { Team } from "@/types/board";
 import {
   GameMode,
   GameState,
   PieceProps,
   PieceStatus,
   PieceStatusMap,
+  Turn,
 } from "@/types/logic";
 import findPieceRelationships, {
   BoardPiece,
@@ -45,7 +46,6 @@ export type LogicContextType = {
   turnCount: number;
   setTurnCount: React.Dispatch<React.SetStateAction<number>>;
   currentTeam: Team;
-  nextTurn: () => void;
   checkGameFinished: (updatedBoard: Record<string, string>) => void;
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
@@ -83,12 +83,6 @@ export type LogicContextType = {
   setGravityAnimating: React.Dispatch<React.SetStateAction<boolean>>;
   isGlobalLoading: boolean;
   setIsGlobalLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  lastGravityDirection?: Direction;
-  setLastGravityDirection?: React.Dispatch<
-    React.SetStateAction<Direction | undefined>
-  >;
-  restrictGravityToDown: boolean;
-  setRestrictGravityToDown: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const LogicContext = createContext<LogicContextType | undefined>(undefined);
@@ -140,11 +134,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [isPreviewingGravity, setIsPreviewingGravity] = useState(false);
   const [gravityAnimating, setGravityAnimating] = useState(false);
 
-  /* Tutorial Only */
-  const [lastGravityDirection, setLastGravityDirection] = useState<
-    Direction | undefined
-  >(undefined);
-  const [restrictGravityToDown, setRestrictGravityToDown] = useState(false);
   React.useEffect(() => {
     cancelAnimation(highlightPulse);
     const noHighlights = Object.keys(nextTurnWins || {}).length === 0;
@@ -256,7 +245,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     return ((currentTurn % 4) + 1) as 1 | 2 | 3 | 4;
   };
 
-  const nextTurn = useCallback(() => {
+  const incrementTurnNumber = useCallback(() => {
     setGameState((prev) =>
       prev === GameState.Ready ? GameState.Playing : prev
     );
@@ -360,16 +349,18 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         setWinner(winnerTeam);
         setGameState(GameState.Finished);
       } else {
-        nextTurn();
+        /* This should NOT be incrementTurnNumber.
+        Replace with a dedicated function for
+        advancing the turn */
+        incrementTurnNumber();
       }
       console.log(gameState);
     },
-    [pieces, pieceAnimations, nextTurn]
+    [pieces, pieceAnimations, incrementTurnNumber]
   );
 
   const resetGame = useCallback(
-    (startingPlayersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => {
-      rehydratedRef.current = false;
+    (startingPlayersTurn: Turn, forfeit: boolean) => {
       const baseStartingTurn =
         gameState === GameState.PostGame || gameState === GameState.Finished
           ? winner === Team.TeamOne
@@ -377,9 +368,10 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
             : winner === Team.TeamTwo
             ? 2
             : startingPlayersTurn
-          : gameState === GameState.Playing
+          : gameState === GameState.Playing && forfeit
           ? getNextPlayersTurn(playersTurn)
           : startingPlayersTurn;
+
       const nextPlayersTurn = forfeit
         ? getNextPlayersTurn(baseStartingTurn)
         : baseStartingTurn;
@@ -466,7 +458,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       turnCount,
       setTurnCount,
       currentTeam,
-      nextTurn,
       checkGameFinished,
       gameState,
       setGameState,
@@ -512,10 +503,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       setGravityAnimating,
       isGlobalLoading,
       setIsGlobalLoading,
-      lastGravityDirection,
-      setLastGravityDirection,
-      restrictGravityToDown,
-      setRestrictGravityToDown,
     }),
     [
       gameMode,
@@ -530,15 +517,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       moveInProgress,
       wellPieceLocations,
       boardPieceLocations,
-      nextTurn,
       checkGameFinished,
       resetGame,
       previewPieces,
       nextTurnWins,
       gravityAnimating,
       isGlobalLoading,
-      lastGravityDirection,
-      restrictGravityToDown,
     ]
   );
 

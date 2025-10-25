@@ -1,8 +1,7 @@
 import { useGameContext } from "@/context/GameContext";
 import { useDebouncedPress } from "@/hooks/useDebouncedPress";
-import { GameState } from "@/types/logic";
 import type { PersistedAppState } from "@/utils/useAsyncStorage";
-import { clearSavedGame, loadAppState } from "@/utils/useAsyncStorage";
+import { loadAppState } from "@/utils/useAsyncStorage";
 import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -57,16 +56,16 @@ function InnerIndexLayout() {
 
   const handlePlay = React.useCallback(async () => {
     logic.setIsGlobalLoading(true);
-    logic.resetGame(1, false);
-    await clearSavedGame();
+    /* logic.resetGame(1, false);
+    await clearSavedGame(); */
     router.replace("/gamePlay");
   }, [logic]);
 
   const handleContinue = React.useCallback(async () => {
     logic.setIsGlobalLoading(true);
-    const saved = await loadAppState();
+    /* const saved = await loadAppState();
     logic.rehydrateFromSavedState(saved);
-    logic.setGameState(GameState.Playing);
+    logic.setGameState(GameState.Playing); */
     router.replace("/gamePlay");
   }, [logic]);
 
