@@ -1,4 +1,4 @@
-import { animateWinner, resetAllPieces } from "@/animations/pieceAnimations";
+import { animateWinner } from "@/animations/pieceAnimations";
 import { GameElements, Logic } from "@/constants";
 import {
   WINNER_BASE_DELAY,
@@ -8,17 +8,24 @@ import {
 import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
 import { Team } from "@/types/board";
 import {
+  LogicAnimationsContextType,
+  LogicBoardStateContextType,
+  LogicGameFlowContextType,
+  LogicInteractionsContextType,
+  LogicUIContextType,
+} from "@/types/context";
+import {
   GameMode,
   GameState,
   PieceProps,
   PieceStatus,
   PieceStatusMap,
-  Turn,
 } from "@/types/logic";
 import findPieceRelationships, {
   BoardPiece,
   BoardPieces,
 } from "@/utils/findPieceRelationships";
+import { PersistedAppState } from "@/utils/useAsyncStorage";
 import React, {
   createContext,
   ReactNode,
@@ -27,7 +34,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { SharedValue } from "react-native-reanimated";
 import {
   cancelAnimation,
   Easing,
@@ -36,56 +42,22 @@ import {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-// reanimated helpers used in animation helpers module
-import { PersistedAppState } from "@/utils/useAsyncStorage";
 import { useLayout } from "./LayoutContext";
 
-export type LogicContextType = {
-  gameMode: GameMode;
-  setGameMode: React.Dispatch<React.SetStateAction<GameMode>>;
-  turnCount: number;
-  setTurnCount: React.Dispatch<React.SetStateAction<number>>;
-  currentTeam: Team;
-  checkGameFinished: (updatedBoard: Record<string, string>) => void;
-  gameState: GameState;
-  setGameState: React.Dispatch<React.SetStateAction<GameState>>;
-  winner: Team;
-  setWinner: React.Dispatch<React.SetStateAction<Team>>;
-  pieces: Record<string, PieceProps>;
-  setPieces: React.Dispatch<React.SetStateAction<Record<string, PieceProps>>>;
-  pieceAnimations: Record<string, PieceAnimation>;
-  pieceStatusMap: PieceStatusMap;
-  setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
-  playersTurn: 1 | 2 | 3 | 4;
-  setPlayersTurn: React.Dispatch<React.SetStateAction<1 | 2 | 3 | 4>>;
-  moveInProgress: boolean;
-  setMoveInProgress: React.Dispatch<React.SetStateAction<boolean>>;
-  setMIP: ({ setting, delay }: { setting: boolean; delay?: number }) => void;
-  wellPieceLocations: Record<string, string>;
-  setWellPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
-  boardPieceLocations: Record<string, string>;
-  setBoardPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
-  resetGame: (playersTurn: 1 | 2 | 3 | 4, forfeit: boolean) => void;
-  previewPieces: Record<string, boolean>;
-  setPreviewPieces: React.Dispatch<
-    React.SetStateAction<Record<string, boolean>>
-  >;
-  rehydrateFromSavedState: (state: PersistedAppState) => void;
-  nextTurnWins: Record<string, boolean>;
-  highlightPulse: SharedValue<number>;
-  isPreviewingGravity: boolean;
-  setIsPreviewingGravity: React.Dispatch<React.SetStateAction<boolean>>;
-  gravityAnimating: boolean;
-  setGravityAnimating: React.Dispatch<React.SetStateAction<boolean>>;
-  isGlobalLoading: boolean;
-  setIsGlobalLoading: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const LogicContext = createContext<LogicContextType | undefined>(undefined);
+// Sub-contexts
+const LogicUIContext = createContext<LogicUIContextType | undefined>(undefined);
+const LogicGameFlowContext = createContext<
+  LogicGameFlowContextType | undefined
+>(undefined);
+const LogicBoardStateContext = createContext<
+  LogicBoardStateContextType | undefined
+>(undefined);
+const LogicAnimationsContext = createContext<
+  LogicAnimationsContextType | undefined
+>(undefined);
+const LogicInteractionsContext = createContext<
+  LogicInteractionsContextType | undefined
+>(undefined);
 
 export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -161,7 +133,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [isPreviewingGravity, gravityAnimating, gameState, nextTurnWins]);
 
-  ///* Big Game Logic */
+  ///* Interactions Logic */
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   // Tracks whether we rehydrated from saved state to avoid overwriting
   const rehydratedRef = useRef(false);
@@ -214,7 +186,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   React.useEffect(() => {
-    if (!layoutReady) return;
     // If user pressed Play (no saved board/wells), allow initial build
     // If we rehydrated (Continue), skip build to preserve saved state
     // Defer one tick so Settings rehydration can run first and set rehydratedRef
@@ -359,92 +330,106 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     [pieces, pieceAnimations, incrementTurnNumber]
   );
 
-  const resetGame = useCallback(
-    (startingPlayersTurn: Turn, forfeit: boolean) => {
-      const baseStartingTurn =
-        gameState === GameState.PostGame || gameState === GameState.Finished
-          ? winner === Team.TeamOne
-            ? 1
-            : winner === Team.TeamTwo
-            ? 2
-            : startingPlayersTurn
-          : gameState === GameState.Playing && forfeit
-          ? getNextPlayersTurn(playersTurn)
-          : startingPlayersTurn;
+  const resetGame = useCallback(() => {
+    // !@# This is not realy in scope
+    cancelAnimation(highlightPulse);
 
-      const nextPlayersTurn = forfeit
-        ? getNextPlayersTurn(baseStartingTurn)
-        : baseStartingTurn;
+    // Rebuild initial pieces and well mappings exactly like first load
+    const { pieces: teamOnePieces, wellMap: teamOneWellMap } = buildTeamPieces(
+      Team.TeamOne,
+      0,
+      wells[Team.TeamOne]
+    );
+    const { pieces: teamTwoPieces, wellMap: teamTwoWellMap } = buildTeamPieces(
+      Team.TeamTwo,
+      24,
+      wells[Team.TeamTwo]
+    );
+    setPieces({ ...teamOnePieces, ...teamTwoPieces });
+    setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
 
-      // Clear any previously scheduled winner animations before resetting
-      if (winnerCleanupRef.current) {
-        winnerCleanupRef.current();
-        winnerCleanupRef.current = null;
-      }
+    // Clear any previously scheduled winner animations before resetting
+    if (winnerCleanupRef.current) {
+      winnerCleanupRef.current();
+      winnerCleanupRef.current = null;
+    }
 
-      setWinner(Team.Unassigned);
-      setGameState(GameState.Ready);
-      setMoveInProgress(false);
-      setTurnCount(0);
+    // UI state
+    setIsGlobalLoading(false);
 
-      resetAllPieces({
-        boardPieceLocations,
-        wellPieceLocations,
-        wells,
-        pieces,
-        pieceAnimations,
-      });
+    // Interactions
+    setMoveInProgress(false);
 
-      setBoardPieceLocations({});
-      setWellPieceLocations({});
-      cancelAnimation(highlightPulse);
+    // Animations state
+    setGravityAnimating(false);
+    setIsPreviewingGravity(false);
+    setPreviewPieces({});
 
-      setPlayersTurn(nextPlayersTurn);
-      firstTurn.current = true;
-    },
-    [
-      layoutReady,
-      wells,
-      boardPieceLocations,
-      wellPieceLocations,
-      pieces,
-      pieceAnimations,
-      gameState,
-      playersTurn,
-      winner,
-      highlightPulse,
-    ]
+    // Board state: clear board placements
+    setBoardPieceLocations({});
+
+    // Ensure every piece is marked in-well
+    const pieceIds = Object.keys(pieces || {});
+    const resetStatusMap: PieceStatusMap = {};
+    pieceIds.forEach((pid) => {
+      resetStatusMap[pid] = PieceStatus.inWell;
+    });
+    setPieceStatusMap(resetStatusMap);
+
+    // Set turn
+    const whichPlayerStarts: 1 | 2 | 3 | 4 =
+      gameState === GameState.Finished
+        ? winner === Team.TeamOne
+          ? 1
+          : winner === Team.TeamTwo
+          ? 2
+          : 1
+        : gameState === GameState.Playing
+        ? getNextPlayersTurn(playersTurn)
+        : 1;
+
+    const freshPieceStatusMap: PieceStatusMap = {};
+    for (let i = 0; i < 48; i++) {
+      freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
+    }
+    setPieceStatusMap(freshPieceStatusMap);
+    setPlayersTurn(whichPlayerStarts);
+    setGameState(GameState.Ready);
+  }, [
+    layoutReady,
+    wells,
+    boardPieceLocations,
+    wellPieceLocations,
+    pieces,
+    pieceAnimations,
+    gameState,
+    playersTurn,
+    winner,
+    highlightPulse,
+  ]);
+
+  console.log("Turn", turnCount);
+  // Provide sub-contexts to enable consumers to subscribe to smaller slices
+  const uiValue: LogicUIContextType = React.useMemo(
+    () => ({ isGlobalLoading, setIsGlobalLoading }),
+    [isGlobalLoading]
   );
 
-  const contextValue = React.useMemo(
+  const gameFlowValue: LogicGameFlowContextType = React.useMemo(
     () => ({
       gameMode,
       setGameMode,
-      turnCount,
-      setTurnCount,
-      currentTeam,
-      checkGameFinished,
       gameState,
       setGameState,
       winner,
       setWinner,
-      pieces,
-      setPieces,
-      pieceAnimations,
-      pieceStatusMap,
       playersTurn,
       setPlayersTurn,
-      setPieceStatusMap,
-      moveInProgress,
-      setMoveInProgress,
-      setMIP,
-      wellPieceLocations,
-      setWellPieceLocations,
-      boardPieceLocations,
-      setBoardPieceLocations,
+      currentTeam,
+      turnCount,
+      setTurnCount,
+      checkGameFinished,
       resetGame,
-      previewPieces,
-      setPreviewPieces,
       rehydrateFromSavedState: (state: PersistedAppState) => {
         rehydratedRef.current = true;
         if (state.gameMode !== undefined) setGameMode(state.gameMode);
@@ -460,61 +445,110 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         if (state.playersTurn !== undefined) setPlayersTurn(state.playersTurn);
         if (state.turnCount !== undefined) setTurnCount(state.turnCount);
       },
-      nextTurnWins,
-      highlightPulse,
-      isPreviewingGravity,
-      setIsPreviewingGravity,
-      gravityAnimating,
-      setGravityAnimating,
-      isGlobalLoading,
-      setIsGlobalLoading,
     }),
     [
       gameMode,
-      turnCount,
-      currentTeam,
       gameState,
       winner,
-      pieces,
-      pieceAnimations,
-      pieceStatusMap,
       playersTurn,
-      moveInProgress,
-      wellPieceLocations,
-      boardPieceLocations,
+      currentTeam,
+      turnCount,
       checkGameFinished,
       resetGame,
-      previewPieces,
-      nextTurnWins,
-      gravityAnimating,
-      isGlobalLoading,
     ]
   );
 
-  const firstTurn = useRef(true);
-  React.useEffect(() => {
-    if (!layoutReady) return;
-    if (rehydratedRef.current) return;
-    if (firstTurn.current) {
-      firstTurn.current = false;
-      return;
-    }
-    const t = setTimeout(() => {
-      setGameState(GameState.Ready);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [layoutReady]);
+  const boardStateValue: LogicBoardStateContextType = React.useMemo(
+    () => ({
+      pieces,
+      setPieces,
+      pieceStatusMap,
+      setPieceStatusMap,
+      wellPieceLocations,
+      setWellPieceLocations,
+      boardPieceLocations,
+      setBoardPieceLocations,
+      nextTurnWins,
+    }),
+    [
+      pieces,
+      pieceStatusMap,
+      wellPieceLocations,
+      boardPieceLocations,
+      nextTurnWins,
+    ]
+  );
 
-  console.log("Turn", turnCount);
+  const animationsValue: LogicAnimationsContextType = React.useMemo(
+    () => ({
+      pieceAnimations,
+      highlightPulse,
+      gravityAnimating,
+      setGravityAnimating,
+      isPreviewingGravity,
+      setIsPreviewingGravity,
+      previewPieces,
+      setPreviewPieces,
+    }),
+    [
+      pieceAnimations,
+      highlightPulse,
+      gravityAnimating,
+      isPreviewingGravity,
+      previewPieces,
+    ]
+  );
+
+  const interactionsValue: LogicInteractionsContextType = React.useMemo(
+    () => ({ moveInProgress, setMoveInProgress, setMIP }),
+    [moveInProgress]
+  );
+
   return (
-    <LogicContext.Provider value={contextValue}>
-      {children}
-    </LogicContext.Provider>
+    <LogicUIContext.Provider value={uiValue}>
+      <LogicGameFlowContext.Provider value={gameFlowValue}>
+        <LogicBoardStateContext.Provider value={boardStateValue}>
+          <LogicAnimationsContext.Provider value={animationsValue}>
+            <LogicInteractionsContext.Provider value={interactionsValue}>
+              {children}
+            </LogicInteractionsContext.Provider>
+          </LogicAnimationsContext.Provider>
+        </LogicBoardStateContext.Provider>
+      </LogicGameFlowContext.Provider>
+    </LogicUIContext.Provider>
   );
 };
+// Slice hooks
+export const useLogicUI = () => {
+  const ctx = useContext(LogicUIContext);
+  if (!ctx) throw new Error("useLogicUI must be used within LogicProvider");
+  return ctx;
+};
 
-export const useLogic = () => {
-  const context = useContext(LogicContext);
-  if (!context) throw new Error("useLogic must be used within LogicProvider");
-  return context;
+export const useLogicGameFlow = () => {
+  const ctx = useContext(LogicGameFlowContext);
+  if (!ctx)
+    throw new Error("useLogicGameFlow must be used within LogicProvider");
+  return ctx;
+};
+
+export const useLogicBoardState = () => {
+  const ctx = useContext(LogicBoardStateContext);
+  if (!ctx)
+    throw new Error("useLogicBoardState must be used within LogicProvider");
+  return ctx;
+};
+
+export const useLogicAnimations = () => {
+  const ctx = useContext(LogicAnimationsContext);
+  if (!ctx)
+    throw new Error("useLogicAnimations must be used within LogicProvider");
+  return ctx;
+};
+
+export const useLogicInteractions = () => {
+  const ctx = useContext(LogicInteractionsContext);
+  if (!ctx)
+    throw new Error("useLogicInteractions must be used within LogicProvider");
+  return ctx;
 };

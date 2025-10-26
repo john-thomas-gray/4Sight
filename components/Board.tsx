@@ -5,6 +5,12 @@ import {
   BOARD_SIZE_ZERO_IDX,
 } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
+import {
+  useLogicAnimations,
+  useLogicBoardState,
+  useLogicGameFlow,
+  useLogicInteractions,
+} from "@/context/LogicContext";
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
@@ -26,7 +32,20 @@ type BoardProps = {
 };
 
 const Board = ({ className, onRotate }: BoardProps) => {
-  const { logic, layout, settings } = useGameContext();
+  const { layout, settings } = useGameContext();
+  const shiftPreviews = settings.shiftPreviews;
+  const { boardPieceLocations, pieces, wellPieceLocations } =
+    useLogicBoardState();
+  const {
+    pieceAnimations,
+    isPreviewingGravity,
+    setIsPreviewingGravity,
+    setPreviewPieces,
+    setGravityAnimating,
+  } = useLogicAnimations();
+  const { gameState, setGameState, checkGameFinished, playersTurn, resetGame } =
+    useLogicGameFlow();
+  const { moveInProgress, setMoveInProgress, setMIP } = useLogicInteractions();
 
   const isSlotPosition = (row: number, col: number) => {
     return (
@@ -46,7 +65,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     );
   };
 
-  const pullPieces = useGravity();
+  const pullGravity = useGravity();
   const boardRef = useRef<View>(null);
   const [boardOffset, setBoardOffset] = React.useState({ x: 0, y: 0 });
 
@@ -62,13 +81,13 @@ const Board = ({ className, onRotate }: BoardProps) => {
     if (!layout.layoutReady) return;
     console.log("timer", timer.current);
     if (timer.current > 0) return;
-    Object.keys(logic.pieces).forEach((pieceId) => {
-      const entry = Object.entries(logic.boardPieceLocations).find(
+    Object.keys(pieces).forEach((pieceId) => {
+      const entry = Object.entries(boardPieceLocations).find(
         ([, value]) => value === pieceId
       );
       if (entry) {
         const [spaceId] = entry;
-        const animate = logic.pieceAnimations[pieceId];
+        const animate = pieceAnimations[pieceId];
         const spaceLayout = layout.spaces[spaceId];
         if (!animate || !spaceLayout) return;
         animateGravity({
@@ -81,40 +100,43 @@ const Board = ({ className, onRotate }: BoardProps) => {
     timer.current = setTimeout(() => {
       if (firstTurn.current) {
         // Don't downgrade Playing to Ready when continuing a game
-        if (logic.gameState !== GameState.Playing) {
-          logic.setGameState(GameState.Ready);
+        if (gameState !== GameState.Playing) {
+          setGameState(GameState.Ready);
         }
         firstTurn.current = false;
         return;
       }
       // Advance turns after gravity or a piece placement drop
-      if (isMoving.current || logic.moveInProgress) {
-        logic.checkGameFinished(logic.boardPieceLocations);
+      if (isMoving.current || moveInProgress) {
+        checkGameFinished(boardPieceLocations);
       }
     }, 300);
     return () => {
       clearTimeout(timer.current);
       timer.current = 0;
     };
-  }, [logic.boardPieceLocations, layout.spaces, layout.layoutReady]);
+  }, [boardPieceLocations, layout.spaces, layout.layoutReady]);
   const isMoving = useRef(false);
 
   const executePull = (direction: Direction) => {
     // If game is finished, fling should reset instead of pulling
-    if (logic.gameState === GameState.Finished) {
-      console.log("Pull for reset. GameState:", logic.gameState);
+    if (gameState === GameState.Finished) {
+      console.log("Pull for reset. GameState:", gameState);
       // logic.resetGame(logic.playersTurn, false);
       return;
     }
-    if (logic.gameState === GameState.Ready || isMoving.current) return;
+    if (gameState === GameState.Ready || isMoving.current) return;
 
     isMoving.current = true;
-    logic.setGravityAnimating(true);
-    pullPieces(direction);
+    setMIP({ setting: true });
+    setMoveInProgress(true);
+    setGravityAnimating(true);
+    pullGravity(direction);
 
     setTimeout(() => {
       isMoving.current = false;
-      logic.setGravityAnimating(false);
+      setMoveInProgress(false);
+      setGravityAnimating(false);
       // !@# magic number
     }, 1500);
   };
@@ -123,7 +145,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     if (gameState === GameState.Playing) {
       executePull(direction);
     } else if (gameState === GameState.Finished) {
-      logic.resetGame(logic.playersTurn, false);
+      resetGame();
     }
   };
 
@@ -140,15 +162,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     } else {
       dir = e.velocityY > 0 ? Direction.Down : Direction.Up;
     }
-    // If restricted to down, force downward direction when vertical component dominates
-    if (logic.restrictGravityToDown && dir !== Direction.Down) {
-      if (absVY >= absVX) {
-        dir = Direction.Down;
-      } else {
-        return;
-      }
-    }
-    scheduleOnRN(handleFling, dir, logic.gameState);
+    scheduleOnRN(handleFling, dir, gameState);
   });
 
   const [gravityPreviewPieces, setGravityPreviewPieces] = React.useState<
@@ -156,7 +170,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
   >(null);
 
   const computePreview = (direction: Direction) => {
-    const updated = { ...logic.boardPieceLocations } as Record<string, string>;
+    const updated = { ...boardPieceLocations } as Record<string, string>;
     let hasMoves = false;
 
     if (direction === Direction.Up) {
@@ -235,7 +249,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
 
     const result: { spaceId: string; team: Team }[] = [];
     Object.entries(updated).forEach(([spaceId, pieceId]) => {
-      const team = logic.pieces[pieceId]?.team ?? Team.Unassigned;
+      const team = pieces[pieceId]?.team ?? Team.Unassigned;
       result.push({ spaceId, team });
     });
     return { previews: result, hasMoves };
@@ -244,12 +258,12 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const gravityPreview = (side: "up" | "down" | "left" | "right") => {
     if (!settings.shiftPreviews) {
       setGravityPreviewPieces(null);
-      logic.setPreviewPieces({});
+      setPreviewPieces({});
       return;
     }
-    if (logic.gameState !== GameState.Playing || logic.moveInProgress) {
+    if (gameState !== GameState.Playing || moveInProgress) {
       setGravityPreviewPieces(null);
-      logic.setPreviewPieces({});
+      setPreviewPieces({});
       return;
     }
     const opposite: Direction =
@@ -263,18 +277,18 @@ const Board = ({ className, onRotate }: BoardProps) => {
     const { previews, hasMoves } = computePreview(opposite);
     if (!hasMoves) {
       setGravityPreviewPieces(null);
-      logic.setPreviewPieces({});
+      setPreviewPieces({});
       return;
     }
     const toHide: Record<string, boolean> = {};
     const wellPieceIds = new Set<string>(
-      Object.values(logic.wellPieceLocations || {})
+      Object.values(wellPieceLocations || {})
     );
-    Object.keys(logic.pieces).forEach((pieceId) => {
+    Object.keys(pieces).forEach((pieceId) => {
       toHide[pieceId] = !wellPieceIds.has(pieceId);
     });
     setGravityPreviewPieces(previews);
-    logic.setPreviewPieces(toHide);
+    setPreviewPieces(toHide);
   };
 
   const longPressDurationMS = 0;
@@ -283,8 +297,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, true);
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         // [0, 0], /* * */ !@#
         [0, 1],
@@ -324,17 +337,15 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewPieces, {});
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, false);
+      scheduleOnRN(setPreviewPieces, {});
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, false);
     });
 
   const lpDown = Gesture.LongPress()
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, true);
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         [8, 1],
         [8, 2],
@@ -368,17 +379,15 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewPieces, {});
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, false);
+      scheduleOnRN(setPreviewPieces, {});
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, false);
     });
 
   const lpLeft = Gesture.LongPress()
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, true);
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         [1, 0],
         [2, 0],
@@ -412,17 +421,15 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewPieces, {});
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, false);
+      scheduleOnRN(setPreviewPieces, {});
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, false);
     });
 
   const lpRight = Gesture.LongPress()
     .minDuration(longPressDurationMS)
     .onStart((e) => {
       "worklet";
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, true);
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, true);
       const targets: [number, number][] = [
         [1, 8],
         [2, 8],
@@ -456,9 +463,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
     .onFinalize(() => {
       "worklet";
       scheduleOnRN(setGravityPreviewPieces, null);
-      scheduleOnRN(logic.setPreviewPieces, {});
-      if (settings.shiftPreviews)
-        scheduleOnRN(logic.setIsPreviewingGravity, false);
+      scheduleOnRN(setPreviewPieces, {});
+      if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, false);
     });
 
   const longPressGestures = Gesture.Simultaneous(lpUp, lpDown, lpLeft, lpRight);

@@ -1,5 +1,6 @@
 import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
+import { useLogicGameFlow } from "@/context/LogicContext";
 import { CellProps, CellType, Team } from "@/types/board";
 import React, { useCallback, useEffect, useRef } from "react";
 import { Image, View } from "react-native";
@@ -7,10 +8,11 @@ import { cellImages } from "../assets/images";
 
 const Slot = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { layout, logic } = useGameContext();
+  const { layout } = useGameContext();
+  const { currentTeam } = useLogicGameFlow();
   const { settings } = useGameContext();
 
-  team = logic.currentTeam;
+  team = currentTeam;
 
   const reportLayout = useCallback(() => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {

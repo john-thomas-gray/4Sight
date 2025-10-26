@@ -12,7 +12,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { useLogic } from "./LogicContext";
+import { useLogicBoardState, useLogicGameFlow } from "./LogicContext";
 
 type SettingsContextType = {
   theme: ThemeType;
@@ -42,7 +42,17 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
     useState<boolean>(true);
   const [tutorialEnabled, setTutorialEnabled] = useState<boolean>(true);
 
-  const logic = useLogic();
+  const {
+    rehydrateFromSavedState,
+    gameMode,
+    turnCount,
+    currentTeam,
+    gameState,
+    winner,
+    playersTurn,
+  } = useLogicGameFlow();
+  const { pieces, pieceStatusMap, wellPieceLocations, boardPieceLocations } =
+    useLogicBoardState();
 
   const normalizeTheme = (input?: Partial<ThemeType>): ThemeType => {
     return {
@@ -90,7 +100,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
         saved.wellPieceLocations &&
         Object.keys(saved.wellPieceLocations).length > 0;
       if (hasBoard || hasWells) {
-        logic.rehydrateFromSavedState(saved);
+        rehydrateFromSavedState(saved);
       }
     };
     loadPersistedState();
@@ -118,19 +128,19 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   // Persist game state every turn
   useEffect(() => {
     const state: PersistedAppState = {
-      gameMode: logic.gameMode,
-      turnCount: logic.turnCount,
-      currentTeam: logic.currentTeam,
-      gameState: logic.gameState,
-      winner: logic.winner,
-      pieces: logic.pieces,
-      pieceStatusMap: logic.pieceStatusMap,
-      playersTurn: logic.playersTurn,
-      wellPieceLocations: logic.wellPieceLocations,
-      boardPieceLocations: logic.boardPieceLocations,
+      gameMode,
+      turnCount: turnCount,
+      currentTeam,
+      gameState: gameState,
+      winner,
+      pieces,
+      pieceStatusMap,
+      playersTurn,
+      wellPieceLocations,
+      boardPieceLocations,
     };
     saveAppState(state);
-  }, [logic.turnCount, logic.winner]);
+  }, [turnCount, winner]);
 
   return (
     <SettingsContext.Provider

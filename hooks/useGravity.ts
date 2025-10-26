@@ -1,5 +1,8 @@
 import { GRAVITY_IN_PROGRESS } from "@/constants/animations";
-import { useGameContext } from "@/context/GameContext";
+import {
+  useLogicBoardState,
+  useLogicInteractions,
+} from "@/context/LogicContext";
 import { Direction } from "@/types/board";
 
 type GravityProps = {
@@ -7,18 +10,19 @@ type GravityProps = {
 };
 
 export const useGravity = () => {
-  const { logic } = useGameContext();
+  const { boardPieceLocations, setBoardPieceLocations } = useLogicBoardState();
+  const { moveInProgress, setMoveInProgress } = useLogicInteractions();
   const applyGravity = (direction: GravityProps["direction"]) => {
-    if (logic.moveInProgress) {
+    if (moveInProgress) {
       return;
     }
 
-    logic.setMoveInProgress(true);
+    setMoveInProgress(true);
     setTimeout(() => {
-      logic.setMoveInProgress(false);
+      setMoveInProgress(false);
     }, GRAVITY_IN_PROGRESS);
 
-    const updatedPieceLocations = { ...logic.boardPieceLocations };
+    const updatedPieceLocations = { ...boardPieceLocations };
     let hasMoves = false;
     if (direction === Direction.Up) {
       for (let row = 2; row <= 7; row++) {
@@ -122,7 +126,7 @@ export const useGravity = () => {
       return;
     }
 
-    logic.setBoardPieceLocations(updatedPieceLocations);
+    setBoardPieceLocations(updatedPieceLocations);
   };
   return applyGravity;
 };

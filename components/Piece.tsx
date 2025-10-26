@@ -9,6 +9,12 @@ import {
 import { GameElements } from "@/constants";
 import { ANIMATE_PIECE_DROP, RETURN_TO_WELL } from "@/constants/animations";
 import { useGameContext } from "@/context/GameContext";
+import {
+  useLogicAnimations,
+  useLogicBoardState,
+  useLogicGameFlow,
+  useLogicInteractions,
+} from "@/context/LogicContext";
 import { Direction, Team } from "@/types/board";
 import { PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
@@ -25,21 +31,32 @@ import { scheduleOnRN } from "react-native-worklets";
 import Highlight from "./Highlight";
 
 const Piece = ({ team, id }: PieceProps) => {
-  const { layout, logic, settings } = useGameContext();
+  const { layout, settings } = useGameContext();
+  const { gameMode } = useLogicGameFlow();
+  const { pieceAnimations, previewPieces } = useLogicAnimations();
+  const {
+    pieceStatusMap,
+    wellPieceLocations,
+    boardPieceLocations,
+    setBoardPieceLocations,
+    setWellPieceLocations,
+    setPieceStatusMap,
+  } = useLogicBoardState();
+  const { setMoveInProgress, setMIP } = useLogicInteractions();
 
   const unsetMoveInProgress = (delay = 0) => {
     if (delay > 0) {
-      logic.setMIP({ setting: false, delay });
+      setMIP({ setting: false, delay });
     } else {
-      logic.setMoveInProgress(false);
+      setMoveInProgress(false);
     }
   };
   const animate = useMemo(() => {
-    return logic.pieceAnimations[id];
-  }, [logic.pieceAnimations, id]);
+    return pieceAnimations[id];
+  }, [pieceAnimations, id]);
   const status = useMemo(() => {
-    return logic.pieceStatusMap[id];
-  }, [logic.pieceStatusMap, id]);
+    return pieceStatusMap[id];
+  }, [pieceStatusMap, id]);
   if (!animate) {
     throw new Error(`No animation found for piece id ${id}`);
   }
@@ -67,11 +84,11 @@ const Piece = ({ team, id }: PieceProps) => {
   ]);
 
   useEffect(() => {
-    logic.setPieceStatusMap((prev) => ({
+    setPieceStatusMap((prev) => ({
       ...prev,
       [id]: PieceStatus.inWell,
     }));
-  }, []);
+  }, [id, setPieceStatusMap]);
 
   const allCells = getCellArray({ layout, result: "all", team });
 
@@ -79,7 +96,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const getCurrentWellData = () => {
     let CWID = "";
-    const entry = Object.entries(logic.wellPieceLocations).find(
+    const entry = Object.entries(wellPieceLocations).find(
       ([, pieceId]) => pieceId === id
     );
     if (entry) {
@@ -97,19 +114,19 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const currentWellDataSV = useSharedValue(currentWellData);
 
-  const boardPieceLocationsSV = useSharedValue(logic.boardPieceLocations);
+  const boardPieceLocationsSV = useSharedValue(boardPieceLocations);
 
   useEffect(() => {
-    boardPieceLocationsSV.value = logic.boardPieceLocations;
-  }, [logic.boardPieceLocations]);
+    boardPieceLocationsSV.value = boardPieceLocations;
+  }, [boardPieceLocations, boardPieceLocationsSV]);
 
   const setBPLUI = (finalSpaceId: string) => {
-    const updated = { ...logic.boardPieceLocations, [finalSpaceId]: id };
-    logic.setBoardPieceLocations(updated);
+    const updated = { ...boardPieceLocations, [finalSpaceId]: id };
+    setBoardPieceLocations(updated);
   };
 
   const updateStatus = (status: PieceStatus) => {
-    logic.setPieceStatusMap((prev) => ({
+    setPieceStatusMap((prev) => ({
       ...prev,
       [id]: status,
     }));
@@ -117,7 +134,7 @@ const Piece = ({ team, id }: PieceProps) => {
 
   const deleteWPLUI = () => {
     if (currentWellId) {
-      logic.setWellPieceLocations((prev) => {
+      setWellPieceLocations((prev) => {
         const updated = { ...prev };
         delete updated[currentWellId as string];
         return updated;
@@ -128,12 +145,11 @@ const Piece = ({ team, id }: PieceProps) => {
   const setWPLUI = (targetWellId: string) => {
     const wellIdToSet = targetWellId;
 
-    logic.setWellPieceLocations((prev) => ({
+    setWellPieceLocations((prev) => ({
       ...prev,
       [wellIdToSet]: id,
     }));
-
-    console.log(logic.wellPieceLocations);
+    console.log(wellPieceLocations);
   };
 
   useEffect(() => {
@@ -148,7 +164,13 @@ const Piece = ({ team, id }: PieceProps) => {
           settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000";
       }
     }
-  }, [status]);
+  }, [
+    status,
+    team,
+    animate.color,
+    settings.theme?.colorTheme?.TEAM_ONE_COLOR,
+    settings.theme?.colorTheme?.TEAM_TWO_COLOR,
+  ]);
 
   // #region PIECE MOVEMENT LOGIC
 
@@ -161,11 +183,11 @@ const Piece = ({ team, id }: PieceProps) => {
     () =>
       Gesture.Pan()
         // .enabled(
-        //   logic.gameState !== GameState.Finished &&
-        //     logic.gameState !== GameState.PostGame &&
+        //   gameState !== GameState.Finished &&
+        //     gameState !== GameState.PostGame &&
         //     logic.thisPlayerCanMove === team &&
         //     (status === PieceStatus.isHeld ||
-        //       (status === PieceStatus.inWell && logic.moveInProgress === false))
+        //       (status === PieceStatus.inWell && moveInProgress === false))
         // )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
@@ -176,11 +198,11 @@ const Piece = ({ team, id }: PieceProps) => {
           });
           scheduleOnRN(deleteWPLUI);
           scheduleOnRN(updateStatus, PieceStatus.isHeld);
-          scheduleOnRN(logic.setMoveInProgress, true);
+          scheduleOnRN(setMoveInProgress, true);
         })
         .onUpdate((event) => {
           pieceHoldOffset(
-            logic.gameMode,
+            gameMode,
             team,
             animate.translateX,
             animate.translateY,
@@ -194,7 +216,7 @@ const Piece = ({ team, id }: PieceProps) => {
             let overAnySlot = false;
 
             const { adjustedX, adjustedY } = pointerHoverOffset(
-              logic.gameMode,
+              gameMode,
               team,
               event.absoluteX,
               event.absoluteY
@@ -376,7 +398,7 @@ const Piece = ({ team, id }: PieceProps) => {
                     boardPieceLocationsSV.value[blockingSpaceId];
                   if (blockingPieceId) {
                     const blockingPieceAnimation =
-                      logic.pieceAnimations[blockingPieceId];
+                      pieceAnimations[blockingPieceId];
                     const blockingSpaceLayout = layout.spaces[blockingSpaceId];
                     if (blockingPieceAnimation && blockingSpaceLayout) {
                       animateBlockingPiece({
@@ -443,10 +465,7 @@ const Piece = ({ team, id }: PieceProps) => {
                 return;
               }
 
-              const dropSlotData = getReachableSlot(
-                logic.boardPieceLocations,
-                id
-              );
+              const dropSlotData = getReachableSlot(boardPieceLocations, id);
               const slotData = slots.find(
                 (s) => s.id === dropSlotData.dropSlot.id
               );
@@ -497,7 +516,7 @@ const Piece = ({ team, id }: PieceProps) => {
               scheduleOnRN(unsetMoveInProgress, ANIMATE_PIECE_DROP);
               return;
             } else if (isWell) {
-              const isOccupied = logic.wellPieceLocations[id] !== undefined;
+              const isOccupied = wellPieceLocations[id] !== undefined;
               if (isOccupied) {
                 if (
                   currentWellDataSV.value &&
@@ -567,7 +586,30 @@ const Piece = ({ team, id }: PieceProps) => {
           }
           return;
         }),
-    [logic.gameState, logic.currentTeam, status, logic.moveInProgress]
+    [
+      status,
+      animate.scaleX,
+      animate.scaleY,
+      animate.translateX,
+      animate.translateY,
+      animate.zIndex,
+      gameMode,
+      layout.slots,
+      layout.spaces,
+      layout.wells,
+      boardPieceLocations,
+      pieceAnimations,
+      allCells,
+      slots,
+      deleteWPLUI,
+      updateStatus,
+      setMoveInProgress,
+      unsetMoveInProgress,
+      setBPLUI,
+      setWPLUI,
+      team,
+      wellPieceLocations,
+    ]
   );
   // #endregion
   const animatedStyles = useAnimatedStyle(() => ({
@@ -614,7 +656,7 @@ const Piece = ({ team, id }: PieceProps) => {
             status === PieceStatus.inWell
               ? { zIndex: GameElements.PIECE_WELL_ZINDEX }
               : null,
-            logic.previewPieces[id] ? { opacity: 0 } : null,
+            previewPieces[id] ? { opacity: 0 } : null,
           ]}
         >
           <Highlight pieceId={id} />

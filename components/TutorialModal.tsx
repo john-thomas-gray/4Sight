@@ -1,4 +1,4 @@
-import { useGameContext } from "@/context/GameContext";
+import { useLogicBoardState } from "@/context/LogicContext";
 import { PieceStatus } from "@/types/logic";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -52,17 +52,15 @@ const TutorialModal = ({
   transparentFadeMs = 160,
   restoreFadeMs = 200,
 }: TutorialModalProps) => {
-  const { logic } = useGameContext();
+  const { pieceStatusMap } = useLogicBoardState();
   const opacity = useSharedValue(0);
   const pulseScale = useSharedValue(1);
   const contentScale = useSharedValue(0);
   const contentPulseScale = useSharedValue(1);
   const anyHeld = React.useMemo(
     () =>
-      Object.values(logic.pieceStatusMap || {}).some(
-        (s) => s === PieceStatus.isHeld
-      ),
-    [logic.pieceStatusMap]
+      Object.values(pieceStatusMap || {}).some((s) => s === PieceStatus.isHeld),
+    [pieceStatusMap]
   );
   const holding = isHoldingPiece ?? anyHeld;
   const containerOpacity = useSharedValue(1);

@@ -1,7 +1,6 @@
 import BackButton from "@/components/BackButton";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const HowToPlay = () => {
   const [isTwoPlayer, setIsTwoPlayer] = useState(true);
@@ -11,7 +10,7 @@ const HowToPlay = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 16,
@@ -86,7 +85,7 @@ const HowToPlay = () => {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

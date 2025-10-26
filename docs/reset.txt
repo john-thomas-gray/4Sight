@@ -2,14 +2,17 @@ Isolate issue == remove reset and save/reload
 Rebuild reset - list every variable to be reset. List default values.
 
 winner:
-logic.gameState:
+gameState:
 setMoveInProgress() ?
 setTurnCount()
+cancel the highlightPulse
+
+Everything originally handled by LayoutContext should be handled
+by LayoutContext. Just ping LayoutContext when there is a reset.
 setBoardPieceLocations()
 setWellPieceLocations
 reset value the pieces and wells hold
 do I need to reset pieceAnimations?
-cancel the highlightPulse
 
 
 Things I probably don't need:

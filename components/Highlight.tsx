@@ -1,4 +1,4 @@
-import { useGameContext } from "@/context/GameContext";
+import { useLogicBoardState } from "@/context/LogicContext";
 import { PieceStatus } from "@/types/logic";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -8,14 +8,14 @@ interface HighlightProps {
 }
 
 const Highlight: React.FC<HighlightProps> = ({ pieceId }) => {
-  const { logic } = useGameContext();
-  const pieceStatus = logic.pieceStatusMap[pieceId];
+  const { pieceStatusMap } = useLogicBoardState();
+  const pieceStatus = pieceStatusMap[pieceId];
   const [style, setStyle] = useState(styles.off);
 
   useEffect(() => {
     if (pieceStatus === PieceStatus.winner) {
-      setStyle(styles.winner)
-      return
+      setStyle(styles.winner);
+      return;
     } else if (pieceStatus === PieceStatus.partial) {
       setStyle(styles.partial);
     } else {

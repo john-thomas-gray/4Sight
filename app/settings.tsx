@@ -5,7 +5,6 @@ import { useGameContext } from "@/context/GameContext";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Switch, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
   const { settings } = useGameContext();
@@ -22,7 +21,7 @@ const Settings = () => {
   const isSchoolhouseSelected = isSameTheme(settings.theme, SCHOOLHOUSE);
 
   return (
-    <SafeAreaView
+    <View
       className="flex-1"
       style={{
         backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
@@ -344,7 +343,7 @@ const Settings = () => {
         </View>
       </View>
       {/* Removed floating back button, now inline in header */}
-    </SafeAreaView>
+    </View>
   );
 };
 

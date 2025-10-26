@@ -6,33 +6,44 @@ import Piece from "@/components/Piece";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import { useGameContext } from "@/context/GameContext";
-import useShake from "@/hooks/useShake";
+import {
+  useLogicBoardState,
+  useLogicGameFlow,
+  useLogicUI,
+} from "@/context/LogicContext";
+
+import { useShake as useShakeHook } from "@/hooks/useShake";
 import { Team } from "@/types/board";
 import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
-import Animated, {
+import {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 
 const GamePlay = () => {
-  const { layout, logic, settings } = useGameContext();
+  const { layout, settings } = useGameContext();
+  const gameFlow = useLogicGameFlow();
+  const { gameState, resetGame } = gameFlow;
+  const boardState = useLogicBoardState();
+  const { pieces } = boardState;
+  const ui = useLogicUI();
+  const { setIsGlobalLoading } = ui;
   const router = useRouter();
-  useShake({
+  useShakeHook({
     enabled:
-      logic.gameState === GameState.Finished ||
-      logic.gameState === GameState.Playing,
+      gameState === GameState.Finished || gameState === GameState.Playing,
     onShake: () => {
-      // logic.resetGame(logic.playersTurn, false);
+      resetGame();
       console.log("Shake for reset");
     },
   });
   const piecesToRender = React.useMemo(
-    () => (layout.layoutReady ? Object.entries(logic.pieces) : []),
-    [layout.layoutReady, logic.pieces]
+    () => (layout.layoutReady ? Object.entries(pieces) : []),
+    [layout.layoutReady, pieces]
   );
 
   const [loadTimer, setLoadTimer] = useState(true);
@@ -42,19 +53,17 @@ const GamePlay = () => {
     setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);
   }, []);
 
-  // Hide global loading once gameplay layout is ready and local timer finished
   useEffect(() => {
     if (layout.layoutReady && !loadTimer) {
-      logic.setIsGlobalLoading(false);
+      setIsGlobalLoading(false);
     }
-  }, [layout.layoutReady, loadTimer, logic]);
+  }, [layout.layoutReady, loadTimer, setIsGlobalLoading]);
 
-  // Fade-in for the menu when tutorial ends
   const menuOpacity = useSharedValue(0);
   useEffect(() => {
     const target = !settings.tutorialEnabled ? 1 : 0;
     menuOpacity.value = withTiming(target, { duration: 400 });
-  }, [settings.tutorialEnabled]);
+  }, [settings.tutorialEnabled, menuOpacity]);
   const menuStyle = useAnimatedStyle(() => ({ opacity: menuOpacity.value }));
 
   return (
@@ -64,10 +73,7 @@ const GamePlay = () => {
         backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#065f46",
       }}
     >
-      {/* <WinModal
-        visible={logic.gameState === GameState.Finished}
-        winner={logic.winner}
-      /> */}
+      {/* WinModal wired via game flow slice if needed */}
       <View className="flex-col items-center justify-center">
         <TeamWellGrid team={Team.TeamTwo} />
         <Board className="mt-7 mb-7" />
@@ -90,7 +96,7 @@ const GamePlay = () => {
 
       {/* Tutorial overlay and modal render above gameplay UI */}
       {/* {layout.layoutReady && !loadTimer && <TutorialMount />} */}
-
+      {/*
       {layout.layoutReady && !loadTimer && (
         <Animated.View
           style={menuStyle}
@@ -99,7 +105,8 @@ const GamePlay = () => {
         >
           <HamburgerMenu onPress={() => router.replace("/")} />
         </Animated.View>
-      )}
+      )} */}
+      <HamburgerMenu onPress={() => router.replace("/")} />
     </View>
   );
 };

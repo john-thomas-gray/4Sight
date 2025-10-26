@@ -2,7 +2,13 @@ import { render, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { Text } from "react-native";
 
-import { LogicProvider, useLogic } from "@/context/LogicContext";
+import {
+  LogicProvider,
+  useLogicAnimations,
+  useLogicBoardState,
+  useLogicGameFlow,
+  useLogicInteractions,
+} from "@/context/LogicContext";
 import { Team } from "@/types/board";
 import { GameState, PieceStatus } from "@/types/logic";
 
@@ -80,7 +86,23 @@ jest.mock("@/context/LayoutContext", () => {
 jest.useFakeTimers();
 
 const Harness: React.FC = () => {
-  const logic = useLogic();
+  const {
+    gameState,
+    setGameState,
+    turnCount,
+    winner,
+    checkGameFinished,
+    playersTurn,
+  } = useLogicGameFlow();
+  const {
+    pieces,
+    pieceStatusMap,
+    boardPieceLocations,
+    wellPieceLocations,
+    setBoardPieceLocations,
+  } = useLogicBoardState();
+  const { pieceAnimations } = useLogicAnimations();
+  const { moveInProgress } = useLogicInteractions();
   const [capturedInitial, setCapturedInitial] = React.useState<null | {
     turnCount: number;
     winner: Team;
@@ -96,26 +118,26 @@ const Harness: React.FC = () => {
 
   // When pieces are built, ensure Ready state, then capture snapshot and trigger win
   React.useEffect(() => {
-    const piecesBuilt = Object.keys(logic.pieces || {}).length === 48;
+    const piecesBuilt = Object.keys(pieces || {}).length === 48;
     if (!piecesBuilt) return;
-    if (!capturedInitial && logic.gameState !== GameState.Ready) {
-      logic.setGameState(GameState.Ready);
+    if (!capturedInitial && gameState !== GameState.Ready) {
+      setGameState(GameState.Ready);
       return;
     }
-    if (logic.gameState !== GameState.Ready) return;
+    if (gameState !== GameState.Ready) return;
     if (capturedInitial) return;
 
-    const allInWell = Object.values(logic.pieceStatusMap || {}).every(
+    const allInWell = Object.values(pieceStatusMap || {}).every(
       (s) => s === PieceStatus.inWell
     );
     const initialSnap = {
-      turnCount: logic.turnCount,
-      winner: logic.winner,
-      moveInProgress: logic.moveInProgress,
-      gameState: logic.gameState,
+      turnCount: turnCount,
+      winner,
+      moveInProgress: moveInProgress,
+      gameState: gameState,
       pieceStatusAllInWell: allInWell,
-      boardCount: Object.keys(logic.boardPieceLocations || {}).length,
-      wellCount: Object.keys(logic.wellPieceLocations || {}).length,
+      boardCount: Object.keys(boardPieceLocations || {}).length,
+      wellCount: Object.keys(wellPieceLocations || {}).length,
     };
     setCapturedInitial(initialSnap);
 
@@ -126,14 +148,20 @@ const Harness: React.FC = () => {
       "1-3": "2",
       "1-4": "3",
     };
-    logic.setBoardPieceLocations(winningBoard);
-    logic.checkGameFinished(winningBoard);
+    setBoardPieceLocations(winningBoard);
+    checkGameFinished(winningBoard);
   }, [
-    logic,
-    logic.pieces,
-    logic.gameState,
-    logic.turnCount,
-    logic.winner,
+    pieces,
+    gameState,
+    setGameState,
+    turnCount,
+    winner,
+    moveInProgress,
+    pieceStatusMap,
+    boardPieceLocations,
+    wellPieceLocations,
+    setBoardPieceLocations,
+    checkGameFinished,
     capturedInitial,
   ]);
 
@@ -142,55 +170,55 @@ const Harness: React.FC = () => {
   //   if (!capturedInitial) return;
   //   if (
   //     logic.winner === Team.TeamOne &&
-  //     logic.gameState === GameState.Finished
+  //     gameState === GameState.Finished
   //   ) {
   //     logic.resetGame(1, false);
   //   }
-  // }, [logic, logic.winner, logic.gameState, capturedInitial]);
+  // }, [logic, logic.winner, gameState, capturedInitial]);
 
   // Mark when post-reset state is achieved
   React.useEffect(() => {
     if (!capturedInitial) return;
-    const allInWell = Object.values(logic.pieceStatusMap || {}).every(
+    const allInWell = Object.values(pieceStatusMap || {}).every(
       (s) => s === PieceStatus.inWell
     );
     if (
-      logic.gameState === GameState.Ready &&
-      logic.winner === Team.Unassigned &&
-      logic.turnCount === 0 &&
+      gameState === GameState.Ready &&
+      winner === Team.Unassigned &&
+      turnCount === 0 &&
       allInWell &&
-      Object.keys(logic.boardPieceLocations || {}).length === 0 &&
-      Object.keys(logic.wellPieceLocations || {}).length ===
-        capturedInitial.wellCount
+      Object.keys(boardPieceLocations || {}).length === 0 &&
+      Object.keys(wellPieceLocations || {}).length === capturedInitial.wellCount
     ) {
       setPostResetReady(true);
 
       // Validate piece ids are numeric 0..47 and animations exist for each
-      const ids = Object.keys(logic.pieces || {});
+      const ids = Object.keys(pieces || {});
       const numeric = ids.every((id) => /^\d+$/.test(id));
       const expected = new Set(Array.from({ length: 48 }, (_, i) => String(i)));
       const allPresent =
         ids.length === 48 && ids.every((id) => expected.has(id));
       setIdsValid(numeric && allPresent);
 
-      const animKeys = new Set(Object.keys(logic.pieceAnimations || {}));
+      const animKeys = new Set(Object.keys(pieceAnimations || {}));
       const animsOk = ids.every((id) => animKeys.has(id));
       setAnimsAligned(animsOk);
     }
   }, [
-    logic,
-    logic.gameState,
-    logic.winner,
-    logic.turnCount,
-    logic.pieceStatusMap,
-    logic.boardPieceLocations,
-    logic.wellPieceLocations,
+    gameState,
+    winner,
+    turnCount,
+    pieceStatusMap,
+    boardPieceLocations,
+    wellPieceLocations,
     capturedInitial,
+    pieces,
+    pieceAnimations,
   ]);
 
   return (
     <>
-      <Text testID="playersTurn">{String(logic.playersTurn)}</Text>
+      <Text testID="playersTurn">{String(playersTurn)}</Text>
       <Text testID="initialReady">{String(!!capturedInitial)}</Text>
       <Text testID="postResetReady">{String(postResetReady)}</Text>
       <Text testID="postResetIdsValid">{String(idsValid)}</Text>

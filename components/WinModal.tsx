@@ -42,7 +42,7 @@ const WinModal = ({
         withDelay(2000, withTiming(0, { duration: 1000 }))
       );
       timer = setTimeout(() => {
-        logic.setGameState(GameState.PostGame);
+        setGameState(GameState.PostGame);
       }, 4000);
     } else {
       // Reset values when not visible

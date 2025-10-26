@@ -4,16 +4,18 @@ import {
   CORNER_STYLE,
 } from "@/constants/gameElements";
 import { useGameContext } from "@/context/GameContext";
+import { useLogicGameFlow } from "@/context/LogicContext";
 import { CellProps, CellType, Team } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Corner = ({ id }: CellProps) => {
-  const { layout, logic } = useGameContext();
+  const { layout } = useGameContext();
+  const { currentTeam } = useLogicGameFlow();
   const { settings } = useGameContext();
   const viewRef = useRef<View>(null);
   const cornerColor =
-    logic.currentTeam === Team.TeamOne
+    currentTeam === Team.TeamOne
       ? settings.theme?.colorTheme?.CORNER_COLOR_ONE || "#ffffff"
       : settings.theme?.colorTheme?.CORNER_COLOR_TWO || "#000000";
 

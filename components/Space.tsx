@@ -1,6 +1,7 @@
 import { GameElements } from "@/constants";
 
 import { useGameContext } from "@/context/GameContext";
+import { useLogicAnimations, useLogicBoardState } from "@/context/LogicContext";
 import { CellProps, CellType } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
@@ -10,7 +11,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 const Space = ({ id }: CellProps) => {
-  const { layout, logic, settings } = useGameContext();
+  const { layout, settings } = useGameContext();
+  const { nextTurnWins } = useLogicBoardState();
+  const { highlightPulse } = useLogicAnimations();
   const viewRef = useRef<View>(null);
 
   const reportLayout = () => {
@@ -38,12 +41,11 @@ const Space = ({ id }: CellProps) => {
     : settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff";
 
   const shouldHighlight =
-    settings.highlightWinningMoves &&
-    !!(logic.nextTurnWins && logic.nextTurnWins[id]);
+    settings.highlightWinningMoves && !!(nextTurnWins && nextTurnWins[id]);
 
   const animatedStyle = useAnimatedStyle(() => {
     const color = interpolateColor(
-      logic.highlightPulse.value,
+      highlightPulse.value,
       [0, 1],
       [baseColor, "#FFD700"]
     );

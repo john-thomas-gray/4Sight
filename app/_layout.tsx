@@ -1,7 +1,8 @@
 import "react-native-reanimated";
 
 import LoadingScreen from "@/components/LoadingScreen";
-import { GameProvider, useGameContext } from "@/context/GameContext";
+import { GameProvider } from "@/context/GameContext";
+import { useLogicUI } from "@/context/LogicContext";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -20,7 +21,7 @@ export default function RootLayout() {
 }
 
 function RootWithGlobalLoading() {
-  const { logic } = useGameContext();
+  const { isGlobalLoading } = useLogicUI();
   return (
     <>
       <Stack
@@ -31,7 +32,7 @@ function RootWithGlobalLoading() {
       >
         <Stack.Screen name="gamePlay" options={{ animation: "none" }} />
       </Stack>
-      <LoadingScreen visible={logic.isGlobalLoading} />
+      <LoadingScreen visible={isGlobalLoading} />
     </>
   );
 }

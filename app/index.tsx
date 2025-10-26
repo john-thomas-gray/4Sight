@@ -1,8 +1,9 @@
 import { useGameContext } from "@/context/GameContext";
+import { useLogicGameFlow, useLogicUI } from "@/context/LogicContext";
 import { useDebouncedPress } from "@/hooks/useDebouncedPress";
 import type { PersistedAppState } from "@/utils/useAsyncStorage";
 import { loadAppState } from "@/utils/useAsyncStorage";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -16,7 +17,11 @@ export default function Index() {
 }
 
 function InnerIndexLayout() {
-  const { logic, settings } = useGameContext();
+  const router = useRouter();
+  const { settings } = useGameContext();
+  const { resetGame, rehydrateFromSavedState } = useLogicGameFlow();
+
+  const { setIsGlobalLoading } = useLogicUI();
   const [hasSavedGame, setHasSavedGame] = React.useState(false);
 
   const computeHasSavedGame = React.useCallback((saved: PersistedAppState) => {
@@ -55,19 +60,19 @@ function InnerIndexLayout() {
   );
 
   const handlePlay = React.useCallback(async () => {
-    logic.setIsGlobalLoading(true);
-    /* logic.resetGame(1, false);
-    await clearSavedGame(); */
+    setIsGlobalLoading(true);
+    resetGame();
+    // await clearSavedGame();
     router.replace("/gamePlay");
-  }, [logic]);
+  }, [setIsGlobalLoading, resetGame]);
 
   const handleContinue = React.useCallback(async () => {
-    logic.setIsGlobalLoading(true);
+    setIsGlobalLoading(true);
     /* const saved = await loadAppState();
-    logic.rehydrateFromSavedState(saved);
-    logic.setGameState(GameState.Playing); */
+    rehydrateFromSavedState(saved);
+    setGameState(GameState.Playing); */
     router.replace("/gamePlay");
-  }, [logic]);
+  }, [setIsGlobalLoading, rehydrateFromSavedState]);
 
   const onPressPlay = useDebouncedPress(handlePlay);
   const onPressContinue = useDebouncedPress(handleContinue);
