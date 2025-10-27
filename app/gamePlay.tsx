@@ -18,11 +18,7 @@ import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
-import {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import { useSharedValue, withTiming } from "react-native-reanimated";
 
 const GamePlay = () => {
   const { layout, settings } = useGameContext();
@@ -64,7 +60,7 @@ const GamePlay = () => {
     const target = !settings.tutorialEnabled ? 1 : 0;
     menuOpacity.value = withTiming(target, { duration: 400 });
   }, [settings.tutorialEnabled, menuOpacity]);
-  const menuStyle = useAnimatedStyle(() => ({ opacity: menuOpacity.value }));
+  /* const menuStyle = useAnimatedStyle(() => ({ opacity: menuOpacity.value })); */
 
   return (
     <View

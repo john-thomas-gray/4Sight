@@ -1,11 +1,12 @@
 import { animateWinner } from "@/animations/pieceAnimations";
 import { GameElements, Logic } from "@/constants";
 import {
+  pieceAnimSharedValues,
   WINNER_BASE_DELAY,
   WINNER_V0,
   WINNER_V1,
 } from "@/constants/animations";
-import { PieceAnimation, usePieceAnimations } from "@/hooks/usePieceAnimations";
+import { PieceAnimation } from "@/types/animation";
 import { Team } from "@/types/board";
 import {
   LogicAnimationsContextType,
@@ -85,19 +86,12 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const { wells, layoutReady } = useLayout();
 
-  /* When a dropped piece makes a space activate highlightPulse,
-  that space's highlightPulse -- and only that space's highlightPulse --
-  should not start until the piece has stopped animating.
-  The newly made highlightPulse space(s) should start pulsing the
-   next time highlightPulse.value reaches 0 after the newest piece's
-   animation has fully stopped. */
-
   /* Visual Effects */
-  const pieceAnimations = usePieceAnimations();
-  const pieceAnimationsRef = useRef(pieceAnimations);
+
+  const pieceAnimSharedValuesRef = useRef(pieceAnimSharedValues);
   React.useEffect(() => {
-    pieceAnimationsRef.current = pieceAnimations;
-  }, [pieceAnimations]);
+    pieceAnimSharedValuesRef.current = pieceAnimSharedValues;
+  }, []);
   const [nextTurnWins, setNextTurnWins] = useState<Record<string, boolean>>({});
   const highlightPulse = useSharedValue(0);
   const [previewPieces, setPreviewPieces] = useState<Record<string, boolean>>(
@@ -111,13 +105,11 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     const noHighlights = Object.keys(nextTurnWins || {}).length === 0;
     const notPlaying = gameState !== GameState.Playing;
     if (isPreviewingGravity || gravityAnimating || notPlaying || noHighlights) {
-      // fade down to base color and hold at 0
       highlightPulse.value = withTiming(0, {
         duration: 300,
         easing: Easing.out(Easing.quad),
       });
     } else {
-      // restart pulse from base
       highlightPulse.value = 0;
       highlightPulse.value = withRepeat(
         withSequence(
@@ -131,7 +123,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     return () => {
       cancelAnimation(highlightPulse);
     };
-  }, [isPreviewingGravity, gravityAnimating, gameState, nextTurnWins]);
+  }, [
+    highlightPulse,
+    isPreviewingGravity,
+    gravityAnimating,
+    gameState,
+    nextTurnWins,
+  ]);
 
   ///* Interactions Logic */
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
@@ -171,7 +169,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         wellMap[wellId] = id;
 
         const layout = teamWells[wellId];
-        const anim = pieceAnimationsRef.current[id];
+        const anim = pieceAnimSharedValuesRef.current[id];
         if (layout && anim) {
           anim.translateX.value =
             layout.pageX + layout.width / 2 - GameElements.PIECE_RADIUS;
@@ -290,7 +288,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         partials: pieceRelationships.partials,
         winners: pieceRelationships.winners,
         setPieces,
-        animations: pieceAnimations,
+        animations: pieceAnimSharedValues,
       });
 
       // Merge next-turn-win space ids from both teams and expose as a map
@@ -320,14 +318,11 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         setWinner(winnerTeam);
         setGameState(GameState.Finished);
       } else {
-        /* This should NOT be incrementTurnNumber.
-        Replace with a dedicated function for
-        advancing the turn */
         incrementTurnNumber();
       }
       console.log(gameState);
     },
-    [pieces, pieceAnimations, incrementTurnNumber]
+    []
   );
 
   const resetGame = useCallback(() => {
@@ -396,16 +391,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     setPlayersTurn(whichPlayerStarts);
     setGameState(GameState.Ready);
   }, [
-    layoutReady,
-    wells,
-    boardPieceLocations,
-    wellPieceLocations,
-    pieces,
-    pieceAnimations,
+    buildTeamPieces,
     gameState,
-    playersTurn,
-    winner,
     highlightPulse,
+    pieces,
+    playersTurn,
+    wells,
+    winner,
   ]);
 
   console.log("Turn", turnCount);
@@ -481,7 +473,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const animationsValue: LogicAnimationsContextType = React.useMemo(
     () => ({
-      pieceAnimations,
+      pieceAnimSharedValues,
       highlightPulse,
       gravityAnimating,
       setGravityAnimating,
@@ -490,13 +482,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       previewPieces,
       setPreviewPieces,
     }),
-    [
-      pieceAnimations,
-      highlightPulse,
-      gravityAnimating,
-      isPreviewingGravity,
-      previewPieces,
-    ]
+    [highlightPulse, gravityAnimating, isPreviewingGravity, previewPieces]
   );
 
   const interactionsValue: LogicInteractionsContextType = React.useMemo(

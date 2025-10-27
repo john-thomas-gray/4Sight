@@ -31,19 +31,18 @@ type BoardProps = {
   ) => void;
 };
 
-const Board = ({ className, onRotate }: BoardProps) => {
+const Board = ({ className }: BoardProps) => {
   const { layout, settings } = useGameContext();
   const shiftPreviews = settings.shiftPreviews;
   const { boardPieceLocations, pieces, wellPieceLocations } =
     useLogicBoardState();
   const {
-    pieceAnimations,
-    isPreviewingGravity,
+    pieceAnimSharedValues,
     setIsPreviewingGravity,
     setPreviewPieces,
     setGravityAnimating,
   } = useLogicAnimations();
-  const { gameState, setGameState, checkGameFinished, playersTurn, resetGame } =
+  const { gameState, setGameState, checkGameFinished, resetGame } =
     useLogicGameFlow();
   const { moveInProgress, setMoveInProgress, setMIP } = useLogicInteractions();
 
@@ -69,8 +68,8 @@ const Board = ({ className, onRotate }: BoardProps) => {
   const boardRef = useRef<View>(null);
   const [boardOffset, setBoardOffset] = React.useState({ x: 0, y: 0 });
 
-  const measureBoard = () => {
-    boardRef.current?.measure((x, y, width, height, pageX, pageY) => {
+  const measureBoardOffset = () => {
+    boardRef.current?.measure((pageX, pageY) => {
       setBoardOffset({ x: pageX, y: pageY });
     });
   };
@@ -87,7 +86,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       );
       if (entry) {
         const [spaceId] = entry;
-        const animate = pieceAnimations[pieceId];
+        const animate = pieceAnimSharedValues[pieceId];
         const spaceLayout = layout.spaces[spaceId];
         if (!animate || !spaceLayout) return;
         animateGravity({
@@ -115,7 +114,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
       clearTimeout(timer.current);
       timer.current = 0;
     };
-  }, [boardPieceLocations, layout.spaces, layout.layoutReady]);
+  }, [boardPieceLocations]);
   const isMoving = useRef(false);
 
   const executePull = (direction: Direction) => {
@@ -474,7 +473,7 @@ const Board = ({ className, onRotate }: BoardProps) => {
     <GestureDetector gesture={boardGestures}>
       <Animated.View
         ref={boardRef}
-        onLayout={measureBoard}
+        onLayout={measureBoardOffset}
         className={className}
         style={{ position: "relative" }}
       >

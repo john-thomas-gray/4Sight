@@ -33,7 +33,7 @@ import Highlight from "./Highlight";
 const Piece = ({ team, id }: PieceProps) => {
   const { layout, settings } = useGameContext();
   const { gameMode } = useLogicGameFlow();
-  const { pieceAnimations, previewPieces } = useLogicAnimations();
+  const { pieceAnimSharedValues, previewPieces } = useLogicAnimations();
   const {
     pieceStatusMap,
     wellPieceLocations,
@@ -52,8 +52,8 @@ const Piece = ({ team, id }: PieceProps) => {
     }
   };
   const animate = useMemo(() => {
-    return pieceAnimations[id];
-  }, [pieceAnimations, id]);
+    return pieceAnimSharedValues[id];
+  }, [pieceAnimSharedValues, id]);
   const status = useMemo(() => {
     return pieceStatusMap[id];
   }, [pieceStatusMap, id]);
@@ -398,7 +398,7 @@ const Piece = ({ team, id }: PieceProps) => {
                     boardPieceLocationsSV.value[blockingSpaceId];
                   if (blockingPieceId) {
                     const blockingPieceAnimation =
-                      pieceAnimations[blockingPieceId];
+                      pieceAnimSharedValues[blockingPieceId];
                     const blockingSpaceLayout = layout.spaces[blockingSpaceId];
                     if (blockingPieceAnimation && blockingSpaceLayout) {
                       animateBlockingPiece({
@@ -593,21 +593,17 @@ const Piece = ({ team, id }: PieceProps) => {
       animate.translateX,
       animate.translateY,
       animate.zIndex,
-      gameMode,
       layout.slots,
       layout.spaces,
       layout.wells,
       boardPieceLocations,
-      pieceAnimations,
-      allCells,
-      slots,
-      deleteWPLUI,
+      pieceAnimSharedValues,
+      ,
       updateStatus,
       setMoveInProgress,
       unsetMoveInProgress,
       setBPLUI,
       setWPLUI,
-      team,
       wellPieceLocations,
     ]
   );
@@ -618,9 +614,6 @@ const Piece = ({ team, id }: PieceProps) => {
       { translateY: animate.translateY.value },
       { scaleX: animate.scaleX.value },
       { scaleY: animate.scaleY.value },
-      { skewX: `${animate.skewX.value}deg` },
-      { skewY: `${animate.skewY.value}deg` },
-      { rotate: `${animate.rotation.value}deg` },
     ],
     zIndex: animate.zIndex.value,
     backgroundColor: animate.color.value,

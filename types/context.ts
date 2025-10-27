@@ -1,4 +1,4 @@
-import { PieceAnimation } from "@/hooks/usePieceAnimations";
+import { PieceAnimation } from "@/types/animation";
 import { Team } from "@/types/board";
 import { GameMode, GameState, PieceProps, PieceStatusMap } from "@/types/logic";
 import { SharedValue } from "react-native-reanimated";
@@ -43,7 +43,7 @@ type LogicBoardStateContextType = {
 };
 
 type LogicAnimationsContextType = {
-  pieceAnimations: Record<string, PieceAnimation>;
+  pieceAnimSharedValues: Record<string, PieceAnimation>;
   highlightPulse: SharedValue<number>;
   gravityAnimating: boolean;
   setGravityAnimating: React.Dispatch<React.SetStateAction<boolean>>;

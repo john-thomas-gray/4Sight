@@ -15,8 +15,8 @@ import {
   PIECE_HELD_ZINDEX,
   PIECE_WELL_ZINDEX,
 } from "@/constants/gameElements";
-import type { PieceAnimation } from "@/hooks/usePieceAnimations";
 import { Board } from "@/types";
+import type { PieceAnimation } from "@/types/animation";
 import { CellLayout, Direction, EachCellType, Team } from "@/types/board";
 import type { PieceProps } from "@/types/logic";
 import {
@@ -514,25 +514,13 @@ export function animateWinner({
   translateY,
   scaleX,
   scaleY,
-  skewX,
-  skewY,
-  rotation,
   color,
   winnerColor,
-}: // shadowOpacity,
-// shadowRadius,
-// shadowOffset
-{
+}: {
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   scaleX: SharedValue<number>;
   scaleY: SharedValue<number>;
-  skewX: SharedValue<number>;
-  skewY: SharedValue<number>;
-  rotation: SharedValue<number>;
-  shadowOpacity?: SharedValue<number>;
-  shadowRadius?: SharedValue<number>;
-  shadowOffset?: SharedValue<number>;
   color: SharedValue<string>;
   winnerColor: SharedValue<string>;
 }) {

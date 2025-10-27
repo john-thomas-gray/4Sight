@@ -1,6 +1,10 @@
 Final:
 
 - Turn change delay builds up each time a game is won\*
+is the issue that usePieceAnimations is being called on every render
+and creating 450 new shared values every time? Maybe there is a way to create one
+sharedValue and use it for multiple pieces.
+
 - Animate tutorial messages
 - Reorder tutorial more elegantly
 - disconnect piece enabled from whose turn it is. Make an independent
@@ -8,7 +12,14 @@ Final:
   turn dependent but make boardColor change on a timeout.
 
 would be nice:
-
+- my hooks are all fucked up. They should actually have all of their dependencies
+and the fact that they don't is a symptom of bad design
+- When a dropped piece makes a space activate highlightPulse,
+  that space's highlightPulse -- and only that space's highlightPulse --
+  should not start until the piece has stopped animating.
+  The newly made highlightPulse space(s) should start pulsing the
+  next time highlightPulse.value reaches 0 after the newest piece's
+  animation has fully stopped.
 - can place in enemy well
 - pieces double in wells sometimes on reset
 - The glitch where two pieces occupy the same well sometimes occurs still
