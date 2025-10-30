@@ -19,6 +19,8 @@ type LogicGameFlowContextType = {
   playersTurn: 1 | 2 | 3 | 4;
   setPlayersTurn: React.Dispatch<React.SetStateAction<1 | 2 | 3 | 4>>;
   currentTeam: Team;
+  playerCanMove: Team;
+  setPlayerCanMove: React.Dispatch<React.SetStateAction<Team>>;
   turnCount: number;
   setTurnCount: React.Dispatch<React.SetStateAction<number>>;
   checkGameFinished: (updatedBoard: Record<string, string>) => void;

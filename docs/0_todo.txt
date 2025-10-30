@@ -1,10 +1,5 @@
 Final:
 
-- Turn change delay builds up each time a game is won\*
-is the issue that usePieceAnimations is being called on every render
-and creating 450 new shared values every time? Maybe there is a way to create one
-sharedValue and use it for multiple pieces.
-
 - Animate tutorial messages
 - Reorder tutorial more elegantly
 - disconnect piece enabled from whose turn it is. Make an independent

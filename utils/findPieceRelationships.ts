@@ -94,7 +94,7 @@ const findPieceRelationships = ({
 
     for (const [spaceId, pieceId] of line) {
       const team: Team =
-        pieceId === "unassigned" ? Team.Unassigned : allPieces[pieceId].team;
+        pieceId === "unassigned" ? Team.Unassigned : Team.Unassigned;
       items.push({ spaceId, pieceId, team });
 
       if (pieceId === "unassigned") {

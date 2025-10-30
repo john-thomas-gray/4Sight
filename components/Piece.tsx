@@ -16,7 +16,7 @@ import {
   useLogicInteractions,
 } from "@/context/LogicContext";
 import { Direction, Team } from "@/types/board";
-import { PieceProps, PieceStatus } from "@/types/logic";
+import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
@@ -33,7 +33,10 @@ import Highlight from "./Highlight";
 const Piece = ({ team, id }: PieceProps) => {
   const { layout, settings } = useGameContext();
   const { gameMode } = useLogicGameFlow();
+  const { moveInProgress } = useLogicInteractions();
   const { pieceAnimSharedValues, previewPieces } = useLogicAnimations();
+  const { gameState, playerCanMove, setPlayerCanMove, currentTeam } =
+    useLogicGameFlow();
   const {
     pieceStatusMap,
     wellPieceLocations,
@@ -172,23 +175,59 @@ const Piece = ({ team, id }: PieceProps) => {
     settings.theme?.colorTheme?.TEAM_TWO_COLOR,
   ]);
 
-  // #region PIECE MOVEMENT LOGIC
-
   const [hoverSpaceId, setHoverSpaceId] = React.useState<string | null>(null);
   const setHover = (spaceId: string | null) => {
     setHoverSpaceId(spaceId);
   };
 
+  const unassignedTimeoutRef = React.useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const assignTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  useEffect(() => {
+    return () => {
+      if (unassignedTimeoutRef.current)
+        clearTimeout(unassignedTimeoutRef.current);
+      if (assignTimeoutRef.current) clearTimeout(assignTimeoutRef.current);
+    };
+  }, []);
+
+  const assignEarlyMove = (team: Team) => {
+    const nextTeam =
+      team === Team.TeamOne
+        ? Team.TeamTwo
+        : Team.TeamTwo
+        ? Team.TeamOne
+        : Team.Unassigned;
+
+    if (unassignedTimeoutRef.current)
+      clearTimeout(unassignedTimeoutRef.current);
+    if (assignTimeoutRef.current) clearTimeout(assignTimeoutRef.current);
+
+    unassignedTimeoutRef.current = setTimeout(
+      () => setPlayerCanMove(Team.Unassigned),
+      300
+    );
+    assignTimeoutRef.current = setTimeout(
+      () => setPlayerCanMove(nextTeam),
+      500
+    );
+  };
+
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
-        // .enabled(
-        //   gameState !== GameState.Finished &&
-        //     gameState !== GameState.PostGame &&
-        //     logic.thisPlayerCanMove === team &&
-        //     (status === PieceStatus.isHeld ||
-        //       (status === PieceStatus.inWell && moveInProgress === false))
-        // )
+        .enabled(
+          (gameState !== GameState.Finished &&
+            gameState !== GameState.PostGame &&
+            team === currentTeam) ||
+            (playerCanMove === team &&
+              (status === PieceStatus.isHeld ||
+                (status === PieceStatus.inWell && moveInProgress === false)))
+        )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           elevationPieceToHeld({
@@ -295,6 +334,7 @@ const Piece = ({ team, id }: PieceProps) => {
         })
         .onEnd(() => {
           scheduleOnRN(setHover, null);
+          scheduleOnRN(assignEarlyMove, team);
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,
@@ -607,7 +647,6 @@ const Piece = ({ team, id }: PieceProps) => {
       wellPieceLocations,
     ]
   );
-  // #endregion
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
       { translateX: animate.translateX.value },
@@ -617,11 +656,6 @@ const Piece = ({ team, id }: PieceProps) => {
     ],
     zIndex: animate.zIndex.value,
     backgroundColor: animate.color.value,
-    // shadows: [
-    //   { shadowOpacity: shadowOpacity.value },
-    //   { shadowRadius: shadowRadius },
-    //   { shadowOffset: shadowOffset },
-    // ],
   }));
 
   const baseStyle: ViewStyle = {

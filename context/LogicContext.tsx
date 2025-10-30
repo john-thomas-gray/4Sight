@@ -65,6 +65,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [gameMode, setGameMode] = useState<GameMode>(GameMode.TwoPlayer);
 
+  const [playerCanMove, setPlayerCanMove] = useState<Team>(Team.Unassigned);
   const [playersTurn, setPlayersTurn] = useState<1 | 2 | 3 | 4>(1);
   const [turnCount, setTurnCount] = useState<number>(0);
   const [gameState, setGameState] = useState<GameState>(GameState.PreGame);
@@ -418,6 +419,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       playersTurn,
       setPlayersTurn,
       currentTeam,
+      playerCanMove,
+      setPlayerCanMove,
       turnCount,
       setTurnCount,
       checkGameFinished,
@@ -447,6 +450,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       turnCount,
       checkGameFinished,
       resetGame,
+      playerCanMove,
     ]
   );
 
