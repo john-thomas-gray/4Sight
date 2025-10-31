@@ -4,6 +4,7 @@ import {
   BOARD_SIZE,
   BOARD_SIZE_ZERO_IDX,
 } from "@/constants/gameElements";
+import { MOVE_IN_PROGRESS_DROP } from "@/constants/logic";
 import { useGameContext } from "@/context/GameContext";
 import {
   useLogicAnimations,
@@ -39,11 +40,10 @@ const Board = ({ className }: BoardProps) => {
   const {
     pieceAnimSharedValues,
     setIsPreviewingGravity,
-    setPreviewPieces,
     setGravityAnimating,
+    setPreviewPieces,
   } = useLogicAnimations();
-  const { gameState, setGameState, checkGameFinished, resetGame } =
-    useLogicGameFlow();
+  const { gameState, checkGameFinished, resetGame } = useLogicGameFlow();
   const { moveInProgress, setMoveInProgress, setMIP } = useLogicInteractions();
 
   const isSlotPosition = (row: number, col: number) => {
@@ -69,16 +69,17 @@ const Board = ({ className }: BoardProps) => {
   const [boardOffset, setBoardOffset] = React.useState({ x: 0, y: 0 });
 
   const measureBoardOffset = () => {
-    boardRef.current?.measure((pageX, pageY) => {
+    boardRef.current?.measure((x, y, width, height, pageX, pageY) => {
+      // Use page coordinates since spaces also use page coordinates
       setBoardOffset({ x: pageX, y: pageY });
     });
   };
+
   const firstTurn = useRef(true);
   const timer = useRef(0);
-  // !@# Should only fire when we actually pull gravity
+
   useLayoutEffect(() => {
     if (!layout.layoutReady) return;
-    console.log("timer", timer.current);
     if (timer.current > 0) return;
     Object.keys(pieces).forEach((pieceId) => {
       const entry = Object.entries(boardPieceLocations).find(
@@ -97,16 +98,7 @@ const Board = ({ className }: BoardProps) => {
       }
     });
     timer.current = setTimeout(() => {
-      if (firstTurn.current) {
-        // Don't downgrade Playing to Ready when continuing a game
-        if (gameState !== GameState.Playing) {
-          setGameState(GameState.Ready);
-        }
-        firstTurn.current = false;
-        return;
-      }
-      // Advance turns after gravity or a piece placement drop
-      if (isMoving.current || moveInProgress) {
+      if (moveInProgress) {
         checkGameFinished(boardPieceLocations);
       }
     }, 300);
@@ -115,29 +107,24 @@ const Board = ({ className }: BoardProps) => {
       timer.current = 0;
     };
   }, [boardPieceLocations]);
-  const isMoving = useRef(false);
 
   const executePull = (direction: Direction) => {
-    // If game is finished, fling should reset instead of pulling
     if (gameState === GameState.Finished) {
-      console.log("Pull for reset. GameState:", gameState);
-      // logic.resetGame(logic.playersTurn, false);
+      resetGame();
       return;
     }
-    if (gameState === GameState.Ready || isMoving.current) return;
+    if (gameState === GameState.Ready) return;
 
-    isMoving.current = true;
     setMIP({ setting: true });
     setMoveInProgress(true);
     setGravityAnimating(true);
     pullGravity(direction);
 
     setTimeout(() => {
-      isMoving.current = false;
       setMoveInProgress(false);
       setGravityAnimating(false);
       // !@# magic number
-    }, 1500);
+    }, MOVE_IN_PROGRESS_DROP);
   };
 
   const handleFling = (direction: Direction, gameState: GameState) => {
@@ -255,16 +242,17 @@ const Board = ({ className }: BoardProps) => {
   };
 
   const gravityPreview = (side: "up" | "down" | "left" | "right") => {
-    if (!settings.shiftPreviews) {
+    if (
+      !settings.shiftPreviews ||
+      gameState !== GameState.Playing ||
+      moveInProgress
+    ) {
       setGravityPreviewPieces(null);
       setPreviewPieces({});
       return;
     }
-    if (gameState !== GameState.Playing || moveInProgress) {
-      setGravityPreviewPieces(null);
-      setPreviewPieces({});
-      return;
-    }
+    setMoveInProgress(true);
+
     const opposite: Direction =
       side === "up"
         ? Direction.Down
@@ -338,6 +326,7 @@ const Board = ({ className }: BoardProps) => {
       scheduleOnRN(setGravityPreviewPieces, null);
       scheduleOnRN(setPreviewPieces, {});
       if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, false);
+      if (moveInProgress) scheduleOnRN(setMIP, { setting: false, delay: 25 });
     });
 
   const lpDown = Gesture.LongPress()

@@ -3,11 +3,11 @@ import { PieceStatus } from "@/types/logic";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-interface HighlightProps {
+interface GlowProps {
   pieceId: string;
 }
 
-const Highlight: React.FC<HighlightProps> = ({ pieceId }) => {
+const Glow: React.FC<GlowProps> = ({ pieceId }) => {
   const { pieceStatusMap } = useLogicBoardState();
   const pieceStatus = pieceStatusMap[pieceId];
   const [style, setStyle] = useState(styles.off);
@@ -26,7 +26,7 @@ const Highlight: React.FC<HighlightProps> = ({ pieceId }) => {
   return <View style={style} />;
 };
 
-export default Highlight;
+export default Glow;
 
 const styles = StyleSheet.create({
   off: {

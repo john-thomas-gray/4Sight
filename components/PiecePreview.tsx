@@ -32,6 +32,7 @@ const PiecePreview = ({
     alignItems: "center",
     justifyContent: "center",
     position: "absolute",
+    // Convert absolute page coordinates to relative coordinates within Board container
     top: space.pageY - offsetY + space.height / 2 - GameElements.PIECE_RADIUS,
     left: space.pageX - offsetX + space.width / 2 - GameElements.PIECE_RADIUS,
     backgroundColor:

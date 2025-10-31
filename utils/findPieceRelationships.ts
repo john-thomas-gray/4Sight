@@ -61,7 +61,6 @@ const findPieceRelationships = ({
   };
 
   function scanLine(line: string[][]) {
-    console.log("line", line);
     let run: any[] = [];
     let lastTeam: Team = Team.Unassigned;
 
@@ -83,18 +82,16 @@ const findPieceRelationships = ({
     };
 
     for (const [spaceId, pieceId] of line) {
-      const team: Team =
-        pieceId === "unassigned" ? Team.Unassigned : Team.Unassigned;
+      const piece = pieceId === "unassigned" ? null : allPieces[pieceId];
+      const team: Team = piece?.team ?? Team.Unassigned;
       items.push({ spaceId, pieceId, team });
 
-      const piece = pieceId === "unassigned" ? null : allPieces[pieceId];
-
-      if (piece && piece.team === lastTeam) {
+      if (piece && team === lastTeam) {
         run.push({ spaceId, pieceId: piece.id });
       } else {
         flushRun();
         run = [{ spaceId, pieceId: piece ? piece.id : "unassigned" }];
-        lastTeam = piece ? piece.team : Team.Unassigned;
+        lastTeam = team;
       }
     }
     flushRun();
@@ -247,7 +244,6 @@ const findPieceRelationships = ({
   pieceRelationships.winNextTurns[Team.TeamTwo] = Array.from(
     winNextTurnSpaces[Team.TeamTwo]
   );
-  console.log("pieceRelationships", pieceRelationships);
   return pieceRelationships;
 };
 

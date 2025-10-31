@@ -3,7 +3,7 @@ import { GameElements } from "@/constants";
 import { useGameContext } from "@/context/GameContext";
 import { useLogicAnimations, useLogicBoardState } from "@/context/LogicContext";
 import { CellProps, CellType } from "@/types/board";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 import Animated, {
   interpolateColor,
@@ -16,20 +16,22 @@ const Space = ({ id }: CellProps) => {
   const { highlightPulse } = useLogicAnimations();
   const viewRef = useRef<View>(null);
 
-  const reportLayout = () => {
+  const { registerCell } = layout;
+
+  const reportLayout = useCallback(() => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      layout.registerCell({
+      registerCell({
         id,
         type: CellType.Space,
         layout: { pageX, pageY, width, height },
       });
     });
-  };
+  }, [registerCell, id]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [reportLayout]);
 
   const [rowStr, colStr] = id.split("-");
   const row = parseInt(rowStr, 10);
@@ -52,7 +54,7 @@ const Space = ({ id }: CellProps) => {
     return {
       backgroundColor: shouldHighlight ? color : baseColor,
     } as ViewStyle;
-  });
+  }, [shouldHighlight, baseColor]);
 
   const style: ViewStyle = {
     ...GameElements.SPACE_STYLE,

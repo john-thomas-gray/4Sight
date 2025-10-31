@@ -34,13 +34,19 @@ const GamePlay = () => {
       gameState === GameState.Finished || gameState === GameState.Playing,
     onShake: () => {
       resetGame();
-      console.log("Shake for reset");
     },
   });
-  const piecesToRender = React.useMemo(
-    () => (layout.layoutReady ? Object.entries(pieces) : []),
-    [layout.layoutReady, pieces]
-  );
+  const [piecesReady, setPiecesReady] = useState(false);
+
+  React.useEffect(() => {
+    if (layout.layoutReady && Object.keys(pieces).length > 0) {
+      setPiecesReady(true);
+    } else if (!layout.layoutReady || Object.keys(pieces).length === 0) {
+      setPiecesReady(false);
+    }
+  }, [layout.layoutReady, pieces]);
+
+  const piecesToRender = React.useMemo(() => Object.entries(pieces), [pieces]);
 
   const [loadTimer, setLoadTimer] = useState(true);
   const loadAnimationLoops = 0;
@@ -69,7 +75,6 @@ const GamePlay = () => {
         backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#065f46",
       }}
     >
-      {/* WinModal wired via game flow slice if needed */}
       <View className="flex-col items-center justify-center">
         <TeamWellGrid team={Team.TeamTwo} />
         <Board className="mt-7 mb-7" />
@@ -84,6 +89,7 @@ const GamePlay = () => {
         ))}
 
       {layout.layoutReady &&
+        piecesReady &&
         piecesToRender.map(([id, p]) => (
           <Piece key={id} id={id} team={p.team} />
         ))}

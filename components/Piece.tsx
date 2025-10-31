@@ -7,7 +7,10 @@ import {
   successfulPieceDrop,
 } from "@/animations/pieceAnimations";
 import { GameElements } from "@/constants";
-import { ANIMATE_PIECE_DROP, RETURN_TO_WELL } from "@/constants/animations";
+import {
+  MOVE_IN_PROGRESS_DROP,
+  MOVE_IN_PROGRESS_RETURN,
+} from "@/constants/logic";
 import { useGameContext } from "@/context/GameContext";
 import {
   useLogicAnimations,
@@ -28,7 +31,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import Highlight from "./Highlight";
+import Glow from "./Glow";
 
 const Piece = ({ team, id }: PieceProps) => {
   const { layout, settings } = useGameContext();
@@ -152,7 +155,6 @@ const Piece = ({ team, id }: PieceProps) => {
       ...prev,
       [wellIdToSet]: id,
     }));
-    console.log(wellPieceLocations);
   };
 
   useEffect(() => {
@@ -202,31 +204,19 @@ const Piece = ({ team, id }: PieceProps) => {
         : Team.TeamTwo
         ? Team.TeamOne
         : Team.Unassigned;
-
-    if (unassignedTimeoutRef.current)
-      clearTimeout(unassignedTimeoutRef.current);
-    if (assignTimeoutRef.current) clearTimeout(assignTimeoutRef.current);
-
-    unassignedTimeoutRef.current = setTimeout(
-      () => setPlayerCanMove(Team.Unassigned),
-      300
-    );
-    assignTimeoutRef.current = setTimeout(
-      () => setPlayerCanMove(nextTeam),
-      500
-    );
+    setPlayerCanMove(nextTeam);
   };
 
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
         .enabled(
-          (gameState !== GameState.Finished &&
+          status !== PieceStatus.onBoard &&
+            gameState !== GameState.Finished &&
             gameState !== GameState.PostGame &&
-            team === currentTeam) ||
-            (playerCanMove === team &&
-              (status === PieceStatus.isHeld ||
-                (status === PieceStatus.inWell && moveInProgress === false)))
+            team === currentTeam &&
+            (status === PieceStatus.isHeld ||
+              (status === PieceStatus.inWell && moveInProgress === false))
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
@@ -334,7 +324,7 @@ const Piece = ({ team, id }: PieceProps) => {
         })
         .onEnd(() => {
           scheduleOnRN(setHover, null);
-          scheduleOnRN(assignEarlyMove, team);
+
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,
@@ -459,7 +449,7 @@ const Piece = ({ team, id }: PieceProps) => {
                 ) {
                   scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
                 }
-                scheduleOnRN(unsetMoveInProgress);
+                scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_RETURN);
                 return;
               }
 
@@ -477,10 +467,10 @@ const Piece = ({ team, id }: PieceProps) => {
                 scaleY: animate.scaleY,
                 zIndex: animate.zIndex,
               });
-
+              scheduleOnRN(assignEarlyMove, team);
               scheduleOnRN(setBPLUI, finalSpaceId);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
-              scheduleOnRN(unsetMoveInProgress, ANIMATE_PIECE_DROP);
+              scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_DROP);
               return;
             } else if (isSpace) {
               const isOccupied = boardPieceLocationsSV.value[id] !== undefined;
@@ -501,7 +491,7 @@ const Piece = ({ team, id }: PieceProps) => {
                 }
 
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
-                scheduleOnRN(unsetMoveInProgress, RETURN_TO_WELL);
+                scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_RETURN);
                 return;
               }
 
@@ -534,7 +524,7 @@ const Piece = ({ team, id }: PieceProps) => {
                   scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
                 }
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
-                scheduleOnRN(unsetMoveInProgress, RETURN_TO_WELL);
+                scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_RETURN);
                 return;
               }
 
@@ -552,8 +542,8 @@ const Piece = ({ team, id }: PieceProps) => {
 
               scheduleOnRN(setBPLUI, id);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
-
-              scheduleOnRN(unsetMoveInProgress, ANIMATE_PIECE_DROP);
+              scheduleOnRN(assignEarlyMove, team);
+              scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_DROP);
               return;
             } else if (isWell) {
               const isOccupied = wellPieceLocations[id] !== undefined;
@@ -581,7 +571,7 @@ const Piece = ({ team, id }: PieceProps) => {
                   scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
                 }
                 scheduleOnRN(updateStatus, PieceStatus.inWell);
-                scheduleOnRN(unsetMoveInProgress, RETURN_TO_WELL);
+                scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_RETURN);
                 return;
               }
 
@@ -595,7 +585,7 @@ const Piece = ({ team, id }: PieceProps) => {
               });
 
               scheduleOnRN(setWPLUI, selectedCell.id);
-              scheduleOnRN(unsetMoveInProgress, RETURN_TO_WELL);
+              scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_RETURN);
               return;
             }
           }
@@ -614,9 +604,8 @@ const Piece = ({ team, id }: PieceProps) => {
               currentWellLayout: currentWellDataSV.value.layout,
             });
           }
-          // Return status to inWell since placement didn't occur
           scheduleOnRN(updateStatus, PieceStatus.inWell);
-          scheduleOnRN(unsetMoveInProgress);
+          scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_RETURN);
           if (
             currentWellDataSV.value &&
             typeof currentWellDataSV.value === "object" &&
@@ -676,7 +665,13 @@ const Piece = ({ team, id }: PieceProps) => {
     <>
       <GestureDetector gesture={movePiece}>
         <Animated.View
-          pointerEvents={status === PieceStatus.onBoard ? "none" : "auto"}
+          pointerEvents={
+            previewPieces[id]
+              ? "none"
+              : status === PieceStatus.onBoard
+              ? "none"
+              : "auto"
+          }
           style={[
             baseStyle,
             animatedStyles,
@@ -686,7 +681,7 @@ const Piece = ({ team, id }: PieceProps) => {
             previewPieces[id] ? { opacity: 0 } : null,
           ]}
         >
-          <Highlight pieceId={id} />
+          <Glow pieceId={id} />
           {/* Shine accent following the curve of the piece's edge */}
           <Animated.View
             style={{

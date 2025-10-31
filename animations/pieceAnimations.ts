@@ -29,6 +29,13 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
+const blockedPieceReturnTimeouts = new Map<
+  SharedValue<number>,
+  ReturnType<typeof setTimeout>
+>();
+
+const resetPieceTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+
 export const setPieceScale = ({
   scaleX,
   scaleY,
@@ -292,9 +299,15 @@ export const animateBlockedPiece = ({
       })
     )
   );
-  setTimeout(() => {
+  const existingTimeout = blockedPieceReturnTimeouts.get(translateX);
+  if (existingTimeout) {
+    clearTimeout(existingTimeout);
+  }
+  const timeoutId = setTimeout(() => {
+    blockedPieceReturnTimeouts.delete(translateX);
     elevationPieceToWell({ scaleX, scaleY, zIndex });
   }, totalTime * 0.76);
+  blockedPieceReturnTimeouts.set(translateX, timeoutId);
   translateY.value = withSequence(
     withTiming(slotCenterY, {
       duration: totalTime * 0.23,
@@ -495,7 +508,12 @@ export const resetAllPieces = ({
       scaleY: anim.scaleY,
       zIndex: anim.zIndex,
     });
-    setTimeout(() => {
+    const existingTimeout = resetPieceTimeouts.get(pieceId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+    const timeoutId = setTimeout(() => {
+      resetPieceTimeouts.delete(pieceId);
       animateResetPiece({
         translateX: anim.translateX,
         translateY: anim.translateY,
@@ -505,6 +523,7 @@ export const resetAllPieces = ({
         zIndex: anim.zIndex,
       });
     }, RESET_PIECE_DELAY);
+    resetPieceTimeouts.set(pieceId, timeoutId);
     assignedThisReset.add(targetWellId);
   });
 };

@@ -1,7 +1,9 @@
-import { animateWinner } from "@/animations/pieceAnimations";
+import { animateWinner, resetAllPieces } from "@/animations/pieceAnimations";
 import { GameElements, Logic } from "@/constants";
 import {
   pieceAnimSharedValues,
+  RESET_PIECE_DELAY,
+  RESET_PIECE_DURATION,
   WINNER_BASE_DELAY,
   WINNER_V0,
   WINNER_V1,
@@ -85,7 +87,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     Record<string, string>
   >({});
 
-  const { wells, layoutReady } = useLayout();
+  const { wells, spaces, layoutReady } = useLayout();
 
   /* Visual Effects */
 
@@ -140,6 +142,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   // const rehydrationPositionsAppliedRef = useRef(false);
   // Holds cleanup for any scheduled winner timeouts so we can clear them on reset/new schedules
   const winnerCleanupRef = useRef<null | (() => void)>(null);
+  const resetGameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   const buildTeamPieces = React.useCallback(
     (
@@ -148,11 +153,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       teamWells: Record<
         string,
         { pageX: number; pageY: number; width: number; height: number }
-      >
+      >,
+      options?: { updateAnimations?: boolean }
     ): {
       pieces: Record<string, PieceProps>;
       wellMap: Record<string, string>;
     } => {
+      const shouldUpdateAnimations = options?.updateAnimations ?? true;
       const pieces: Record<string, PieceProps> = {};
       const wellMap: Record<string, string> = {};
 
@@ -171,7 +178,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
         const layout = teamWells[wellId];
         const anim = pieceAnimSharedValuesRef.current[id];
-        if (layout && anim) {
+        if (layout && anim && shouldUpdateAnimations) {
           anim.translateX.value =
             layout.pageX + layout.width / 2 - GameElements.PIECE_RADIUS;
           anim.translateY.value =
@@ -188,6 +195,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     // If user pressed Play (no saved board/wells), allow initial build
     // If we rehydrated (Continue), skip build to preserve saved state
     // Defer one tick so Settings rehydration can run first and set rehydratedRef
+    if (!layoutReady) return;
+
     const timeoutId = setTimeout(() => {
       if (rehydratedRef.current) return;
 
@@ -202,6 +211,74 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     }, 0);
     return () => clearTimeout(timeoutId);
   }, [layoutReady, wells, buildTeamPieces]);
+
+  // Track if we've done initial positioning to avoid interfering with animations
+  const positionsInitializedRef = useRef(false);
+
+  // Ensure piece positions are updated after pieces are created or rehydrated
+  // Only run once on initial setup/rehydration, not on every boardPieceLocations change
+  React.useEffect(() => {
+    if (!layoutReady || Object.keys(pieces).length === 0) return;
+
+    // Update positions for pieces in wells (only if not yet initialized or rehydrated)
+    if (!positionsInitializedRef.current || rehydratedRef.current) {
+      Object.entries(wellPieceLocations).forEach(([wellId, pieceId]) => {
+        const wellLayout =
+          wells[Team.TeamOne][wellId] || wells[Team.TeamTwo][wellId];
+        const anim = pieceAnimSharedValuesRef.current[pieceId];
+        if (wellLayout && anim) {
+          anim.translateX.value =
+            wellLayout.pageX + wellLayout.width / 2 - GameElements.PIECE_RADIUS;
+          anim.translateY.value =
+            wellLayout.pageY +
+            wellLayout.height / 2 -
+            GameElements.PIECE_RADIUS;
+        }
+      });
+
+      // Update positions for pieces on the board (only if rehydrated from saved state)
+      if (rehydratedRef.current) {
+        Object.entries(boardPieceLocations).forEach(([spaceId, pieceId]) => {
+          const spaceLayout = spaces[spaceId];
+          const anim = pieceAnimSharedValuesRef.current[pieceId];
+          if (spaceLayout && anim) {
+            anim.translateX.value =
+              spaceLayout.pageX +
+              spaceLayout.width / 2 -
+              GameElements.PIECE_RADIUS;
+            anim.translateY.value =
+              spaceLayout.pageY +
+              spaceLayout.height / 2 -
+              GameElements.PIECE_RADIUS;
+          }
+        });
+      }
+
+      positionsInitializedRef.current = true;
+    }
+  }, [
+    layoutReady,
+    pieces,
+    wellPieceLocations,
+    wells,
+    spaces,
+    boardPieceLocations,
+  ]);
+
+  // Reset initialization flag when pieces are reset (new game)
+  React.useEffect(() => {
+    if (Object.keys(pieces).length === 0) {
+      positionsInitializedRef.current = false;
+    }
+  }, [pieces]);
+
+  React.useEffect(() => {
+    return () => {
+      if (resetGameTimeoutRef.current) {
+        clearTimeout(resetGameTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const initialPieceStatusMap: PieceStatusMap = {};
   for (let i = 0; i < 48; i++) {
@@ -321,29 +398,30 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       } else {
         incrementTurnNumber();
       }
-      console.log(gameState);
+      console.log("gameState", gameState);
     },
-    []
+    [gameState, incrementTurnNumber, pieces]
   );
 
   const resetGame = useCallback(() => {
     // !@# This is not realy in scope
     cancelAnimation(highlightPulse);
 
-    // Rebuild initial pieces and well mappings exactly like first load
-    const { pieces: teamOnePieces, wellMap: teamOneWellMap } = buildTeamPieces(
-      Team.TeamOne,
-      0,
-      wells[Team.TeamOne]
-    );
-    const { pieces: teamTwoPieces, wellMap: teamTwoWellMap } = buildTeamPieces(
-      Team.TeamTwo,
-      24,
-      wells[Team.TeamTwo]
-    );
-    setPieces({ ...teamOnePieces, ...teamTwoPieces });
-    console.log("pieces:", pieces);
-    setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
+    if (resetGameTimeoutRef.current) {
+      clearTimeout(resetGameTimeoutRef.current);
+      resetGameTimeoutRef.current = null;
+    }
+
+    const pieceAnimations = pieceAnimSharedValuesRef.current;
+    if (pieceAnimations) {
+      resetAllPieces({
+        boardPieceLocations,
+        wellPieceLocations,
+        wells,
+        pieces,
+        pieceAnimations,
+      });
+    }
 
     // Clear any previously scheduled winner animations before resetting
     if (winnerCleanupRef.current) {
@@ -362,20 +440,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     setIsPreviewingGravity(false);
     setPreviewPieces({});
 
-    // Board state: clear board placements
-    setBoardPieceLocations({});
-
-    // Ensure every piece is marked in-well
-    const pieceIds = Object.keys(pieces || {});
-    const resetStatusMap: PieceStatusMap = {};
-    pieceIds.forEach((pid) => {
-      resetStatusMap[pid] = PieceStatus.inWell;
-    });
-    setPieceStatusMap(resetStatusMap);
-
     // Set turn
     const whichPlayerStarts: 1 | 2 | 3 | 4 =
-      gameState === GameState.Finished
+      gameState === GameState.Finished || GameState.PreGame
         ? winner === Team.TeamOne
           ? 1
           : winner === Team.TeamTwo
@@ -385,19 +452,53 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         ? getNextPlayersTurn(playersTurn)
         : 1;
 
-    const freshPieceStatusMap: PieceStatusMap = {};
-    for (let i = 0; i < 48; i++) {
-      freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
+    const boardHasPieces = Object.keys(boardPieceLocations).length > 0;
+    const resetDelay = boardHasPieces
+      ? RESET_PIECE_DELAY + RESET_PIECE_DURATION
+      : 0;
+
+    const performStateReset = () => {
+      positionsInitializedRef.current = false;
+      rehydratedRef.current = false;
+
+      const { pieces: teamOnePieces, wellMap: teamOneWellMap } =
+        buildTeamPieces(Team.TeamOne, 0, wells[Team.TeamOne] || {}, {
+          updateAnimations: false,
+        });
+      const { pieces: teamTwoPieces, wellMap: teamTwoWellMap } =
+        buildTeamPieces(Team.TeamTwo, 24, wells[Team.TeamTwo] || {}, {
+          updateAnimations: false,
+        });
+
+      setPieces({ ...teamOnePieces, ...teamTwoPieces });
+      setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
+      setBoardPieceLocations({});
+
+      const freshPieceStatusMap: PieceStatusMap = {};
+      for (let i = 0; i < 48; i++) {
+        freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
+      }
+      setPieceStatusMap(freshPieceStatusMap);
+
+      setTurnCount(1);
+      setPlayersTurn(whichPlayerStarts);
+      setGameState(GameState.Ready);
+      resetGameTimeoutRef.current = null;
+    };
+
+    if (resetDelay > 0) {
+      resetGameTimeoutRef.current = setTimeout(performStateReset, resetDelay);
+    } else {
+      performStateReset();
     }
-    setPieceStatusMap(freshPieceStatusMap);
-    setPlayersTurn(whichPlayerStarts);
-    setGameState(GameState.Ready);
   }, [
+    boardPieceLocations,
     buildTeamPieces,
     gameState,
     highlightPulse,
     pieces,
     playersTurn,
+    wellPieceLocations,
     wells,
     winner,
   ]);
