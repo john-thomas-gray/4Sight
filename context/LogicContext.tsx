@@ -342,6 +342,7 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       wells[Team.TeamTwo]
     );
     setPieces({ ...teamOnePieces, ...teamTwoPieces });
+    console.log("pieces:", pieces);
     setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
 
     // Clear any previously scheduled winner animations before resetting

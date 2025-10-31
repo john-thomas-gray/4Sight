@@ -5,7 +5,6 @@ import getReachableSlot from "@/utils/getReachableSlot";
 interface FindPieceRelationships {
   boardPieceLocations: Record<string, string>;
   winLen: number;
-  initialSpaceId?: string;
   allPieces: AllPieces;
 }
 
@@ -28,7 +27,6 @@ interface PieceRelationships {
 const findPieceRelationships = ({
   boardPieceLocations,
   winLen,
-  initialSpaceId,
   allPieces,
 }: FindPieceRelationships) => {
   const pieceRelationships: PieceRelationships = {
@@ -45,13 +43,6 @@ const findPieceRelationships = ({
       [Team.TeamTwo]: [],
     },
   };
-
-  // const directions = [
-  //   { name: "row", dx: 1, dy: 0 },
-  //   { name: "column", dx: 0, dy: 1 },
-  //   { name: "diagDown", dx: -1, dy: 1 },
-  //   { name: "diagUp", dx: -1, dy: 1 },
-  // ];
 
   const SIZE = 7;
 
@@ -70,10 +61,10 @@ const findPieceRelationships = ({
   };
 
   function scanLine(line: string[][]) {
+    console.log("line", line);
     let run: any[] = [];
     let lastTeam: Team = Team.Unassigned;
 
-    // Keep full line details to evaluate sliding windows for win-next-turns
     const items: { spaceId: string; pieceId: string; team: Team }[] = [];
 
     const flushRun = () => {
@@ -84,10 +75,9 @@ const findPieceRelationships = ({
       if (run.length >= winLen) {
         if (team === Team.TeamOne || team === Team.TeamTwo) {
           pieceRelationships.winners[team].push(run);
-          // Record all spaces in this winning run so we can filter next-turn wins
+
           run.forEach(({ spaceId }) => winningSpaceIds[team].add(spaceId));
         }
-      } else if (run.length === winLen - 1) {
       }
       run = [];
     };
@@ -97,19 +87,14 @@ const findPieceRelationships = ({
         pieceId === "unassigned" ? Team.Unassigned : Team.Unassigned;
       items.push({ spaceId, pieceId, team });
 
-      if (pieceId === "unassigned") {
-        flushRun();
-        lastTeam = Team.Unassigned;
-        continue;
-      }
-      const piece = allPieces[pieceId];
+      const piece = pieceId === "unassigned" ? null : allPieces[pieceId];
 
-      if (piece.team === lastTeam) {
+      if (piece && piece.team === lastTeam) {
         run.push({ spaceId, pieceId: piece.id });
       } else {
         flushRun();
-        run = [{ spaceId, pieceId: piece.id }];
-        lastTeam = piece.team;
+        run = [{ spaceId, pieceId: piece ? piece.id : "unassigned" }];
+        lastTeam = piece ? piece.team : Team.Unassigned;
       }
     }
     flushRun();
