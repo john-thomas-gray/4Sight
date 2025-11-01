@@ -2,9 +2,9 @@ Final:
 
 - Animate tutorial messages
 - Reorder tutorial more elegantly
-- disconnect piece enabled from whose turn it is. Make an independent
-  variable responsible for when each team can move. Either that or have piece enabled
-  turn dependent but make boardColor change on a timeout.
+- Play Tutorial should call resetGame
+- Win Modal should be full screen
+- fix memory leaks
 
 would be nice:
 - my hooks are all fucked up. They should actually have all of their dependencies

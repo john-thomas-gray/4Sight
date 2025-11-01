@@ -5,6 +5,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
+import { TutorialMount } from "@/components/TutorialMount";
 import { useGameContext } from "@/context/GameContext";
 import {
   useLogicBoardState,
@@ -18,7 +19,11 @@ import { GameState } from "@/types/logic";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
-import { useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 const GamePlay = () => {
   const { layout, settings } = useGameContext();
@@ -52,7 +57,11 @@ const GamePlay = () => {
   const loadAnimationLoops = 0;
 
   useEffect(() => {
-    setTimeout(() => setLoadTimer(false), 5000 * loadAnimationLoops);
+    const timeoutId = setTimeout(
+      () => setLoadTimer(false),
+      5000 * loadAnimationLoops
+    );
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -66,7 +75,7 @@ const GamePlay = () => {
     const target = !settings.tutorialEnabled ? 1 : 0;
     menuOpacity.value = withTiming(target, { duration: 400 });
   }, [settings.tutorialEnabled, menuOpacity]);
-  /* const menuStyle = useAnimatedStyle(() => ({ opacity: menuOpacity.value })); */
+  const menuStyle = useAnimatedStyle(() => ({ opacity: menuOpacity.value }));
 
   return (
     <View
@@ -96,9 +105,8 @@ const GamePlay = () => {
 
       <LoadingScreen visible={!layout.layoutReady || loadTimer} />
 
-      {/* Tutorial overlay and modal render above gameplay UI */}
-      {/* {layout.layoutReady && !loadTimer && <TutorialMount />} */}
-      {/*
+      {layout.layoutReady && !loadTimer && <TutorialMount />}
+
       {layout.layoutReady && !loadTimer && (
         <Animated.View
           style={menuStyle}
@@ -107,22 +115,9 @@ const GamePlay = () => {
         >
           <HamburgerMenu onPress={() => router.replace("/")} />
         </Animated.View>
-      )} */}
-      <HamburgerMenu onPress={() => router.replace("/")} />
+      )}
     </View>
   );
 };
 
 export default GamePlay;
-
-// Separate child to safely use hooks conditionally above the rest of the UI
-/* const TutorialMount = () => {
-  const tutorial = useTutorial();
-  return (
-    <>
-      {tutorial.overlay}
-      {tutorial.modal}
-    </>
-  );
-};
- */

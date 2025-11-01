@@ -31,7 +31,7 @@ function useTutorial(): TutorialAPI {
     wellPieceLocations,
     setWellPieceLocations,
   } = useLogicBoardState();
-  const { pieceAnimations } = useLogicAnimations();
+  const { pieceAnimSharedValues } = useLogicAnimations();
   const { gameState } = useLogicGameFlow();
   const { setMoveInProgress } = useLogicInteractions();
   const [step, setStep] = React.useState<number>(0);
@@ -56,6 +56,40 @@ function useTutorial(): TutorialAPI {
   const completedRef = React.useRef<boolean>(false);
   const usedPieceIdsRef = React.useRef<Set<string>>(new Set());
   const step4PostActionRanRef = React.useRef<boolean>(false);
+  const timeoutIdsRef = React.useRef<Set<ReturnType<typeof setTimeout>>>(
+    new Set()
+  );
+
+  const registerTimeout = React.useCallback(
+    (callback: () => void, delay: number) => {
+      const id = setTimeout(() => {
+        timeoutIdsRef.current.delete(id);
+        callback();
+      }, delay);
+      timeoutIdsRef.current.add(id);
+      return id;
+    },
+    []
+  );
+
+  const clearRegisteredTimeout = React.useCallback(
+    (id: ReturnType<typeof setTimeout>) => {
+      if (timeoutIdsRef.current.has(id)) {
+        clearTimeout(id);
+        timeoutIdsRef.current.delete(id);
+      }
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    return () => {
+      timeoutIdsRef.current.forEach((id) => {
+        clearTimeout(id);
+      });
+      timeoutIdsRef.current.clear();
+    };
+  }, []);
 
   // Helpers
   const getFinalSpaceForSlot = React.useCallback(
@@ -129,7 +163,7 @@ function useTutorial(): TutorialAPI {
   const scriptDropFromSlot = React.useCallback(
     (team: Team, slotId: string, delayMs = 0): Promise<void> => {
       return new Promise((resolve) => {
-        setTimeout(() => {
+        registerTimeout(() => {
           const target = getFinalSpaceForSlot(slotId, boardPieceLocations);
           const available = getAvailableWellPiece(team);
           if (!target || !available) {
@@ -137,7 +171,7 @@ function useTutorial(): TutorialAPI {
             return;
           }
           const [wellId, pieceId] = available;
-          const anim = pieceAnimations[pieceId];
+          const anim = pieceAnimSharedValues[pieceId];
           const slotLayout = layout.slots[slotId];
           const spaceLayout = layout.spaces[target];
           if (!anim || !slotLayout || !spaceLayout) {
@@ -160,13 +194,9 @@ function useTutorial(): TutorialAPI {
           });
 
           // 2) Wait 500ms, move to slot center
-          setTimeout(() => {
-            // animatePieceToWell({
-
-            // });
-
+          registerTimeout(() => {
             // 3) Wait 500ms, release (sets placed scale), then drop into final space
-            setTimeout(() => {
+            registerTimeout(() => {
               elevationPieceToSlot({
                 scaleX: anim.scaleX,
                 scaleY: anim.scaleY,
@@ -184,7 +214,7 @@ function useTutorial(): TutorialAPI {
 
               // 4) After drop animation finishes, update board mapping, trigger finish check, and resolve
               const totalDropMs = PIECE_TO_SLOT + SLOT_TO_SPACE;
-              setTimeout(() => {
+              registerTimeout(() => {
                 setBoardPieceLocations((prev) => {
                   const updated = { ...prev, [target]: pieceId } as Record<
                     string,
@@ -201,12 +231,13 @@ function useTutorial(): TutorialAPI {
       });
     },
     [
+      registerTimeout,
       getFinalSpaceForSlot,
       getAvailableWellPiece,
       layout.slots,
       layout.spaces,
       boardPieceLocations,
-      pieceAnimations,
+      pieceAnimSharedValues,
       setBoardPieceLocations,
       setWellPieceLocations,
       setMoveInProgress,
@@ -241,12 +272,12 @@ function useTutorial(): TutorialAPI {
     if (!settings.tutorialEnabled) return;
     if (!layout.layoutReady) return;
 
-    const run = async () => {
+    const cleanup = (() => {
       switch (step) {
         case 0: {
           // Configure welcome + consent with delayed appearance
           setShowOverlay(false);
-          const t = setTimeout(() => {
+          const timeoutId = registerTimeout(() => {
             setModalText(
               "Welcome to 4Sight!\nWould you like to play the tutorial?"
             );
@@ -266,7 +297,7 @@ function useTutorial(): TutorialAPI {
             };
             setShowModal(true);
           }, 1500);
-          return () => clearTimeout(t);
+          return () => clearRegisteredTimeout(timeoutId);
         }
         case 1: {
           // Clear any consent buttons
@@ -351,8 +382,7 @@ function useTutorial(): TutorialAPI {
           );
           setShowOverlay(false);
           try {
-            logic.setRestrictGravityToDown &&
-              logic.setRestrictGravityToDown(true);
+            setRestrictGravityToDown && setRestrictGravityToDown(true);
           } catch {}
           break;
         }
@@ -400,9 +430,22 @@ function useTutorial(): TutorialAPI {
         default:
           break;
       }
+      return undefined;
+    })();
+
+    return () => {
+      if (cleanup) cleanup();
     };
-    run();
-  }, [step, settings.tutorialEnabled, layout.layoutReady]);
+  }, [
+    step,
+    settings.tutorialEnabled,
+    layout.layoutReady,
+    registerTimeout,
+    clearRegisteredTimeout,
+    rectFromCell,
+    layout.wells,
+    settings,
+  ]);
 
   const step5ArmedRef = React.useRef(false);
   const step5BaselineRef = React.useRef<string | undefined>(undefined);
@@ -549,13 +592,13 @@ function useTutorial(): TutorialAPI {
       if (step4PostActionRanRef.current) return;
       step4PostActionRanRef.current = true;
       const delayMs = PIECE_TO_SLOT + SLOT_TO_SPACE + 10;
-      const t = setTimeout(() => {
+      const t = registerTimeout(() => {
         // After white placement animation finishes, drop a black piece from 0-4
         scriptDropFromSlot(Team.TeamTwo, "0-4").then(() => {
           setStep(5);
         });
       }, delayMs);
-      return () => clearTimeout(t);
+      return () => clearRegisteredTimeout(t);
     }
   }, [step, boardPieceLocations, pieces]);
 

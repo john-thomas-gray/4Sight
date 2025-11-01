@@ -161,15 +161,18 @@ const TutorialModal = ({
     containerOpacity,
   ]);
 
-  if (!visible) return null;
-
-  if (timeoutMS) {
-    setTimeout(() => {
+  React.useEffect(() => {
+    if (!visible) return;
+    if (!timeoutMS) return;
+    const timeoutId = setTimeout(() => {
       opacity.value = withTiming(visible ? 1 : 0, {
         duration: 250 + timeoutMS,
       });
     });
-  }
+    return () => clearTimeout(timeoutId);
+  }, [visible, timeoutMS, opacity]);
+
+  if (!visible) return null;
 
   return (
     <Animated.View

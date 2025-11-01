@@ -4,6 +4,7 @@ import {
   useLogicInteractions,
 } from "@/context/LogicContext";
 import { Direction } from "@/types/board";
+import { useEffect, useRef } from "react";
 
 type GravityProps = {
   direction: Direction.Up | Direction.Down | Direction.Left | Direction.Right;
@@ -12,14 +13,20 @@ type GravityProps = {
 export const useGravity = () => {
   const { boardPieceLocations, setBoardPieceLocations } = useLogicBoardState();
   const { moveInProgress, setMoveInProgress } = useLogicInteractions();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const applyGravity = (direction: GravityProps["direction"]) => {
     if (moveInProgress) {
       return;
     }
 
     setMoveInProgress(true);
-    setTimeout(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    timeoutRef.current = setTimeout(() => {
       setMoveInProgress(false);
+      timeoutRef.current = null;
     }, GRAVITY_IN_PROGRESS);
 
     const updatedPieceLocations = { ...boardPieceLocations };
@@ -128,5 +135,13 @@ export const useGravity = () => {
 
     setBoardPieceLocations(updatedPieceLocations);
   };
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
   return applyGravity;
 };

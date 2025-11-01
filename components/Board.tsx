@@ -15,7 +15,7 @@ import {
 import { useGravity } from "@/hooks/useGravity";
 import { CellType, Direction, Team } from "@/types/board";
 import { GameState } from "@/types/logic";
-import React, { memo, useLayoutEffect, useRef } from "react";
+import React, { memo, useEffect, useLayoutEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
@@ -75,12 +75,12 @@ const Board = ({ className }: BoardProps) => {
     });
   };
 
-  const firstTurn = useRef(true);
-  const timer = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gravityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useLayoutEffect(() => {
     if (!layout.layoutReady) return;
-    if (timer.current > 0) return;
+    if (timer.current) return;
     Object.keys(pieces).forEach((pieceId) => {
       const entry = Object.entries(boardPieceLocations).find(
         ([, value]) => value === pieceId
@@ -101,10 +101,13 @@ const Board = ({ className }: BoardProps) => {
       if (moveInProgress) {
         checkGameFinished(boardPieceLocations);
       }
+      timer.current = null;
     }, 300);
     return () => {
-      clearTimeout(timer.current);
-      timer.current = 0;
+      if (timer.current) {
+        clearTimeout(timer.current);
+        timer.current = null;
+      }
     };
   }, [boardPieceLocations]);
 
@@ -120,10 +123,16 @@ const Board = ({ className }: BoardProps) => {
     setGravityAnimating(true);
     pullGravity(direction);
 
-    setTimeout(() => {
+    if (gravityTimeoutRef.current) {
+      clearTimeout(gravityTimeoutRef.current);
+      gravityTimeoutRef.current = null;
+    }
+
+    gravityTimeoutRef.current = setTimeout(() => {
       setMoveInProgress(false);
       setGravityAnimating(false);
       // !@# magic number
+      gravityTimeoutRef.current = null;
     }, MOVE_IN_PROGRESS_DROP);
   };
 
@@ -454,6 +463,15 @@ const Board = ({ className }: BoardProps) => {
       scheduleOnRN(setPreviewPieces, {});
       if (shiftPreviews) scheduleOnRN(setIsPreviewingGravity, false);
     });
+
+  useEffect(() => {
+    return () => {
+      if (gravityTimeoutRef.current) {
+        clearTimeout(gravityTimeoutRef.current);
+        gravityTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const longPressGestures = Gesture.Simultaneous(lpUp, lpDown, lpLeft, lpRight);
   const boardGestures = Gesture.Simultaneous(longPressGestures, panFling);

@@ -22,7 +22,7 @@ const WinModal = ({
   visible: boolean;
   winner: Team;
 }) => {
-  const { settings, logic } = useGameContext();
+  const { settings } = useGameContext();
 
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
