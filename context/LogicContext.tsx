@@ -528,19 +528,38 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       checkGameFinished,
       resetGame,
       rehydrateFromSavedState: (state: PersistedAppState) => {
-        rehydratedRef.current = true;
+        const hasPiecesSnapshot = Boolean(
+          state.pieces && Object.keys(state.pieces).length > 0
+        );
+        const hasWellSnapshot = Boolean(
+          state.wellPieceLocations &&
+            Object.keys(state.wellPieceLocations).length > 0
+        );
+        const hasBoardSnapshot = Boolean(
+          state.boardPieceLocations &&
+            Object.keys(state.boardPieceLocations).length > 0
+        );
+
+        const canRehydratePieces = hasPiecesSnapshot && hasWellSnapshot;
+
+        rehydratedRef.current = canRehydratePieces || hasBoardSnapshot;
+
         if (state.gameMode !== undefined) setGameMode(state.gameMode);
-        if (state.pieces !== undefined) setPieces(state.pieces);
+        if (state.pieces && canRehydratePieces) setPieces(state.pieces);
         if (state.pieceStatusMap !== undefined)
           setPieceStatusMap(state.pieceStatusMap);
-        if (state.wellPieceLocations !== undefined)
+        if (state.wellPieceLocations && hasWellSnapshot)
           setWellPieceLocations(state.wellPieceLocations);
-        if (state.boardPieceLocations !== undefined)
+        if (state.boardPieceLocations && hasBoardSnapshot)
           setBoardPieceLocations(state.boardPieceLocations);
         if (state.winner !== undefined) setWinner(state.winner);
         if (state.gameState !== undefined) setGameState(state.gameState);
         if (state.playersTurn !== undefined) setPlayersTurn(state.playersTurn);
         if (state.turnCount !== undefined) setTurnCount(state.turnCount);
+
+        if (!rehydratedRef.current) {
+          positionsInitializedRef.current = false;
+        }
       },
     }),
     [

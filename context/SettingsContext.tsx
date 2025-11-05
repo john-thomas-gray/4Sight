@@ -127,11 +127,17 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
 
   // Persist game state every turn
   useEffect(() => {
+    const pieceCount = Object.keys(pieces || {}).length;
+    const wellsReady = Object.keys(wellPieceLocations || {}).length > 0;
+    if (pieceCount === 0 || !wellsReady) {
+      return;
+    }
+
     const state: PersistedAppState = {
       gameMode,
-      turnCount: turnCount,
+      turnCount,
       currentTeam,
-      gameState: gameState,
+      gameState,
       winner,
       pieces,
       pieceStatusMap,
@@ -140,7 +146,18 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
       boardPieceLocations,
     };
     saveAppState(state);
-  }, [turnCount, winner]);
+  }, [
+    gameMode,
+    turnCount,
+    currentTeam,
+    gameState,
+    winner,
+    pieces,
+    pieceStatusMap,
+    playersTurn,
+    wellPieceLocations,
+    boardPieceLocations,
+  ]);
 
   return (
     <SettingsContext.Provider

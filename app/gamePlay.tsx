@@ -106,7 +106,7 @@ const GamePlay = () => {
   }, []);
 
   const [loadTimer, setLoadTimer] = useState(true);
-  const loadAnimationLoops = 0;
+  const loadAnimationLoops = 1.5;
 
   useEffect(() => {
     const timeoutId = setTimeout(
