@@ -6,6 +6,7 @@ import Piece from "@/components/Piece";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import { TutorialMount } from "@/components/TutorialMount";
+import WinModal from "@/components/WinOverlay";
 import { useGameContext } from "@/context/GameContext";
 import {
   useLogicBoardState,
@@ -13,9 +14,10 @@ import {
   useLogicUI,
 } from "@/context/LogicContext";
 
+import { WINNER_V0, WINNER_V1 } from "@/constants/animations";
 import { useShake as useShakeHook } from "@/hooks/useShake";
 import { Team } from "@/types/board";
-import { GameState } from "@/types/logic";
+import { GameState, PieceStatus } from "@/types/logic";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -28,9 +30,9 @@ import Animated, {
 const GamePlay = () => {
   const { layout, settings } = useGameContext();
   const gameFlow = useLogicGameFlow();
-  const { gameState, resetGame } = gameFlow;
+  const { gameState, resetGame, winner } = gameFlow;
   const boardState = useLogicBoardState();
-  const { pieces } = boardState;
+  const { pieces, pieceStatusMap } = boardState;
   const ui = useLogicUI();
   const { setIsGlobalLoading } = ui;
   const router = useRouter();
@@ -42,6 +44,10 @@ const GamePlay = () => {
     },
   });
   const [piecesReady, setPiecesReady] = useState(false);
+  const [showWinOverlay, setShowWinOverlay] = useState(false);
+  const winOverlayTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   React.useEffect(() => {
     if (layout.layoutReady && Object.keys(pieces).length > 0) {
@@ -52,6 +58,52 @@ const GamePlay = () => {
   }, [layout.layoutReady, pieces]);
 
   const piecesToRender = React.useMemo(() => Object.entries(pieces), [pieces]);
+
+  const winnerPieceCount = React.useMemo(() => {
+    return Object.values(pieceStatusMap).reduce((count, status) => {
+      if (status === PieceStatus.winner) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  }, [pieceStatusMap]);
+
+  useEffect(() => {
+    if (winOverlayTimerRef.current) {
+      clearTimeout(winOverlayTimerRef.current);
+      winOverlayTimerRef.current = null;
+    }
+
+    if (gameState !== GameState.Finished || winner === Team.Unassigned) {
+      setShowWinOverlay(false);
+      return;
+    }
+
+    if (winnerPieceCount === 0) {
+      return;
+    }
+
+    winOverlayTimerRef.current = setTimeout(() => {
+      setShowWinOverlay(true);
+      winOverlayTimerRef.current = null;
+    }, WINNER_V0 + WINNER_V1 + 200);
+
+    return () => {
+      if (winOverlayTimerRef.current) {
+        clearTimeout(winOverlayTimerRef.current);
+        winOverlayTimerRef.current = null;
+      }
+    };
+  }, [gameState, winner, winnerPieceCount]);
+
+  useEffect(() => {
+    return () => {
+      if (winOverlayTimerRef.current) {
+        clearTimeout(winOverlayTimerRef.current);
+        winOverlayTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const [loadTimer, setLoadTimer] = useState(true);
   const loadAnimationLoops = 0;
@@ -116,6 +168,12 @@ const GamePlay = () => {
           <HamburgerMenu onPress={() => router.replace("/")} />
         </Animated.View>
       )}
+
+      <WinModal
+        visible={showWinOverlay && winner !== Team.Unassigned}
+        winner={winner}
+        onClose={() => setShowWinOverlay(false)}
+      />
     </View>
   );
 };

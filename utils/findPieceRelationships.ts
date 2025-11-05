@@ -248,29 +248,3 @@ const findPieceRelationships = ({
 };
 
 export default findPieceRelationships;
-
-// Additionally, if a space preceeds or follows (X - 1) consecutive
-// spaces containing pieces of the same team, unless those pieceIds
-// are part of a sequence of X or more, push a map of that sequence
-// to almosts (team as the key, and a map of spaceids as keys and
-// thier corresponding pieceIds as values). Push the empty spaces
-// to the almostEmpties array.
-
-// if cell is input, run the cell variation:
-
-// starting at the input cell,
-// check each direction (diagonally, horizontally and vertically)
-// for sequences of x or more consecutive spaces containing pieces of the same team.
-// check for sequences of (X - 1) preceeded or followed by an empty space.
-// (omit a check if it would extend out of bounds)
-// continue if a sequence of (X - 1) consecutive pieces becomes impossible
-
-// OPTIMIZATIONS
-
-// On diagonal crawls start only at spaces which could lead to an X
-// long consecutive. eg if X = 4, start at space "4-1""
-
-// >>>>>(starting at spaces "4-1" and "4-7")<<<<<
-
-// If, in the course of crawling a line,
-// a sequence of X consecutive pieces becomes impossible, continue

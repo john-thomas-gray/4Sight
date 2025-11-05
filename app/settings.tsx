@@ -2,12 +2,14 @@ import BackButton from "@/components/BackButton";
 import { CLASSIC } from "@/constants/themes/classic";
 import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse";
 import { useGameContext } from "@/context/GameContext";
+import { useLogicGameFlow } from "@/context/LogicContext";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Switch, Text, View } from "react-native";
 
 const Settings = () => {
   const { settings } = useGameContext();
+  const { resetGame } = useLogicGameFlow();
   const router = useRouter();
   const isSameTheme = (a: typeof CLASSIC | undefined, b: typeof CLASSIC) => {
     if (!a || !a.colorTheme) return false;
@@ -314,12 +316,10 @@ const Settings = () => {
           >
             <Pressable
               className="w-full items-center justify-center py-3 rounded-md"
-              android_ripple={{
-                color: settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#888",
-              }}
               onPress={() => {
                 if (!settings.tutorialEnabled)
                   settings.setTutorialEnabled(true);
+                resetGame();
                 router.replace("/gamePlay");
               }}
               style={({ pressed }) => [
