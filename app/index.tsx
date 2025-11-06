@@ -1,7 +1,6 @@
 import { useGameContext } from "@/context/GameContext";
 import { useLogicGameFlow, useLogicUI } from "@/context/LogicContext";
 import { useDebouncedPress } from "@/hooks/useDebouncedPress";
-import type { PersistedAppState } from "@/utils/useAsyncStorage";
 import { clearSavedGame, loadAppState } from "@/utils/useAsyncStorage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
@@ -19,61 +18,38 @@ export default function Index() {
 function InnerIndexLayout() {
   const router = useRouter();
   const { settings } = useGameContext();
-  const { resetGame, rehydrateFromSavedState } = useLogicGameFlow();
+  const { resetGame, continueGame, hasSavedGame, refreshHasSavedGame } =
+    useLogicGameFlow();
 
   const { setIsGlobalLoading } = useLogicUI();
-  const [hasSavedGame, setHasSavedGame] = React.useState(false);
-
-  const computeHasSavedGame = React.useCallback((saved: PersistedAppState) => {
-    const hasBoard = Boolean(
-      saved.boardPieceLocations &&
-        Object.keys(saved.boardPieceLocations).length > 0
-    );
-    return hasBoard;
-  }, []);
 
   React.useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const saved = await loadAppState();
-      const has = computeHasSavedGame(saved as PersistedAppState);
-      if (mounted) setHasSavedGame(has);
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [computeHasSavedGame]);
+    refreshHasSavedGame();
+  }, [refreshHasSavedGame]);
 
   // Refresh saved-game visibility whenever this screen gains focus
   useFocusEffect(
     React.useCallback(() => {
-      let active = true;
-      (async () => {
-        const saved = await loadAppState();
-        const has = computeHasSavedGame(saved as PersistedAppState);
-        if (active) setHasSavedGame(has);
-      })();
-      return () => {
-        active = false;
-      };
-    }, [computeHasSavedGame])
+      refreshHasSavedGame();
+    }, [refreshHasSavedGame])
   );
 
   const handlePlay = React.useCallback(async () => {
     setIsGlobalLoading(true);
     resetGame();
     await clearSavedGame();
+    await refreshHasSavedGame();
     router.replace("/gamePlay");
-  }, [setIsGlobalLoading, resetGame]);
+  }, [setIsGlobalLoading, resetGame, refreshHasSavedGame]);
 
   const handleContinue = React.useCallback(async () => {
     setIsGlobalLoading(true);
     const saved = await loadAppState();
     if (saved) {
-      rehydrateFromSavedState(saved);
+      continueGame(saved);
     }
     router.replace("/gamePlay");
-  }, [setIsGlobalLoading, rehydrateFromSavedState]);
+  }, [setIsGlobalLoading, continueGame]);
 
   const onPressPlay = useDebouncedPress(handlePlay);
   const onPressContinue = useDebouncedPress(handleContinue);

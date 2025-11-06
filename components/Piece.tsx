@@ -38,8 +38,7 @@ const Piece = ({ team, id }: PieceProps) => {
   const { gameMode } = useLogicGameFlow();
   const { moveInProgress } = useLogicInteractions();
   const { pieceAnimSharedValues, previewPieces } = useLogicAnimations();
-  const { gameState, playerCanMove, setPlayerCanMove, currentTeam } =
-    useLogicGameFlow();
+  const { gameState, currentTeam } = useLogicGameFlow();
   const {
     pieceStatusMap,
     wellPieceLocations,
@@ -197,16 +196,6 @@ const Piece = ({ team, id }: PieceProps) => {
     };
   }, []);
 
-  const assignEarlyMove = (team: Team) => {
-    const nextTeam =
-      team === Team.TeamOne
-        ? Team.TeamTwo
-        : Team.TeamTwo
-        ? Team.TeamOne
-        : Team.Unassigned;
-    setPlayerCanMove(nextTeam);
-  };
-
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
@@ -220,6 +209,7 @@ const Piece = ({ team, id }: PieceProps) => {
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
+          console.log(id);
           elevationPieceToHeld({
             scaleX: animate.scaleX,
             scaleY: animate.scaleY,
@@ -324,7 +314,7 @@ const Piece = ({ team, id }: PieceProps) => {
         })
         .onEnd(() => {
           scheduleOnRN(setHover, null);
-
+          console.log(animate.translateX.value, animate.translateY.value);
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,
@@ -467,7 +457,6 @@ const Piece = ({ team, id }: PieceProps) => {
                 scaleY: animate.scaleY,
                 zIndex: animate.zIndex,
               });
-              scheduleOnRN(assignEarlyMove, team);
               scheduleOnRN(setBPLUI, finalSpaceId);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
               scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_DROP);
@@ -542,7 +531,6 @@ const Piece = ({ team, id }: PieceProps) => {
 
               scheduleOnRN(setBPLUI, id);
               scheduleOnRN(updateStatus, PieceStatus.onBoard);
-              scheduleOnRN(assignEarlyMove, team);
               scheduleOnRN(unsetMoveInProgress, MOVE_IN_PROGRESS_DROP);
               return;
             } else if (isWell) {

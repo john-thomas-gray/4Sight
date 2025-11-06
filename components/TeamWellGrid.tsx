@@ -9,8 +9,8 @@ type TeamWellGridProps = {
   team: Team;
 };
 
-const COLS = 8;
-const ROWS = 3;
+const ROWS = 8;
+const COLS = 3;
 
 const TeamWellGrid = ({ team }: TeamWellGridProps) => {
   const { settings } = useGameContext();
@@ -18,15 +18,17 @@ const TeamWellGrid = ({ team }: TeamWellGridProps) => {
     team === Team.TeamOne
       ? settings.theme?.colorTheme?.TEAM_ONE_COLOR
       : settings.theme?.colorTheme?.TEAM_TWO_COLOR;
-  const idNumOffset =
-    team === Team.TeamOne ? { row: 9, col: 9 } : { row: 17, col: 12 };
+  const rowOffset = team === Team.TeamOne ? 9 : 17;
+  const columnOffset = team === Team.TeamOne ? 9 : 12;
 
   return (
     <View style={[styles.container, { borderColor }]}>
-      {Array.from({ length: ROWS }).map((_, row) => (
-        <View key={row} style={styles.row}>
-          {Array.from({ length: COLS }).map((_, col) => {
-            const id = `${row + idNumOffset.row}-${col + idNumOffset.col}`;
+      {Array.from({ length: COLS }).map((_, col) => (
+        <View key={col} style={styles.row}>
+          {Array.from({ length: ROWS }).map((_, row) => {
+            const rowId = row + rowOffset;
+            const columnId = col + columnOffset;
+            const id = `${rowId}-${columnId}`;
             return <Well key={id} id={id} type={CellType.Well} team={team} />;
           })}
         </View>
@@ -38,8 +40,8 @@ const TeamWellGrid = ({ team }: TeamWellGridProps) => {
 const styles = StyleSheet.create({
   container: {
     position: "relative",
-    width: (COLS - 0.5) * 47,
-    height: ROWS * 47,
+    width: (ROWS - 0.5) * 47,
+    height: COLS * 47,
     borderWidth: 4,
     paddingHorizontal: 5,
     paddingTop: 4,

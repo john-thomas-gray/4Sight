@@ -40,10 +40,10 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
     useState<boolean>(true);
   const [highlightWinningMoves, setHighlightWinningMoves] =
     useState<boolean>(true);
-  const [tutorialEnabled, setTutorialEnabled] = useState<boolean>(true);
+  const [tutorialEnabled, setTutorialEnabled] = useState<boolean>(false);
 
   const {
-    rehydrateFromSavedState,
+    continueGame,
     gameMode,
     turnCount,
     currentTeam,
@@ -100,11 +100,11 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
         saved.wellPieceLocations &&
         Object.keys(saved.wellPieceLocations).length > 0;
       if (hasBoard || hasWells) {
-        rehydrateFromSavedState(saved);
+        continueGame(saved);
       }
     };
     loadPersistedState();
-  }, []);
+  }, [continueGame]);
 
   // Persist theme whenever it changes
   useEffect(() => {

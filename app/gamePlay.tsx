@@ -168,7 +168,7 @@ const GamePlay = () => {
           <HamburgerMenu onPress={() => router.replace("/")} />
         </Animated.View>
       )}
-
+      <Piece team={Team.TeamOne} id="9" />
       <WinModal
         visible={showWinOverlay && winner !== Team.Unassigned}
         winner={winner}

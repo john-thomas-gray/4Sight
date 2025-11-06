@@ -2,10 +2,9 @@ Final:
 
 - Animate tutorial messages
 - Reorder tutorial more elegantly
-- fix memory leaks
-- continue makes animations not work
 - pieces don't load on first load
 - gravity previews break all animations
+- should be able to swipe out of gravity preview
 
 would be nice:
 - my hooks are all fucked up. They should actually have all of their dependencies
