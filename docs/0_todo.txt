@@ -2,7 +2,6 @@ Final:
 
 - Animate tutorial messages
 - Reorder tutorial more elegantly
-- pieces don't load on first load
 - gravity previews break all animations
 - should be able to swipe out of gravity preview
 

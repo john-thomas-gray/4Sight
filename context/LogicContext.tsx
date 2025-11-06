@@ -38,6 +38,7 @@ import React, {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -635,6 +636,9 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     () => ({ moveInProgress, setMoveInProgress, setMIP }),
     [moveInProgress]
   );
+  useEffect(() => {
+    console.log("moveInProgress:", moveInProgress);
+  }, [moveInProgress]);
 
   return (
     <LogicUIContext.Provider value={uiValue}>

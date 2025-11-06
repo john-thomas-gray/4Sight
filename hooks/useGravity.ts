@@ -18,7 +18,7 @@ export const useGravity = () => {
     if (moveInProgress) {
       return;
     }
-
+    console.log("applyGravity", direction);
     setMoveInProgress(true);
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);

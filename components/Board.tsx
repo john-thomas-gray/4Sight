@@ -117,7 +117,7 @@ const Board = ({ className }: BoardProps) => {
       return;
     }
     if (gameState === GameState.Ready) return;
-
+    console.log("fling!");
     setMIP({ setting: true });
     setMoveInProgress(true);
     setGravityAnimating(true);
@@ -131,7 +131,6 @@ const Board = ({ className }: BoardProps) => {
     gravityTimeoutRef.current = setTimeout(() => {
       setMoveInProgress(false);
       setGravityAnimating(false);
-      // !@# magic number
       gravityTimeoutRef.current = null;
     }, MOVE_IN_PROGRESS_DROP);
   };
@@ -149,6 +148,7 @@ const Board = ({ className }: BoardProps) => {
     "worklet";
     const absVX = Math.abs(e.velocityX);
     const absVY = Math.abs(e.velocityY);
+
     if (absVX < VELOCITY_THRESHOLD && absVY < VELOCITY_THRESHOLD) return;
 
     let dir: Direction;
@@ -260,7 +260,6 @@ const Board = ({ className }: BoardProps) => {
       setPreviewPieces({});
       return;
     }
-    setMoveInProgress(true);
 
     const opposite: Direction =
       side === "up"
