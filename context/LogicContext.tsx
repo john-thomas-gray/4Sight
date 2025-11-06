@@ -8,6 +8,7 @@ import {
   WINNER_V0,
   WINNER_V1,
 } from "@/constants/animations";
+import { useSuppressHighlights } from "@/hooks/useSuppressHighlights";
 import { PieceAnimation } from "@/types/animation";
 import { Team } from "@/types/board";
 import {
@@ -37,14 +38,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  cancelAnimation,
-  Easing,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import { cancelAnimation, useSharedValue } from "react-native-reanimated";
 import { useLayout } from "./LayoutContext";
 
 // Sub-contexts
@@ -92,9 +86,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   /* Visual Effects */
 
   const pieceAnimSharedValuesRef = useRef(pieceAnimSharedValues);
-  React.useEffect(() => {
-    pieceAnimSharedValuesRef.current = pieceAnimSharedValues;
-  }, []);
   const [nextTurnWins, setNextTurnWins] = useState<Record<string, boolean>>({});
   const highlightPulse = useSharedValue(0);
   const [previewPieces, setPreviewPieces] = useState<Record<string, boolean>>(
@@ -103,36 +94,13 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   const [isPreviewingGravity, setIsPreviewingGravity] = useState(false);
   const [gravityAnimating, setGravityAnimating] = useState(false);
 
-  React.useEffect(() => {
-    cancelAnimation(highlightPulse);
-    const noHighlights = Object.keys(nextTurnWins || {}).length === 0;
-    const notPlaying = gameState !== GameState.Playing;
-    if (isPreviewingGravity || gravityAnimating || notPlaying || noHighlights) {
-      highlightPulse.value = withTiming(0, {
-        duration: 300,
-        easing: Easing.out(Easing.quad),
-      });
-    } else {
-      highlightPulse.value = 0;
-      highlightPulse.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0, { duration: 1200, easing: Easing.inOut(Easing.quad) })
-        ),
-        -1,
-        false
-      );
-    }
-    return () => {
-      cancelAnimation(highlightPulse);
-    };
-  }, [
+  useSuppressHighlights({
     highlightPulse,
     isPreviewingGravity,
     gravityAnimating,
     gameState,
     nextTurnWins,
-  ]);
+  });
 
   ///* Interactions Logic */
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
@@ -191,16 +159,14 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
 
+  // Initial gamePlay.tsx setup
   React.useEffect(() => {
-    // If user pressed Play (no saved board/wells), allow initial build
-    // If we rehydrated (Continue), skip build to preserve saved state
-    // Defer one tick so Settings rehydration can run first and set rehydratedRef
     if (!layoutReady) return;
 
+    // Build for handlePlay
     const timeoutId = setTimeout(() => {
       if (rehydratedRef.current) return;
 
-      // Build deterministic mappings and initial positions per team
       const { pieces: teamOnePieces, wellMap: teamOneWellMap } =
         buildTeamPieces(Team.TeamOne, 0, wells[Team.TeamOne]);
       const { pieces: teamTwoPieces, wellMap: teamTwoWellMap } =
@@ -212,7 +178,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     return () => clearTimeout(timeoutId);
   }, [layoutReady, wells, buildTeamPieces]);
 
-  // Track if we've done initial positioning to avoid interfering with animations
   const positionsInitializedRef = useRef(false);
 
   // Ensure piece positions are updated after pieces are created or rehydrated
@@ -265,7 +230,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
     boardPieceLocations,
   ]);
 
-  // Reset initialization flag when pieces are reset (new game)
   React.useEffect(() => {
     if (Object.keys(pieces).length === 0) {
       positionsInitializedRef.current = false;
@@ -304,7 +268,6 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
 
   const checkGameFinished = useCallback(
     (updatedBoardPieceLocations: Record<string, string>) => {
-      // Clear any prior scheduled winner animations to avoid accumulation across games
       if (winnerCleanupRef.current) {
         winnerCleanupRef.current();
         winnerCleanupRef.current = null;
@@ -423,41 +386,36 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
       });
     }
 
-    // Clear any previously scheduled winner animations before resetting
     if (winnerCleanupRef.current) {
       winnerCleanupRef.current();
       winnerCleanupRef.current = null;
     }
-
-    // UI state
-    setIsGlobalLoading(false);
-
-    // Interactions
-    setMoveInProgress(false);
-
-    // Animations state
-    setGravityAnimating(false);
-    setIsPreviewingGravity(false);
-    setPreviewPieces({});
-
-    // Set turn
-    const whichPlayerStarts: 1 | 2 | 3 | 4 =
-      gameState === GameState.Finished || GameState.PreGame
-        ? winner === Team.TeamOne
-          ? 1
-          : winner === Team.TeamTwo
-          ? 2
-          : 1
-        : gameState === GameState.Playing
-        ? getNextPlayersTurn(playersTurn)
-        : 1;
-
-    const boardHasPieces = Object.keys(boardPieceLocations).length > 0;
-    const resetDelay = boardHasPieces
-      ? RESET_PIECE_DELAY + RESET_PIECE_DURATION
-      : 0;
-
     const performStateReset = () => {
+      // UI state
+      setIsGlobalLoading(false);
+
+      // Interactions
+      setMoveInProgress(false);
+
+      // Animations state
+      setGravityAnimating(false);
+      setIsPreviewingGravity(false);
+      setPreviewPieces({});
+
+      // Set which player goes first next game
+      const whichPlayerStarts: 1 | 2 | 3 | 4 =
+        gameState === GameState.Finished || GameState.PreGame
+          ? winner === Team.TeamOne
+            ? 1
+            : winner === Team.TeamTwo
+            ? 2
+            : 1
+          : gameState === GameState.Playing
+          ? getNextPlayersTurn(playersTurn)
+          : 1;
+
+      const boardHasPieces = Object.keys(boardPieceLocations).length > 0;
+
       positionsInitializedRef.current = false;
       rehydratedRef.current = false;
 
@@ -469,28 +427,32 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
         buildTeamPieces(Team.TeamTwo, 24, wells[Team.TeamTwo] || {}, {
           updateAnimations: false,
         });
+      const resetPieceStatuses = () => {
+        const freshPieceStatusMap: PieceStatusMap = {};
+        for (let i = 0; i < 48; i++) {
+          freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
+        }
+        setPieceStatusMap(freshPieceStatusMap);
+      };
 
       setPieces({ ...teamOnePieces, ...teamTwoPieces });
       setWellPieceLocations({ ...teamOneWellMap, ...teamTwoWellMap });
       setBoardPieceLocations({});
 
-      const freshPieceStatusMap: PieceStatusMap = {};
-      for (let i = 0; i < 48; i++) {
-        freshPieceStatusMap[i.toString()] = PieceStatus.inWell;
-      }
-      setPieceStatusMap(freshPieceStatusMap);
-
+      resetPieceStatuses();
       setTurnCount(1);
       setPlayersTurn(whichPlayerStarts);
       setGameState(GameState.Ready);
       resetGameTimeoutRef.current = null;
+      const resetDelay = boardHasPieces
+        ? RESET_PIECE_DELAY + RESET_PIECE_DURATION
+        : 0;
+      if (resetDelay > 0) {
+        resetGameTimeoutRef.current = setTimeout(performStateReset, resetDelay);
+      } else {
+        performStateReset();
+      }
     };
-
-    if (resetDelay > 0) {
-      resetGameTimeoutRef.current = setTimeout(performStateReset, resetDelay);
-    } else {
-      performStateReset();
-    }
   }, [
     boardPieceLocations,
     buildTeamPieces,
@@ -504,7 +466,8 @@ export const LogicProvider: React.FC<{ children: ReactNode }> = ({
   ]);
 
   console.log("Turn", turnCount);
-  // Provide sub-contexts to enable consumers to subscribe to smaller slices
+
+  // Sub-contexts:
   const uiValue: LogicUIContextType = React.useMemo(
     () => ({ isGlobalLoading, setIsGlobalLoading }),
     [isGlobalLoading]

@@ -491,12 +491,12 @@ export const resetAllPieces = ({
   Object.values(boardSnapshot).forEach((pieceId) => {
     const piece = pieces[pieceId];
     if (!piece) return;
-    const teamWells = wells[piece.team] || {};
-    const targetWellId = Object.keys(teamWells).find(
+    const teamWellGrid = wells[piece.team] || {};
+    const targetWellId = Object.keys(teamWellGrid).find(
       (wid) => !wellSnapshot[wid] && !assignedThisReset.has(wid)
     );
     if (!targetWellId) return;
-    const targetLayout = teamWells[targetWellId];
+    const targetLayout = teamWellGrid[targetWellId];
     const anim = pieceAnimations[pieceId];
     if (!anim || !targetLayout) return;
 
@@ -508,6 +508,7 @@ export const resetAllPieces = ({
       scaleY: anim.scaleY,
       zIndex: anim.zIndex,
     });
+
     const existingTimeout = resetPieceTimeouts.get(pieceId);
     if (existingTimeout) {
       clearTimeout(existingTimeout);
@@ -545,7 +546,6 @@ export function animateWinner({
 }) {
   "worklet";
 
-  // reserved for future skew/rotation winner effects if desired
   type Point = { x: number; y: number };
   type Animation = {
     svx: SharedValue<number>;
@@ -643,6 +643,7 @@ export const successfulPieceDrop = ({
   zIndex: SharedValue<number>;
 }) => {
   "worklet";
+
   elevationPieceToSlot({ scaleX, scaleY, zIndex });
   translateX.value = withSequence(
     withTiming(

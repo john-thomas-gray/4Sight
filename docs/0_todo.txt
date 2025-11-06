@@ -2,9 +2,10 @@ Final:
 
 - Animate tutorial messages
 - Reorder tutorial more elegantly
-- Play Tutorial should call resetGame
-- Win Modal should be full screen
 - fix memory leaks
+- continue makes animations not work
+- pieces don't load on first load
+- gravity previews break all animations
 
 would be nice:
 - my hooks are all fucked up. They should actually have all of their dependencies
