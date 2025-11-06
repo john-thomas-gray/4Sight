@@ -4,7 +4,7 @@ import { useDebouncedPress } from "@/hooks/useDebouncedPress";
 import { clearSavedGame, loadAppState } from "@/utils/useAsyncStorage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function Index() {
@@ -40,7 +40,7 @@ function InnerIndexLayout() {
     await clearSavedGame();
     await refreshHasSavedGame();
     router.replace("/gamePlay");
-  }, [setIsGlobalLoading, resetGame, refreshHasSavedGame]);
+  }, [router, refreshHasSavedGame, resetGame, setIsGlobalLoading]);
 
   const handleContinue = React.useCallback(async () => {
     setIsGlobalLoading(true);
@@ -49,11 +49,55 @@ function InnerIndexLayout() {
       continueGame(saved);
     }
     router.replace("/gamePlay");
-  }, [setIsGlobalLoading, continueGame]);
+  }, [continueGame, router, setIsGlobalLoading]);
 
   const onPressPlay = useDebouncedPress(handlePlay);
   const onPressContinue = useDebouncedPress(handleContinue);
   const onPressSettings = useDebouncedPress(() => router.push("/settings"));
+
+  type ButtonId = "play" | "continue" | "settings";
+  const [buttonWidths, setButtonWidths] = React.useState<
+    Partial<Record<ButtonId, number>>
+  >({});
+
+  const handleButtonLayout = React.useCallback(
+    (id: ButtonId) => (event: LayoutChangeEvent) => {
+      const { width } = event.nativeEvent.layout;
+      setButtonWidths((prev) => {
+        if (prev[id] === width) {
+          return prev;
+        }
+        return { ...prev, [id]: width };
+      });
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    if (!hasSavedGame) {
+      setButtonWidths((prev) => {
+        if (!("continue" in prev)) {
+          return prev;
+        }
+        const { ["continue"]: _unused, ...rest } = prev;
+        return rest;
+      });
+    }
+  }, [hasSavedGame]);
+
+  const maxButtonWidth = React.useMemo(() => {
+    const activeKeys: ButtonId[] = hasSavedGame
+      ? ["play", "continue", "settings"]
+      : ["play", "settings"];
+    let max = 0;
+    for (const key of activeKeys) {
+      const value = buttonWidths[key];
+      if (typeof value === "number" && value > max) {
+        max = value;
+      }
+    }
+    return max;
+  }, [buttonWidths, hasSavedGame]);
 
   return (
     <View
@@ -81,10 +125,23 @@ function InnerIndexLayout() {
         </Text>
       </View>
       <View className="flex-col items-center space-y-4">
-        <Pressable onPress={onPressPlay}>
+        <Pressable
+          onPress={onPressPlay}
+          onLayout={handleButtonLayout("play")}
+          className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
+          style={[
+            {
+              borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
+              backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
+              borderWidth: 1,
+            },
+            maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
+          ]}
+        >
           <Text
             className="text-3xl"
             style={{
+              textAlign: "center",
               color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
             }}
           >
@@ -92,10 +149,23 @@ function InnerIndexLayout() {
           </Text>
         </Pressable>
         {hasSavedGame && (
-          <Pressable onPress={onPressContinue}>
+          <Pressable
+            onPress={onPressContinue}
+            onLayout={handleButtonLayout("continue")}
+            className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
+            style={[
+              {
+                borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
+                backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
+                borderWidth: 1,
+              },
+              maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
+            ]}
+          >
             <Text
               className="text-3xl"
               style={{
+                textAlign: "center",
                 color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
               }}
             >
@@ -103,10 +173,23 @@ function InnerIndexLayout() {
             </Text>
           </Pressable>
         )}
-        <Pressable onPress={onPressSettings}>
+        <Pressable
+          onPress={onPressSettings}
+          onLayout={handleButtonLayout("settings")}
+          className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
+          style={[
+            {
+              borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
+              backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
+              borderWidth: 1,
+            },
+            maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
+          ]}
+        >
           <Text
             className="text-3xl"
             style={{
+              textAlign: "center",
               color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
             }}
           >

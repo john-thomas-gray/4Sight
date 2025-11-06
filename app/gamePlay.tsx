@@ -5,7 +5,6 @@ import LoadingScreen from "@/components/LoadingScreen";
 import Piece from "@/components/Piece";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
-import { TutorialMount } from "@/components/TutorialMount";
 import WinModal from "@/components/WinOverlay";
 import { useGameContext } from "@/context/GameContext";
 import {
@@ -106,7 +105,7 @@ const GamePlay = () => {
   }, []);
 
   const [loadTimer, setLoadTimer] = useState(true);
-  const loadAnimationLoops = 0;
+  const loadAnimationLoops = 1;
 
   useEffect(() => {
     const timeoutId = setTimeout(
@@ -123,11 +122,16 @@ const GamePlay = () => {
   }, [layout.layoutReady, loadTimer, setIsGlobalLoading]);
 
   const menuOpacity = useSharedValue(0);
-  useEffect(() => {
-    const target = !settings.tutorialEnabled ? 1 : 0;
-    menuOpacity.value = withTiming(target, { duration: 400 });
-  }, [settings.tutorialEnabled, menuOpacity]);
   const menuStyle = useAnimatedStyle(() => ({ opacity: menuOpacity.value }));
+
+  useEffect(() => {
+    if (!layout.layoutReady || loadTimer) {
+      menuOpacity.value = withTiming(0, { duration: 150 });
+      return;
+    }
+
+    menuOpacity.value = withTiming(1, { duration: 250 });
+  }, [layout.layoutReady, loadTimer, menuOpacity]);
 
   return (
     <View
@@ -156,8 +160,6 @@ const GamePlay = () => {
         ))}
 
       <LoadingScreen visible={!layout.layoutReady || loadTimer} />
-
-      {layout.layoutReady && !loadTimer && <TutorialMount />}
 
       {layout.layoutReady && !loadTimer && (
         <Animated.View

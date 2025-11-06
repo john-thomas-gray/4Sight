@@ -2,15 +2,11 @@ import BackButton from "@/components/BackButton";
 import { CLASSIC } from "@/constants/themes/classic";
 import { SCHOOLHOUSE } from "@/constants/themes/schoolhouse";
 import { useGameContext } from "@/context/GameContext";
-import { useLogicGameFlow } from "@/context/LogicContext";
-import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Switch, Text, View } from "react-native";
 
 const Settings = () => {
   const { settings } = useGameContext();
-  const { resetGame } = useLogicGameFlow();
-  const router = useRouter();
   const isSameTheme = (a: typeof CLASSIC | undefined, b: typeof CLASSIC) => {
     if (!a || !a.colorTheme) return false;
     return (
@@ -29,7 +25,7 @@ const Settings = () => {
         backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
       }}
     >
-      <View className="px-6 pt-6 pb-4 py-12">
+      <View className="px-6 pt-20 pb-4 py-12">
         <View
           style={{
             position: "relative",
@@ -76,23 +72,11 @@ const Settings = () => {
           <Pressable
             className={`w-full items-start justify-start rounded-lg p-4 border`}
             onPress={() => settings.setTheme(CLASSIC)}
-            android_ripple={{
-              color: settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#888",
+            style={{
+              borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
+              backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
+              borderWidth: 1,
             }}
-            style={({ pressed }) => [
-              {
-                borderWidth: isClassicSelected ? 2 : 1,
-                borderColor: isClassicSelected
-                  ? settings.theme?.colorTheme?.SLOT_FOREGROUND_COLOR
-                  : settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
-                borderStyle: "solid",
-                backgroundColor: isClassicSelected
-                  ? settings.theme?.colorTheme?.WELL_BG_COLOR_ONE
-                  : settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-                opacity: pressed ? 0.96 : 1,
-              },
-            ]}
           >
             <Text
               className="text-2xl"
@@ -127,20 +111,11 @@ const Settings = () => {
             android_ripple={{
               color: settings.theme?.colorTheme?.SLOT_BORDER_COLOR || "#888",
             }}
-            style={({ pressed }) => [
-              {
-                borderWidth: isSchoolhouseSelected ? 2 : 1,
-                borderColor: isSchoolhouseSelected
-                  ? settings.theme?.colorTheme?.SLOT_FOREGROUND_COLOR
-                  : settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
-                borderStyle: "solid",
-                backgroundColor: isSchoolhouseSelected
-                  ? settings.theme?.colorTheme?.WELL_BG_COLOR_ONE
-                  : settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-                opacity: pressed ? 0.96 : 1,
-              },
-            ]}
+            style={{
+              borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
+              backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
+              borderWidth: 1,
+            }}
           >
             <Text
               className="text-2xl"
@@ -199,7 +174,7 @@ const Settings = () => {
                   color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#fff",
                 }}
               >
-                Shift Previews
+                Gravity Shift Preview
               </Text>
               <Switch
                 value={settings.shiftPreviews}
@@ -301,44 +276,9 @@ const Settings = () => {
                 color: settings.theme?.colorTheme?.EVEN_SPACE_COLOR || "#ccc",
               }}
             >
-              Highlights spaces where a drop would put four same-colored pieces
-              in a row.
+              Highlights spaces where a drop would complete a row of four
+              same-colored pieces.
             </Text>
-          </View>
-
-          <View
-            className="w-full rounded-lg p-4 border"
-            style={{
-              borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
-              backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
-              borderWidth: 1,
-            }}
-          >
-            <Pressable
-              className="w-full items-center justify-center py-3 rounded-md"
-              onPress={() => {
-                if (!settings.tutorialEnabled)
-                  settings.setTutorialEnabled(true);
-                resetGame();
-                router.replace("/gamePlay");
-              }}
-              style={({ pressed }) => [
-                {
-                  backgroundColor: "transparent",
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                  opacity: pressed ? 0.96 : 1,
-                },
-              ]}
-            >
-              <Text
-                className="text-2xl"
-                style={{
-                  color: settings.theme?.colorTheme?.TEAM_ONE_COLOR,
-                }}
-              >
-                Play Tutorial
-              </Text>
-            </Pressable>
           </View>
         </View>
       </View>
