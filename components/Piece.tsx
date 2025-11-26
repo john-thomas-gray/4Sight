@@ -21,6 +21,7 @@ import {
 import { Direction, Team } from "@/types/board";
 import { GameState, PieceProps, PieceStatus } from "@/types/logic";
 import { getCellArray } from "@/utils/boardLogic";
+import { detectHover } from "@/utils/detectHover";
 import getReachableSlot from "@/utils/getReachableSlot";
 import { pieceHoldOffset, pointerHoverOffset } from "@/utils/pieceHoldOffset";
 import React, { memo, useEffect, useMemo } from "react";
@@ -231,86 +232,20 @@ const Piece = ({ team, id }: PieceProps) => {
             true
           );
 
-          if (status === PieceStatus.isHeld) {
-            let overAnySlot = false;
+          const adjustedPointerCoordinates = pointerHoverOffset(
+            gameMode,
+            team,
+            event.absoluteX,
+            event.absoluteY
+          );
 
-            const { adjustedX, adjustedY } = pointerHoverOffset(
-              gameMode,
-              team,
-              event.absoluteX,
-              event.absoluteY
-            );
-
-            for (const cell of allCells) {
-              if (!cell.layout) continue;
-              const { pageX, pageY, width, height } = cell.layout;
-              const inside =
-                adjustedX >= pageX &&
-                adjustedX <= pageX + width &&
-                adjustedY >= pageY &&
-                adjustedY <= pageY + height;
-              if (inside && cell.id in layout.slots) {
-                overAnySlot = true;
-                let [nextRow, nextCol] = cell.id.split("-").map(Number) as [
-                  number,
-                  number
-                ];
-                const slotDirection =
-                  nextRow === 8
-                    ? Direction.Up
-                    : nextRow === 0
-                    ? Direction.Down
-                    : nextCol === 0
-                    ? Direction.Right
-                    : Direction.Left;
-                const deltas: Record<Direction, { dr: number; dc: number }> = {
-                  [Direction.Up]: { dr: -1, dc: 0 },
-                  [Direction.Down]: { dr: 1, dc: 0 },
-                  [Direction.Right]: { dr: 0, dc: 1 },
-                  [Direction.Left]: { dr: 0, dc: -1 },
-                };
-                nextRow += deltas[slotDirection].dr;
-                nextCol += deltas[slotDirection].dc;
-
-                let prevRow: number | null = null;
-                let prevCol: number | null = null;
-
-                while (true) {
-                  const nextSpaceId = `${nextRow}-${nextCol}`;
-                  const nextSpace = layout.spaces[nextSpaceId];
-                  const isOccupied =
-                    boardPieceLocationsSV.value[nextSpaceId] !== undefined;
-
-                  if (
-                    nextRow < 0 ||
-                    nextRow >= GameElements.BOARD_SIZE ||
-                    nextCol < 0 ||
-                    nextCol >= GameElements.BOARD_SIZE
-                  )
-                    break;
-
-                  if (!nextSpace) break;
-                  if (isOccupied) break;
-
-                  prevRow = nextRow;
-                  prevCol = nextCol;
-                  nextRow += deltas[slotDirection].dr;
-                  nextCol += deltas[slotDirection].dc;
-                }
-
-                if (prevRow !== null && prevCol !== null) {
-                  const finalSpaceId = `${prevRow}-${prevCol}`;
-                  scheduleOnRN(setHover, finalSpaceId);
-                } else {
-                  scheduleOnRN(setHover, null);
-                }
-                break;
-              }
-            }
-            if (!overAnySlot) {
-              scheduleOnRN(setHover, null);
-            }
-          }
+          detectHover({
+            pieceStatus: status,
+            allCells,
+            adjustedPointerCoordinates,
+            layout,
+            boardPieceLocationsValue: boardPieceLocationsSV.value,
+            setHover})
         })
         .onEnd(() => {
           scheduleOnRN(setHover, null);

@@ -77,6 +77,7 @@ export const pointerHoverOffset = (
   //     adjustedX = eventX + 40;
   //   }
   // }
+  const coordinates = { x: adjustedX, y: adjustedY }
 
-  return { adjustedX, adjustedY };
+  return coordinates;
 };

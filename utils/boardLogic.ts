@@ -1,7 +1,7 @@
 import { Board, Utils } from "@/types";
 import { EachCellType, Team } from "@/types/board";
 
-type GetCellListProps = {
+type GetCellArrayProps = {
   layout: Utils.LayoutCells;
   result: "wells" | "spaces" | "slots" | "all";
   team: Team;
@@ -11,7 +11,7 @@ export const getCellArray = ({
   layout,
   result,
   team,
-}: GetCellListProps): EachCellType[] => {
+}: GetCellArrayProps): EachCellType[] => {
   const wellArray = Object.entries(layout.wells[team]).map(([id, layout]) => ({
     id,
     layout,
