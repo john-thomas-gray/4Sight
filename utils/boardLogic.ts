@@ -18,7 +18,6 @@ export const getCellArray = ({
     type: Board.CellType.Well as const,
     team,
   }));
-  if (result === "wells") return wellArray;
 
   const slotArray = Object.entries(layout.slots).map(([id, layout]) => ({
     id,
@@ -26,19 +25,22 @@ export const getCellArray = ({
     type: Board.CellType.Slot as const,
   }));
 
-  if (result === "slots") return slotArray;
-
   const spaceArray = Object.entries(layout.spaces).map(([id, layout]) => ({
     id,
     layout,
     type: Board.CellType.Space as const,
   }));
 
-  if (result === "spaces") return spaceArray;
+
 
   const allCells: EachCellType[] = [...wellArray, ...slotArray, ...spaceArray];
 
-  if (result === "all") return allCells;
+  switch(result){
+    case "wells": return wellArray;
+    case "slots": return slotArray;
+    case "spaces": return spaceArray;
+    case "all": return allCells;
+    default: return [];
+  }
 
-  return [];
 };

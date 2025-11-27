@@ -96,9 +96,14 @@ const Piece = ({ team, id }: PieceProps) => {
     }));
   }, [id, setPieceStatusMap]);
 
-  const allCells = getCellArray({ layout, result: "all", team });
+  const allCells = useMemo(
+    () => getCellArray({ layout, result: "all", team }),
+    [layout, team]
+  );
 
-  const slots = getCellArray({ layout, result: "slots", team });
+  const slots = useMemo(
+    () => getCellArray({ layout, result: "slots", team }),
+    [layout, team]);
 
   const getCurrentWellData = () => {
     let CWID = "";
@@ -197,9 +202,8 @@ const Piece = ({ team, id }: PieceProps) => {
     };
   }, []);
 
-  const movePiece = useMemo(
-    () =>
-      Gesture.Pan()
+
+    let movePiece =  Gesture.Pan()
         .enabled(
           status !== PieceStatus.onBoard &&
             gameState !== GameState.Finished &&
@@ -537,28 +541,8 @@ const Piece = ({ team, id }: PieceProps) => {
             scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
           }
           return;
-        }),
-    [
-      status,
-      animate.scaleX,
-      animate.scaleY,
-      animate.translateX,
-      animate.translateY,
-      animate.zIndex,
-      layout.slots,
-      layout.spaces,
-      layout.wells,
-      boardPieceLocations,
-      pieceAnimSharedValues,
-      ,
-      updateStatus,
-      setMoveInProgress,
-      unsetMoveInProgress,
-      setBPLUI,
-      setWPLUI,
-      wellPieceLocations,
-    ]
-  );
+        })
+
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
       { translateX: animate.translateX.value },
