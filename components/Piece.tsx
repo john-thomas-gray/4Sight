@@ -202,8 +202,9 @@ const Piece = ({ team, id }: PieceProps) => {
     };
   }, []);
 
-
-    let movePiece =  Gesture.Pan()
+  const movePiece = useMemo(
+    () =>
+      Gesture.Pan()
         .enabled(
           status !== PieceStatus.onBoard &&
             gameState !== GameState.Finished &&
@@ -541,8 +542,28 @@ const Piece = ({ team, id }: PieceProps) => {
             scheduleOnRN(setWPLUI, currentWellDataSV.value.id);
           }
           return;
-        })
-
+        }),
+    [
+      status,
+      animate.scaleX,
+      animate.scaleY,
+      animate.translateX,
+      animate.translateY,
+      animate.zIndex,
+      layout.slots,
+      layout.spaces,
+      layout.wells,
+      boardPieceLocations,
+      pieceAnimSharedValues,
+      ,
+      updateStatus,
+      setMoveInProgress,
+      unsetMoveInProgress,
+      setBPLUI,
+      setWPLUI,
+      wellPieceLocations,
+    ]
+  );
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [
       { translateX: animate.translateX.value },

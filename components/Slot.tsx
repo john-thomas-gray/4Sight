@@ -5,6 +5,7 @@ import { CellProps, CellType, Team } from "@/types/board";
 import React, { useCallback, useEffect, useRef } from "react";
 import { Image, View } from "react-native";
 import { cellImages } from "../assets/images";
+/* Make slots detect hover */
 
 const Slot = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
