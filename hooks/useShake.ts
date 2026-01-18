@@ -1,5 +1,6 @@
 import { Accelerometer } from "expo-sensors";
 import { useEffect, useRef } from "react";
+import { Platform } from "react-native";
 
 type UseShakeOptions = {
   onShake: () => void;
@@ -18,24 +19,43 @@ export const useShake = ({
 
   useEffect(() => {
     if (!enabled) return;
+    if (Platform.OS === "web") return;
 
-    Accelerometer.setUpdateInterval(100);
+    let subscription: { remove: () => void } | null = null;
+    let isActive = true;
 
-    const subscription = Accelerometer.addListener(({ x, y, z }) => {
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-
-      // Normal gravity is around 1g; shaking adds spikes > threshold
-      if (magnitude > threshold) {
-        const now = Date.now();
-        if (now - lastFireRef.current < minIntervalMs) return;
-
-        lastFireRef.current = now;
-        onShake();
+    const start = async () => {
+      if (
+        typeof Accelerometer?.addListener !== "function" ||
+        typeof Accelerometer?.setUpdateInterval !== "function"
+      ) {
+        return;
       }
-    });
+
+      const isAvailable = await Accelerometer.isAvailableAsync?.();
+      if (!isActive || isAvailable === false) return;
+
+      Accelerometer.setUpdateInterval(100);
+
+      subscription = Accelerometer.addListener(({ x, y, z }) => {
+        const magnitude = Math.sqrt(x * x + y * y + z * z);
+
+        // Normal gravity is around 1g; shaking adds spikes > threshold
+        if (magnitude > threshold) {
+          const now = Date.now();
+          if (now - lastFireRef.current < minIntervalMs) return;
+
+          lastFireRef.current = now;
+          onShake();
+        }
+      });
+    };
+
+    void start();
 
     return () => {
-      subscription.remove();
+      isActive = false;
+      subscription?.remove();
     };
   }, [enabled, minIntervalMs, threshold, onShake]);
 };
