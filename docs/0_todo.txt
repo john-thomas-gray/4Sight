@@ -1,7 +1,9 @@
 Final:
-
+- Tutorial - Make the swipe to shift gravity shift the pieces to make a smiley face or some other picture
 - Animate tutorial messages
 - Reorder tutorial more elegantly
+- Fix memory leak
+- Make the loading screen an actual animation video, not react
 
 would be nice:
 - my hooks are all fucked up. They should actually have all of their dependencies

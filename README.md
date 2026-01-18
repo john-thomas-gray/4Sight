@@ -1,50 +1,95 @@
-# Welcome to your Expo app 👋
+# 4Sight
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+4Sight is a Connect-Four-style board game with a twist: instead of pieces only “dropping down”, players can **shift gravity** to change how pieces settle, opening up new tactics for offense and defense.
 
-## Get started
+Built with **Expo + React Native**, using **`expo-router`** for navigation, **NativeWind (Tailwind)** for styling, **Reanimated + Gesture Handler** for interactions/animations, and **Jest** for tests.
 
-1. Install dependencies
+## Requirements
 
-   ```bash
-   npm install
-   ```
+- **Node.js**: current LTS recommended
+- **npm**
+- **iOS development (optional)**: Xcode + Command Line Tools
+- **Android development (optional)**: Android Studio + an emulator/device
 
-2. Start the app
+## Setup
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Run the app
 
-## Learn more
+Start the Metro dev server:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Then choose a target:
 
-## Join the community
+- **Web**:
 
-Join our community of developers creating universal apps.
+```bash
+npm run web
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **iOS (dev build)**:
+
+```bash
+npm run ios
+```
+
+- **Android (dev build)**:
+
+```bash
+npm run android
+```
+
+### Expo Go vs dev builds
+
+This project includes native modules (for example `react-native-purchases`), so **Expo Go may not be sufficient** depending on what codepaths you hit.
+
+- If you see “native module not found / not available in Expo Go”-style errors, use a **development build** via `npm run ios` / `npm run android`.
+- If everything you’re working on is supported in Expo Go, `npm start` + “Open in Expo Go” can still be convenient.
+
+## Test & lint
+
+- **Run tests**:
+
+```bash
+npm test
+```
+
+- **Run lint**:
+
+```bash
+npm run lint
+```
+
+## Project structure (high level)
+
+- **`app/`**: screens/routes (file-based routing via `expo-router`)
+- **`components/`**: UI components (board, pieces, overlays, etc.)
+- **`context/`**: global state providers (game state, logic, layout, settings)
+- **`utils/`**: game logic + helpers (board updates, reachable slots, persistence, etc.)
+- **`constants/`**: game constants, themes, animation timings
+- **`__tests__/`** and **`__mocks__/`**: Jest tests and mocks
+
+Imports use the `@/` alias (configured in `tsconfig.json`).
+
+## Troubleshooting
+
+- **Metro is acting weird**: try clearing the cache
+
+```bash
+npx expo start --clear
+```
+
+- **iOS build issues**: confirm Xcode is installed and you’ve opened/accepted licenses at least once.
+- **Android build issues**: confirm Android Studio SDKs are installed and an emulator/device is available.
+
+## Notes
+
+- `npm run reset-project` exists because the project originated from a template; it’s typically not used for this repo unless you intentionally want to wipe starter/template scaffolding.
