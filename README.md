@@ -89,7 +89,3 @@ npx expo start --clear
 
 - **iOS build issues**: confirm Xcode is installed and you’ve opened/accepted licenses at least once.
 - **Android build issues**: confirm Android Studio SDKs are installed and an emulator/device is available.
-
-## Notes
-
-- `npm run reset-project` exists because the project originated from a template; it’s typically not used for this repo unless you intentionally want to wipe starter/template scaffolding.
