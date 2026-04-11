@@ -3,25 +3,28 @@ import {
   CORNER_BORDER_RADIUS,
   CORNER_STYLE,
 } from "@/constants/gameElements";
-import { useGameContext } from "@/context/GameContext";
-import { useLogicGameFlow } from "@/context/LogicContext";
-import { CellProps, CellType, Team } from "@/types/board";
+import { useGameSession } from "@/context/GameSessionContext";
+import { useLayout } from "@/context/LayoutContext";
+import { useSettings } from "@/context/SettingsContext";
+import { Team } from "@/engine";
+import { CellProps, CellType } from "@/types/board";
 import { useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Corner = ({ id }: CellProps) => {
-  const { layout } = useGameContext();
-  const { currentTeam } = useLogicGameFlow();
-  const { settings } = useGameContext();
+  const { registerCell } = useLayout();
+  const { gameState } = useGameSession();
+  const { theme } = useSettings();
   const viewRef = useRef<View>(null);
+
   const cornerColor =
-    currentTeam === Team.TeamOne
-      ? settings.theme?.colorTheme?.CORNER_COLOR_ONE || "#ffffff"
-      : settings.theme?.colorTheme?.CORNER_COLOR_TWO || "#000000";
+    gameState.currentTeam === Team.One
+      ? theme.colorTheme.CORNER_COLOR_ONE
+      : theme.colorTheme.CORNER_COLOR_TWO;
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      layout.registerCell({
+      registerCell({
         id,
         type: CellType.Corner,
         layout: { pageX, pageY, width, height },

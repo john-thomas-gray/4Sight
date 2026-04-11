@@ -1,7 +1,7 @@
-import { useGameContext } from "@/context/GameContext";
-import { useLogicGameFlow, useLogicUI } from "@/context/LogicContext";
-import { useDebouncedPress } from "@/hooks/useDebouncedPress";
-import { clearSavedGame, loadAppState } from "@/utils/useAsyncStorage";
+import { useGameSession } from "@/context/GameSessionContext";
+import { useSettings } from "@/context/SettingsContext";
+import { useUi } from "@/context/UiContext";
+import { clearSession, hasSavedSession, loadAppState } from "@/storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
 import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
@@ -10,50 +10,48 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 export default function Index() {
   return (
     <GestureHandlerRootView className="flex-1">
-      <InnerIndexLayout />
+      <MainMenu />
     </GestureHandlerRootView>
   );
 }
 
-function InnerIndexLayout() {
+function MainMenu() {
   const router = useRouter();
-  const { settings } = useGameContext();
-  const { resetGame, continueGame, hasSavedGame, refreshHasSavedGame } =
-    useLogicGameFlow();
+  const { newGame, continueGame } = useGameSession();
+  const { theme } = useSettings();
+  const { setIsGlobalLoading } = useUi();
+  const [hasSaved, setHasSaved] = React.useState(false);
 
-  const { setIsGlobalLoading } = useLogicUI();
+  const refreshSavedState = React.useCallback(async () => {
+    const exists = await hasSavedSession();
+    setHasSaved(exists);
+  }, []);
 
   React.useEffect(() => {
-    refreshHasSavedGame();
-  }, [refreshHasSavedGame]);
+    refreshSavedState();
+  }, [refreshSavedState]);
 
-  // Refresh saved-game visibility whenever this screen gains focus
   useFocusEffect(
     React.useCallback(() => {
-      refreshHasSavedGame();
-    }, [refreshHasSavedGame])
+      refreshSavedState();
+    }, [refreshSavedState])
   );
 
   const handlePlay = React.useCallback(async () => {
     setIsGlobalLoading(true);
-    resetGame();
-    await clearSavedGame();
-    await refreshHasSavedGame();
+    await newGame();
+    await clearSession();
     router.replace("/gamePlay");
-  }, [router, refreshHasSavedGame, resetGame, setIsGlobalLoading]);
+  }, [router, newGame, setIsGlobalLoading]);
 
   const handleContinue = React.useCallback(async () => {
     setIsGlobalLoading(true);
-    const saved = await loadAppState();
-    if (saved) {
-      continueGame(saved);
+    const state = await loadAppState();
+    if (state.session) {
+      continueGame(state.session);
     }
     router.replace("/gamePlay");
   }, [continueGame, router, setIsGlobalLoading]);
-
-  const onPressPlay = useDebouncedPress(handlePlay);
-  const onPressContinue = useDebouncedPress(handleContinue);
-  const onPressSettings = useDebouncedPress(() => router.push("/settings"));
 
   type ButtonId = "play" | "continue" | "settings";
   const [buttonWidths, setButtonWidths] = React.useState<
@@ -64,9 +62,7 @@ function InnerIndexLayout() {
     (id: ButtonId) => (event: LayoutChangeEvent) => {
       const { width } = event.nativeEvent.layout;
       setButtonWidths((prev) => {
-        if (prev[id] === width) {
-          return prev;
-        }
+        if (prev[id] === width) return prev;
         return { ...prev, [id]: width };
       });
     },
@@ -74,124 +70,97 @@ function InnerIndexLayout() {
   );
 
   React.useEffect(() => {
-    if (!hasSavedGame) {
+    if (!hasSaved) {
       setButtonWidths((prev) => {
-        if (!("continue" in prev)) {
-          return prev;
-        }
+        if (!("continue" in prev)) return prev;
         const { ["continue"]: _unused, ...rest } = prev;
         return rest;
       });
     }
-  }, [hasSavedGame]);
+  }, [hasSaved]);
 
   const maxButtonWidth = React.useMemo(() => {
-    const activeKeys: ButtonId[] = hasSavedGame
+    const activeKeys: ButtonId[] = hasSaved
       ? ["play", "continue", "settings"]
       : ["play", "settings"];
     let max = 0;
     for (const key of activeKeys) {
       const value = buttonWidths[key];
-      if (typeof value === "number" && value > max) {
-        max = value;
-      }
+      if (typeof value === "number" && value > max) max = value;
     }
     return max;
-  }, [buttonWidths, hasSavedGame]);
+  }, [buttonWidths, hasSaved]);
+
+  const textColor = theme.colorTheme.ODD_SPACE_COLOR;
+  const buttonStyle = {
+    borderColor: theme.colorTheme.SLOT_BORDER_COLOR,
+    backgroundColor: theme.colorTheme.WELL_BG_COLOR_TWO,
+    borderWidth: 1,
+  };
 
   return (
     <View
       className="flex-1 items-center justify-evenly"
-      style={{
-        backgroundColor: settings.theme?.colorTheme?.FELT_TOP || "#222",
-      }}
+      style={{ backgroundColor: theme.colorTheme.FELT_TOP }}
     >
       <View className="flex-row items-end items-center">
         <Text
           className="font-bold text-[128px] mb-4"
-          style={{
-            color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
-          }}
+          style={{ color: textColor }}
         >
           4
         </Text>
-        <Text
-          className="font-bold text-8xl ml-2"
-          style={{
-            color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
-          }}
-        >
+        <Text className="font-bold text-8xl ml-2" style={{ color: textColor }}>
           Sight
         </Text>
       </View>
       <View className="flex-col items-center space-y-4">
         <Pressable
-          onPress={onPressPlay}
+          onPress={handlePlay}
           onLayout={handleButtonLayout("play")}
           className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
           style={[
-            {
-              borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
-              backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
-              borderWidth: 1,
-            },
+            buttonStyle,
             maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
           ]}
         >
           <Text
             className="text-3xl"
-            style={{
-              textAlign: "center",
-              color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
-            }}
+            style={{ textAlign: "center", color: textColor }}
           >
-            {settings.tutorialEnabled ? "Tutorial" : "New Game"}
+            New Game
           </Text>
         </Pressable>
-        {hasSavedGame && (
+        {hasSaved && (
           <Pressable
-            onPress={onPressContinue}
+            onPress={handleContinue}
             onLayout={handleButtonLayout("continue")}
             className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
             style={[
-              {
-                borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
-                backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
-                borderWidth: 1,
-              },
+              buttonStyle,
               maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
             ]}
           >
             <Text
               className="text-3xl"
-              style={{
-                textAlign: "center",
-                color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
-              }}
+              style={{ textAlign: "center", color: textColor }}
             >
               Continue
             </Text>
           </Pressable>
         )}
         <Pressable
-          onPress={onPressSettings}
+          onPress={() => router.push("/settings")}
           onLayout={handleButtonLayout("settings")}
           className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
           style={[
-            {
-              borderColor: settings.theme?.colorTheme?.SLOT_BORDER_COLOR,
-              backgroundColor: settings.theme?.colorTheme?.WELL_BG_COLOR_TWO,
-              borderWidth: 1,
-            },
+            buttonStyle,
             maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
           ]}
         >
           <Text
             className="text-3xl"
-            style={{
-              textAlign: "center",
-              color: settings.theme?.colorTheme?.ODD_SPACE_COLOR || "#ffffff",
-            }}
+            style={{ textAlign: "center", color: textColor }}
           >
             Settings
           </Text>

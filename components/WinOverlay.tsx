@@ -1,5 +1,4 @@
-import { useGameContext } from "@/context/GameContext";
-import { Team } from "@/types/board";
+import { useSettings } from "@/context/SettingsContext";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated, {
@@ -9,19 +8,18 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-const WinOverlay = ({
-  onOpen,
-  onClose,
+type WinOverlayProps = {
+  visible: boolean;
+  winner: string;
+  onClose?: () => void;
+};
+
+const WinOverlay: React.FC<WinOverlayProps> = ({
   visible,
   winner,
-}: {
-  onOpen?: () => void;
-  onClose?: () => void;
-  visible: boolean;
-  winner: Team;
+  onClose,
 }) => {
-  const { settings } = useGameContext();
-
+  const { theme } = useSettings();
   const opacity = useSharedValue(0);
   const [isOverlayVisible, setIsOverlayVisible] = useState(visible);
 
@@ -41,16 +39,13 @@ const WinOverlay = ({
 
     if (visible) {
       setIsOverlayVisible(true);
-      onOpen?.();
       opacity.value = withTiming(1, { duration: FADE_DURATION_MS });
       displayTimer = setTimeout(() => {
         opacity.value = withTiming(
           0,
           { duration: FADE_DURATION_MS },
           (finished) => {
-            if (finished) {
-              scheduleOnRN(handleClose);
-            }
+            if (finished) scheduleOnRN(handleClose);
           }
         );
       }, DISPLAY_DURATION_MS);
@@ -59,52 +54,42 @@ const WinOverlay = ({
         0,
         { duration: FADE_DURATION_MS },
         (finished) => {
-          if (finished) {
-            scheduleOnRN(handleClose);
-          }
+          if (finished) scheduleOnRN(handleClose);
         }
       );
     }
 
     return () => {
-      if (displayTimer) {
-        clearTimeout(displayTimer);
-      }
+      if (displayTimer) clearTimeout(displayTimer);
     };
-  }, [visible, isOverlayVisible, opacity, onOpen, handleClose]);
+  }, [visible, isOverlayVisible, opacity, handleClose]);
 
   const { backgroundColor, textColor, displayText } = useMemo(() => {
-    const teamOneName =
-      settings.theme?.textAndFontTheme?.teamOneName || "Team One";
-    const teamTwoName =
-      settings.theme?.textAndFontTheme?.teamTwoName || "Team Two";
-    const teamOneColor =
-      settings.theme?.colorTheme?.TEAM_ONE_COLOR || "#ffffff";
-    const teamTwoColor =
-      settings.theme?.colorTheme?.TEAM_TWO_COLOR || "#000000";
+    const t1Name = theme.textAndFontTheme.teamOneName;
+    const t2Name = theme.textAndFontTheme.teamTwoName;
+    const t1Color = theme.colorTheme.TEAM_ONE_COLOR;
+    const t2Color = theme.colorTheme.TEAM_TWO_COLOR;
 
-    if (winner === Team.TeamOne) {
+    if (winner === "teamOne") {
       return {
-        backgroundColor: teamOneColor,
-        textColor: teamTwoColor,
-        displayText: `${teamOneName} Wins!`,
+        backgroundColor: t1Color,
+        textColor: t2Color,
+        displayText: `${t1Name} Wins!`,
       };
     }
-
-    if (winner === Team.TeamTwo) {
+    if (winner === "teamTwo") {
       return {
-        backgroundColor: teamTwoColor,
-        textColor: teamOneColor,
-        displayText: `${teamTwoName} Wins!`,
+        backgroundColor: t2Color,
+        textColor: t1Color,
+        displayText: `${t2Name} Wins!`,
       };
     }
-
     return {
       backgroundColor: "#FFA500",
       textColor: "#000000",
       displayText: "It's a Tie!",
     };
-  }, [settings.theme?.textAndFontTheme, settings.theme?.colorTheme, winner]);
+  }, [winner, theme]);
 
   if (!isOverlayVisible) return null;
 

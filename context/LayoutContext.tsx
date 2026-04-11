@@ -1,4 +1,5 @@
-import { CellLayout, CellProps, CellType, Team } from "@/types/board";
+import { Team } from "@/engine";
+import { CellLayout, CellProps, CellType } from "@/types/board";
 import React, {
   createContext,
   ReactNode,
@@ -22,10 +23,8 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [wells, setWells] = useState<Record<Team, Record<string, CellLayout>>>({
-    [Team.TeamOne]: {},
-    [Team.TeamTwo]: {},
-    [Team.Both]: {},
-    [Team.Unassigned]: {},
+    [Team.One]: {},
+    [Team.Two]: {},
   });
   const [spaces, setSpaces] = useState<Record<string, CellLayout>>({});
   const [slots, setSlots] = useState<Record<string, CellLayout>>({});
@@ -35,8 +34,8 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
     Object.keys(slots).length > 0 &&
     Object.keys(spaces).length > 0 &&
     Object.keys(corners).length > 0 &&
-    Object.keys(wells[Team.TeamOne]).length > 0 &&
-    Object.keys(wells[Team.TeamTwo]).length > 0;
+    Object.keys(wells[Team.One]).length > 0 &&
+    Object.keys(wells[Team.Two]).length > 0;
 
   const registerCell = useCallback(({ id, team, type, layout }: CellProps) => {
     if (!layout) return;
@@ -52,7 +51,10 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
         if (!team) throw new Error("Well must have a team");
         setWells((prev) => ({
           ...prev,
-          [team]: { ...prev[team], [id]: layout },
+          [team as string]: {
+            ...(prev[team as Team] ?? {}),
+            [id]: layout,
+          },
         }));
         break;
       case CellType.Corner:
@@ -65,14 +67,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({
 
   return (
     <LayoutContext.Provider
-      value={{
-        wells,
-        spaces,
-        slots,
-        corners,
-        layoutReady,
-        registerCell,
-      }}
+      value={{ wells, spaces, slots, corners, layoutReady, registerCell }}
     >
       {children}
     </LayoutContext.Provider>

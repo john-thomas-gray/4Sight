@@ -1,10 +1,9 @@
-import { Board } from ".";
+import { Team as EngineTeam } from "@/engine";
 
-//!@# get rid of question marks
 export type CellProps = {
   id: string;
   type: CellType;
-  team?: Team;
+  team?: EngineTeam;
   layout?: CellLayout;
 };
 
@@ -23,6 +22,8 @@ export enum CellType {
   Error = "error",
 }
 
+export { EngineTeam as Team };
+
 export enum Direction {
   Up = "up",
   Down = "down",
@@ -30,22 +31,7 @@ export enum Direction {
   Right = "right",
 }
 
-export enum Team {
-  TeamOne = "teamOne",
-  TeamTwo = "teamTwo",
-  Both = "both",
-  Unassigned = "unassigned",
-}
-
 export type EachCellType =
-  | {
-      id: string;
-      layout: Board.CellLayout;
-      type: Board.CellType.Slot;
-    }
-  | {
-      id: string;
-      layout: Board.CellLayout;
-      type: Board.CellType.Space;
-    }
-  | Board.CellProps;
+  | { id: string; layout: CellLayout; type: CellType.Slot }
+  | { id: string; layout: CellLayout; type: CellType.Space }
+  | CellProps;
