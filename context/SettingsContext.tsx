@@ -1,30 +1,26 @@
-import { CLASSIC } from "@/constants/themes/classic";
+import { getThemeById, THEME_REGISTRY } from "@/constants/themes/registry";
+import { loadAppState, saveSettings } from "@/storage";
 import { ThemeType } from "@/types/themes/theme";
-import {
-  loadAppState,
-  PersistedAppState,
-  saveAppState,
-} from "@/utils/useAsyncStorage";
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-import { useLogicBoardState, useLogicGameFlow } from "./LogicContext";
 
 type SettingsContextType = {
   theme: ThemeType;
-  setTheme: React.Dispatch<React.SetStateAction<ThemeType>>;
+  themeId: string;
+  setThemeById: (id: string) => void;
   shiftPreviews: boolean;
-  setShiftPreviews: React.Dispatch<React.SetStateAction<boolean>>;
+  setShiftPreviews: (value: boolean) => void;
   piecePlacementPreviews: boolean;
-  setPiecePlacementPreviews: React.Dispatch<React.SetStateAction<boolean>>;
+  setPiecePlacementPreviews: (value: boolean) => void;
   highlightWinningMoves: boolean;
-  setHighlightWinningMoves: React.Dispatch<React.SetStateAction<boolean>>;
-  tutorialEnabled: boolean;
-  setTutorialEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  setHighlightWinningMoves: (value: boolean) => void;
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -34,155 +30,81 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [theme, setTheme] = useState<ThemeType>(CLASSIC);
-  const [shiftPreviews, setShiftPreviews] = useState<boolean>(true);
-  const [piecePlacementPreviews, setPiecePlacementPreviews] =
-    useState<boolean>(true);
-  const [highlightWinningMoves, setHighlightWinningMoves] =
-    useState<boolean>(true);
-  const [tutorialEnabled, setTutorialEnabled] = useState<boolean>(false);
+  const [themeId, setThemeIdState] = useState("classic");
+  const [shiftPreviews, setShiftPreviewsState] = useState(true);
+  const [piecePlacementPreviews, setPiecePlacementPreviewsState] = useState(true);
+  const [highlightWinningMoves, setHighlightWinningMovesState] = useState(true);
 
-  const {
-    continueGame,
-    gameMode,
-    turnCount,
-    currentTeam,
-    gameState,
-    winner,
-    playersTurn,
-  } = useLogicGameFlow();
-  const { pieces, pieceStatusMap, wellPieceLocations, boardPieceLocations } =
-    useLogicBoardState();
+  const theme = useMemo(() => getThemeById(themeId), [themeId]);
 
-  const normalizeTheme = (input?: Partial<ThemeType>): ThemeType => {
-    return {
-      colorTheme: {
-        ...CLASSIC.colorTheme,
-        ...(input?.colorTheme || {}),
-      },
-      textAndFontTheme: {
-        ...CLASSIC.textAndFontTheme,
-        ...(input?.textAndFontTheme || {}),
-      },
-    };
-  };
-
-  const setAndPersistTheme: React.Dispatch<React.SetStateAction<ThemeType>> = (
-    updater
-  ) => {
-    setTheme((prev) => {
-      const next =
-        typeof updater === "function"
-          ? (updater as (prevState: ThemeType) => ThemeType)(prev)
-          : updater;
-      return normalizeTheme(next);
-    });
-  };
-
+  // Load persisted settings on mount
   useEffect(() => {
-    const loadPersistedState = async () => {
-      const saved = await loadAppState();
-      if (saved?.theme) {
-        setTheme(normalizeTheme(saved.theme));
-      }
-      if (saved.shiftPreviews !== undefined)
-        setShiftPreviews(saved.shiftPreviews);
-      if (saved.piecePlacementPreviews !== undefined)
-        setPiecePlacementPreviews(saved.piecePlacementPreviews);
-      if (saved.highlightWinningMoves !== undefined)
-        setHighlightWinningMoves(saved.highlightWinningMoves);
-      if (saved.tutorialEnabled !== undefined)
-        setTutorialEnabled(saved.tutorialEnabled);
-      const hasBoard =
-        saved.boardPieceLocations &&
-        Object.keys(saved.boardPieceLocations).length > 0;
-      const hasWells =
-        saved.wellPieceLocations &&
-        Object.keys(saved.wellPieceLocations).length > 0;
-      if (hasBoard || hasWells) {
-        continueGame(saved);
-      }
-    };
-    loadPersistedState();
-  }, [continueGame]);
+    (async () => {
+      const state = await loadAppState();
+      setThemeIdState(state.settings.themeId);
+      setShiftPreviewsState(state.settings.shiftPreviews);
+      setPiecePlacementPreviewsState(state.settings.piecePlacementPreviews);
+      setHighlightWinningMovesState(state.settings.highlightWinningMoves);
+    })();
+  }, []);
 
-  // Persist theme whenever it changes
-  useEffect(() => {
-    saveAppState({ theme });
-  }, [theme]);
+  const setThemeById = useCallback((id: string) => {
+    const exists = THEME_REGISTRY.some((t) => t.id === id);
+    if (!exists) return;
+    setThemeIdState(id);
+    saveSettings({ themeId: id });
+  }, []);
 
-  // Persist toggles when they change
-  useEffect(() => {
-    saveAppState({ shiftPreviews });
-  }, [shiftPreviews]);
-  useEffect(() => {
-    saveAppState({ piecePlacementPreviews });
-  }, [piecePlacementPreviews]);
-  useEffect(() => {
-    saveAppState({ highlightWinningMoves });
-  }, [highlightWinningMoves]);
-  useEffect(() => {
-    saveAppState({ tutorialEnabled });
-  }, [tutorialEnabled]);
+  const setShiftPreviews = useCallback((value: boolean) => {
+    setShiftPreviewsState(value);
+    saveSettings({ shiftPreviews: value });
+  }, []);
 
-  // Persist game state every turn
-  useEffect(() => {
-    const pieceCount = Object.keys(pieces || {}).length;
-    const wellsReady = Object.keys(wellPieceLocations || {}).length > 0;
-    if (pieceCount === 0 || !wellsReady) {
-      return;
-    }
+  const setPiecePlacementPreviews = useCallback((value: boolean) => {
+    setPiecePlacementPreviewsState(value);
+    saveSettings({ piecePlacementPreviews: value });
+  }, []);
 
-    const state: PersistedAppState = {
-      gameMode,
-      turnCount,
-      currentTeam,
-      gameState,
-      winner,
-      pieces,
-      pieceStatusMap,
-      playersTurn,
-      wellPieceLocations,
-      boardPieceLocations,
-    };
-    saveAppState(state);
-  }, [
-    gameMode,
-    turnCount,
-    currentTeam,
-    gameState,
-    winner,
-    pieces,
-    pieceStatusMap,
-    playersTurn,
-    wellPieceLocations,
-    boardPieceLocations,
-  ]);
+  const setHighlightWinningMoves = useCallback((value: boolean) => {
+    setHighlightWinningMovesState(value);
+    saveSettings({ highlightWinningMoves: value });
+  }, []);
+
+  const value = useMemo<SettingsContextType>(
+    () => ({
+      theme,
+      themeId,
+      setThemeById,
+      shiftPreviews,
+      setShiftPreviews,
+      piecePlacementPreviews,
+      setPiecePlacementPreviews,
+      highlightWinningMoves,
+      setHighlightWinningMoves,
+    }),
+    [
+      theme,
+      themeId,
+      setThemeById,
+      shiftPreviews,
+      setShiftPreviews,
+      piecePlacementPreviews,
+      setPiecePlacementPreviews,
+      highlightWinningMoves,
+      setHighlightWinningMoves,
+    ]
+  );
 
   return (
-    <SettingsContext.Provider
-      value={{
-        theme,
-        setTheme: setAndPersistTheme,
-        shiftPreviews,
-        setShiftPreviews,
-        piecePlacementPreviews,
-        setPiecePlacementPreviews,
-        highlightWinningMoves,
-        setHighlightWinningMoves,
-        tutorialEnabled,
-        setTutorialEnabled,
-      }}
-    >
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );
 };
 
 export const useSettings = () => {
-  const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error("useSettings must be used within a SettingsProvider");
-  }
-  return context;
+  const ctx = useContext(SettingsContext);
+  if (!ctx)
+    throw new Error("useSettings must be used within SettingsProvider");
+  return ctx;
 };

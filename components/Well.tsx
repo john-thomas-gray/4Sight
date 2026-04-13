@@ -1,16 +1,19 @@
 import { WELL_STYLE } from "@/constants/gameElements";
-import { useGameContext } from "@/context/GameContext";
-import { CellProps, CellType, Team } from "@/types/board";
+import { useLayout } from "@/context/LayoutContext";
+import { useSettings } from "@/context/SettingsContext";
+import { Team } from "@/engine";
+import { CellProps, CellType } from "@/types/board";
 import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { settings, layout } = useGameContext();
+  const { registerCell } = useLayout();
+  const { theme } = useSettings();
 
   const reportLayout = () => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      layout.registerCell({
+      registerCell({
         id,
         type: CellType.Well,
         team,
@@ -23,17 +26,17 @@ const Well = ({ id, team }: CellProps) => {
     const timer = setTimeout(reportLayout, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  const bgColor =
+    team === Team.One
+      ? theme.colorTheme.WELL_BG_COLOR_ONE
+      : theme.colorTheme.WELL_BG_COLOR_TWO;
+
   return (
     <View
       ref={viewRef}
       onLayout={reportLayout}
-      style={{
-        ...WELL_STYLE,
-        backgroundColor:
-          team === Team.TeamOne
-            ? settings.theme?.colorTheme?.WELL_BG_COLOR_ONE || "#377a67ff"
-            : settings.theme?.colorTheme?.WELL_BG_COLOR_TWO || "#377a67ff",
-      }}
+      style={{ ...WELL_STYLE, backgroundColor: bgColor }}
     />
   );
 };
