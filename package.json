@@ -20,7 +20,11 @@
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1"
-    }
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/_v0/"
+    ]
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

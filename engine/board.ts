@@ -71,6 +71,46 @@ export function resolveSlotDrop(
   return landing;
 }
 
+/**
+ * Given a target space on the board, finds the nearest slot that would
+ * cause a piece to land on that space (via resolveSlotDrop).
+ * Returns null if the space is occupied or no slot can reach it.
+ */
+export function findSlotForSpace(
+  board: Readonly<Record<string, string>>,
+  target: Coord,
+): Coord | null {
+  if (!isPlayable(target)) return null;
+  if (board[coordToKey(target)] !== undefined) return null;
+
+  const FRAME = BOARD_SIZE + 1;
+  const candidates: { slot: Coord; distance: number }[] = [
+    { slot: { row: 0, col: target.col }, distance: target.row },
+    { slot: { row: FRAME, col: target.col }, distance: FRAME - target.row },
+    { slot: { row: target.row, col: 0 }, distance: target.col },
+    { slot: { row: target.row, col: FRAME }, distance: FRAME - target.col },
+  ];
+
+  let best: Coord | null = null;
+  let bestDist = Infinity;
+
+  for (const { slot, distance } of candidates) {
+    if (!isSlot(slot)) continue;
+    const landing = resolveSlotDrop(board, slot);
+    if (
+      landing &&
+      landing.row === target.row &&
+      landing.col === target.col &&
+      distance < bestDist
+    ) {
+      best = slot;
+      bestDist = distance;
+    }
+  }
+
+  return best;
+}
+
 export function createEmptyBoard(): Record<string, string> {
   return {};
 }

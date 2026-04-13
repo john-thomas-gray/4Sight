@@ -5,12 +5,12 @@ import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { Team } from "@/engine";
 import { CellType, EachCellType } from "@/types/board";
-import React, { memo, useCallback, useEffect, useMemo } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import Glow from "./Glow";
-import { resolveDropTarget } from "./pieceDropController";
+import { resolveDropOutcome } from "./pieceDropController";
 
 type PieceViewProps = {
   id: string;
@@ -53,7 +53,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
 
   const currentWellEntry = useMemo(() => {
     const entry = Object.entries(wellPieceLocations).find(
-      ([, pid]) => pid === id
+      ([, pid]) => pid === id,
     );
     return entry ? entry[0] : null;
   }, [wellPieceLocations, id]);
@@ -66,6 +66,8 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       null
     );
   }, [currentWellEntry, layout.wells]);
+
+  const originWellRef = useRef<{ id: string; layout: typeof currentWellLayout } | null>(null);
 
   const allCells = useMemo((): EachCellType[] => {
     const slots = Object.entries(layout.slots).map(([cid, l]) => ({
@@ -93,7 +95,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       targetPageY: number,
       targetWidth: number,
       targetHeight: number,
-      scale: number
+      scale: number,
     ) => {
       animate.translateX.value =
         targetPageX + targetWidth / 2 - GameElements.PIECE_RADIUS;
@@ -102,7 +104,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       animate.scaleX.value = scale;
       animate.scaleY.value = scale;
     },
-    [animate]
+    [animate],
   );
 
   const movePiece = useMemo(
@@ -114,7 +116,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             status !== PieceStatus.winner &&
             gameState.status === "playing" &&
             isMyTurn &&
-            (status === PieceStatus.isHeld || !moveInProgress)
+            (status === PieceStatus.isHeld || !moveInProgress),
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
@@ -123,6 +125,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
 
           if (currentWellEntry) {
+            originWellRef.current = { id: currentWellEntry, layout: currentWellLayout };
             setWellPieceLocations((prev) => {
               const next = { ...prev };
               delete next[currentWellEntry];
@@ -139,11 +142,13 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             event.absoluteY - GameElements.PIECE_RADIUS - 50;
         })
         .onEnd(() => {
+          const origin = originWellRef.current;
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
             y: animate.translateY.value + GameElements.PIECE_RADIUS,
           };
 
+          let hitCellId: string | null = null;
           for (const cell of allCells) {
             if (!cell.layout) continue;
             const { pageX, pageY, width, height } = cell.layout;
@@ -152,103 +157,99 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               pieceCenter.x <= pageX + width &&
               pieceCenter.y >= pageY &&
               pieceCenter.y <= pageY + height;
-            if (!inBounds) continue;
-
-            const target = resolveDropTarget(
-              cell.id,
-              gameState.board,
-              layout.slots,
-              layout.spaces,
-              layout.wells[team]
-            );
-
-            if (target.kind === "slot") {
-              const spaceLayout = layout.spaces[target.landingKey];
-              if (spaceLayout) {
-                snapToLayout(
-                  spaceLayout.pageX,
-                  spaceLayout.pageY,
-                  spaceLayout.width,
-                  spaceLayout.height,
-                  GameElements.PIECE_BOARD_SCALE
-                );
-                animate.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
-                dropPiece(target.slotCoord, id);
-                setPieceStatusMap((prev) => ({
-                  ...prev,
-                  [id]: PieceStatus.onBoard,
-                }));
-                setMoveInProgressDelayed(false, 400);
-                return;
-              }
+            if (inBounds) {
+              hitCellId = cell.id;
+              break;
             }
-
-            if (target.kind === "well") {
-              if (wellPieceLocations[target.wellId] === undefined) {
-                const wellLayout = layout.wells[team]?.[target.wellId];
-                if (wellLayout) {
-                  snapToLayout(
-                    wellLayout.pageX,
-                    wellLayout.pageY,
-                    wellLayout.width,
-                    wellLayout.height,
-                    GameElements.PIECE_WELL_SCALE
-                  );
-                  animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
-                  setWellPieceLocations((prev) => ({
-                    ...prev,
-                    [target.wellId]: id,
-                  }));
-                  setPieceStatusMap((prev) => ({
-                    ...prev,
-                    [id]: PieceStatus.inWell,
-                  }));
-                  setMoveInProgressDelayed(false, 300);
-                  return;
-                }
-              }
-            }
-
-            // Blocked slot or occupied space — return to original well
-            if (currentWellLayout) {
-              snapToLayout(
-                currentWellLayout.pageX,
-                currentWellLayout.pageY,
-                currentWellLayout.width,
-                currentWellLayout.height,
-                GameElements.PIECE_WELL_SCALE
-              );
-              animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
-            }
-            if (currentWellEntry) {
-              setWellPieceLocations((prev) => ({
-                ...prev,
-                [currentWellEntry]: id,
-              }));
-            }
-            setPieceStatusMap((prev) => ({
-              ...prev,
-              [id]: PieceStatus.inWell,
-            }));
-            setMoveInProgressDelayed(false, 300);
-            return;
           }
 
-          // Missed all cells — return to well
-          if (currentWellLayout) {
+          const outcome = hitCellId
+            ? resolveDropOutcome(
+                hitCellId,
+                gameState.board,
+                layout.slots,
+                layout.spaces,
+                layout.wells[team],
+                wellPieceLocations,
+                origin?.id ?? "",
+              )
+            : { kind: "returnToWell" as const, originWellId: origin?.id ?? "" };
+
+          // #region agent log
+          console.log("[DROP]", JSON.stringify({pieceId:id,originWell:origin?.id,hitCellId,outcome}));
+          fetch('http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ed3eae'},body:JSON.stringify({sessionId:'ed3eae',location:'PieceView.tsx:onEnd',message:'drop-resolved',data:{pieceId:id,originWell:origin?.id,hitCellId,outcome},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+          // #endregion
+
+          if (outcome.kind === "placed") {
+            const spaceLayout = layout.spaces[outcome.landingKey];
+            if (spaceLayout) {
+              snapToLayout(
+                spaceLayout.pageX,
+                spaceLayout.pageY,
+                spaceLayout.width,
+                spaceLayout.height,
+                GameElements.PIECE_BOARD_SCALE,
+              );
+              animate.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
+              dropPiece(outcome.slotCoord, id);
+              setPieceStatusMap((prev) => ({
+                ...prev,
+                [id]: PieceStatus.onBoard,
+              }));
+              originWellRef.current = null;
+              // #region agent log
+              console.log("[DROP:PLACED]", JSON.stringify({pieceId:id,landingKey:outcome.landingKey}));
+              fetch('http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ed3eae'},body:JSON.stringify({sessionId:'ed3eae',location:'PieceView.tsx:placed',message:'piece-placed',data:{pieceId:id,landingKey:outcome.landingKey},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+              // #endregion
+              setMoveInProgressDelayed(false, 400);
+              return;
+            }
+          }
+
+          if (outcome.kind === "well") {
+            const wellLayout = layout.wells[team]?.[outcome.wellId];
+            if (wellLayout) {
+              snapToLayout(
+                wellLayout.pageX,
+                wellLayout.pageY,
+                wellLayout.width,
+                wellLayout.height,
+                GameElements.PIECE_WELL_SCALE,
+              );
+              animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
+              setWellPieceLocations((prev) => ({
+                ...prev,
+                [outcome.wellId]: id,
+              }));
+              setPieceStatusMap((prev) => ({
+                ...prev,
+                [id]: PieceStatus.inWell,
+              }));
+              originWellRef.current = null;
+              setMoveInProgressDelayed(false, 300);
+              return;
+            }
+          }
+
+          // returnToWell — snap back to original well using the ref
+          // #region agent log
+          console.log("[DROP:RETURN_TO_WELL]", JSON.stringify({pieceId:id,originWellId:origin?.id,hasLayout:!!origin?.layout}));
+          fetch('http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ed3eae'},body:JSON.stringify({sessionId:'ed3eae',location:'PieceView.tsx:returnToWell',message:'returning-to-well',data:{pieceId:id,originWellId:origin?.id,hasLayout:!!origin?.layout},timestamp:Date.now(),hypothesisId:'H2,H3'})}).catch(()=>{});
+          // #endregion
+          if (origin?.layout) {
             snapToLayout(
-              currentWellLayout.pageX,
-              currentWellLayout.pageY,
-              currentWellLayout.width,
-              currentWellLayout.height,
-              GameElements.PIECE_WELL_SCALE
+              origin.layout.pageX,
+              origin.layout.pageY,
+              origin.layout.width,
+              origin.layout.height,
+              GameElements.PIECE_WELL_SCALE,
             );
             animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
           }
-          if (currentWellEntry) {
+          if (origin?.id) {
             setWellPieceLocations((prev) => ({
               ...prev,
-              [currentWellEntry]: id,
+              [origin.id]: id,
             }));
           }
           setPieceStatusMap((prev) => ({
@@ -279,7 +280,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       setWellPieceLocations,
       setMoveInProgress,
       setMoveInProgressDelayed,
-    ]
+    ],
   );
 
   const animatedStyles = useAnimatedStyle(() => ({
