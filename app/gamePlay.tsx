@@ -8,7 +8,7 @@ import { PieceStatus, useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 
 const GamePlay = () => {
@@ -17,15 +17,11 @@ const GamePlay = () => {
     useGameSession();
   const { theme } = useSettings();
   const [showWinOverlay, setShowWinOverlay] = useState(false);
-  const positionsInitialized = useRef(false);
 
-  // Position pieces at their locations once layout is ready.
-  // Handles both fresh games (pieces in wells) and continued games
-  // (some pieces on the board, some in wells).
+  // Reposition pieces whenever layout updates (wells or spaces register).
+  // Runs every time a new cell registers, so pieces land at the right
+  // positions even if wells register incrementally.
   useEffect(() => {
-    if (!layout.layoutReady || positionsInitialized.current) return;
-
-    // Position pieces in wells
     Object.entries(wellPieceLocations).forEach(([wellId, pieceId]) => {
       const wellLayout =
         layout.wells[Team.One]?.[wellId] ?? layout.wells[Team.Two]?.[wellId];
@@ -38,7 +34,6 @@ const GamePlay = () => {
       }
     });
 
-    // Position pieces on the board (from continued game)
     Object.entries(gameState.board).forEach(([spaceId, pieceId]) => {
       const spaceLayout = layout.spaces[spaceId];
       const anim = pieceAnims[pieceId];
@@ -51,19 +46,7 @@ const GamePlay = () => {
         anim.scaleY.value = 1;
       }
     });
-
-    positionsInitialized.current = true;
-  }, [
-    layout.layoutReady,
-    layout.wells,
-    layout.spaces,
-    wellPieceLocations,
-    gameState.board,
-    pieceAnims,
-  ]);
-
-  const piecesReady =
-    layout.layoutReady && Object.keys(gameState.pieces).length > 0;
+  }, [layout.wells, layout.spaces, wellPieceLocations, gameState.board, pieceAnims]);
 
   const piecesToRender = useMemo(
     () => Object.entries(gameState.pieces),
@@ -96,11 +79,9 @@ const GamePlay = () => {
         <TeamWellGrid team={Team.One} />
       </View>
 
-      {piecesReady &&
-        positionsInitialized.current &&
-        piecesToRender.map(([pid, piece]) => (
-          <PieceView key={pid} id={pid} team={piece.team} />
-        ))}
+      {piecesToRender.map(([pid, piece]) => (
+        <PieceView key={pid} id={pid} team={piece.team} />
+      ))}
 
       <WinOverlay
         visible={showWinOverlay && gameState.winner !== null}

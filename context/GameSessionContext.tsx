@@ -1,21 +1,21 @@
-import {
-  createGame,
-  placePiece as enginePlacePiece,
-  shiftGravity as engineShiftGravity,
-  resetGame as engineResetGame,
-  detectNearWins,
-  coordToKey,
-  PIECES_PER_TEAM,
-  Direction,
-} from "@/engine";
 import type { Coord, EngineResult, GameState, NearWin } from "@/engine";
 import {
-  saveSession,
+  coordToKey,
+  createGame,
+  detectNearWins,
+  Direction,
+  placePiece as enginePlacePiece,
+  resetGame as engineResetGame,
+  shiftGravity as engineShiftGravity,
+  PIECES_PER_TEAM,
+} from "@/engine";
+import type { PersistedSessionState } from "@/storage";
+import {
   clearSession,
   gameStateToSerializable,
+  saveSession,
   serializableToGameState,
 } from "@/storage";
-import type { PersistedSessionState } from "@/storage";
 import { PieceAnimation } from "@/types/animation";
 import React, {
   createContext,
@@ -57,7 +57,7 @@ type GameSessionContextType = {
 };
 
 const GameSessionContext = createContext<GameSessionContextType | undefined>(
-  undefined
+  undefined,
 );
 
 function buildInitialPieceStatusMap(): PieceStatusMap {
@@ -78,9 +78,7 @@ function buildPieceAnims(): Record<string, PieceAnimation> {
       scaleX: makeMutable(1.1),
       scaleY: makeMutable(1.1),
       color: makeMutable(i < PIECES_PER_TEAM ? "#ffffff" : "#000000"),
-      winnerColor: makeMutable(
-        i < PIECES_PER_TEAM ? "#fdffd0ff" : "#967d00ff"
-      ),
+      winnerColor: makeMutable(i < PIECES_PER_TEAM ? "#fdffd0ff" : "#967d00ff"),
       zIndex: makeMutable(500),
     };
   }
@@ -108,18 +106,17 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [gameState, setGameState] = useState<GameState>(createGame);
   const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>(
-    buildInitialPieceStatusMap
+    buildInitialPieceStatusMap,
   );
   const [wellPieceLocations, setWellPieceLocations] = useState<
     Record<string, string>
   >(buildInitialWellPieceLocations);
-  const pieceAnimsRef = useRef<Record<string, PieceAnimation>>(
-    buildPieceAnims()
-  );
+  const pieceAnimsRef =
+    useRef<Record<string, PieceAnimation>>(buildPieceAnims());
 
   const nearWins = useMemo(
     () => detectNearWins(gameState.board, gameState.pieces),
-    [gameState.board, gameState.pieces]
+    [gameState.board, gameState.pieces],
   );
 
   const nextTurnWins = useMemo(() => {
@@ -138,7 +135,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       }
       return result;
     },
-    [gameState]
+    [gameState],
   );
 
   const shiftGravity = useCallback(
@@ -149,7 +146,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       }
       return result;
     },
-    [gameState]
+    [gameState],
   );
 
   const newGame = useCallback(async () => {
@@ -213,7 +210,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       newGame,
       resetCurrentGame,
       continueGame,
-    ]
+    ],
   );
 
   return (

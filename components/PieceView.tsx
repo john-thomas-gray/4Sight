@@ -4,18 +4,11 @@ import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { Team } from "@/engine";
-import type { PieceAnimation } from "@/types/animation";
-import { CellLayout, CellType, EachCellType } from "@/types/board";
-import React, { memo, useEffect, useMemo } from "react";
+import { CellType, EachCellType } from "@/types/board";
+import React, { memo, useCallback, useEffect, useMemo } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import Glow from "./Glow";
 import { resolveDropTarget } from "./pieceDropController";
 
@@ -23,17 +16,6 @@ type PieceViewProps = {
   id: string;
   team: Team;
 };
-
-const PIECE_TO_SLOT = 150;
-const SLOT_TO_SPACE = 700;
-const RETURN_TO_WELL = 300;
-
-function centerOf(layout: CellLayout) {
-  return {
-    x: layout.pageX + layout.width / 2 - GameElements.PIECE_RADIUS,
-    y: layout.pageY + layout.height / 2 - GameElements.PIECE_RADIUS,
-  };
-}
 
 const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
   const {
@@ -53,7 +35,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
   const animate = pieceAnims[id];
   const status = pieceStatusMap[id] ?? PieceStatus.inWell;
 
-  // Sync piece colors with theme
   useEffect(() => {
     if (!animate) return;
     const isTeamOne = team === Team.One;
@@ -106,77 +87,28 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     return [...slots, ...spaces, ...wells];
   }, [layout.slots, layout.spaces, layout.wells, team]);
 
-  const updateStatus = (s: PieceStatus) => {
-    setPieceStatusMap((prev) => ({ ...prev, [id]: s }));
-  };
-
-  const deleteFromWell = () => {
-    if (!currentWellEntry) return;
-    setWellPieceLocations((prev) => {
-      const next = { ...prev };
-      delete next[currentWellEntry];
-      return next;
-    });
-  };
-
-  const returnToWell = (wellId: string) => {
-    setWellPieceLocations((prev) => ({ ...prev, [wellId]: id }));
-  };
-
-  const animateToWell = (wellLayout: CellLayout, anim: PieceAnimation) => {
-    "worklet";
-    const c = centerOf(wellLayout);
-    anim.scaleX.value = withTiming(GameElements.PIECE_WELL_SCALE, {
-      duration: 500,
-    });
-    anim.scaleY.value = withTiming(GameElements.PIECE_WELL_SCALE, {
-      duration: 500,
-    });
-    anim.translateX.value = withTiming(c.x, {
-      duration: RETURN_TO_WELL,
-      easing: Easing.inOut(Easing.quad),
-    });
-    anim.translateY.value = withTiming(c.y, {
-      duration: RETURN_TO_WELL,
-      easing: Easing.inOut(Easing.quad),
-    });
-    anim.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
-  };
-
-  const animateSlotDrop = (
-    slotLayout: CellLayout,
-    spaceLayout: CellLayout,
-    anim: PieceAnimation
-  ) => {
-    "worklet";
-    const slotC = centerOf(slotLayout);
-    const spaceC = centerOf(spaceLayout);
-    anim.scaleX.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
-      duration: 200,
-    });
-    anim.scaleY.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
-      duration: 200,
-    });
-    anim.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
-    anim.translateX.value = withSequence(
-      withTiming(slotC.x, {
-        duration: PIECE_TO_SLOT,
-        easing: Easing.inOut(Easing.quad),
-      }),
-      withTiming(spaceC.x, { duration: SLOT_TO_SPACE, easing: Easing.bounce })
-    );
-    anim.translateY.value = withSequence(
-      withTiming(slotC.y, {
-        duration: PIECE_TO_SLOT,
-        easing: Easing.inOut(Easing.quad),
-      }),
-      withTiming(spaceC.y, { duration: SLOT_TO_SPACE, easing: Easing.bounce })
-    );
-  };
+  const snapToLayout = useCallback(
+    (
+      targetPageX: number,
+      targetPageY: number,
+      targetWidth: number,
+      targetHeight: number,
+      scale: number
+    ) => {
+      animate.translateX.value =
+        targetPageX + targetWidth / 2 - GameElements.PIECE_RADIUS;
+      animate.translateY.value =
+        targetPageY + targetHeight / 2 - GameElements.PIECE_RADIUS;
+      animate.scaleX.value = scale;
+      animate.scaleY.value = scale;
+    },
+    [animate]
+  );
 
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
+        .runOnJS(true)
         .enabled(
           status !== PieceStatus.onBoard &&
             status !== PieceStatus.winner &&
@@ -186,16 +118,19 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
-          animate.scaleX.value = withTiming(GameElements.PIECE_HELD_SCALE, {
-            duration: 100,
-          });
-          animate.scaleY.value = withTiming(GameElements.PIECE_HELD_SCALE, {
-            duration: 100,
-          });
+          animate.scaleX.value = GameElements.PIECE_HELD_SCALE;
+          animate.scaleY.value = GameElements.PIECE_HELD_SCALE;
           animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
-          scheduleOnRN(deleteFromWell);
-          scheduleOnRN(updateStatus, PieceStatus.isHeld);
-          scheduleOnRN(setMoveInProgress, true);
+
+          if (currentWellEntry) {
+            setWellPieceLocations((prev) => {
+              const next = { ...prev };
+              delete next[currentWellEntry];
+              return next;
+            });
+          }
+          setPieceStatusMap((prev) => ({ ...prev, [id]: PieceStatus.isHeld }));
+          setMoveInProgress(true);
         })
         .onUpdate((event) => {
           animate.translateX.value =
@@ -228,13 +163,22 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             );
 
             if (target.kind === "slot") {
-              const slotLayout = layout.slots[cell.id];
               const spaceLayout = layout.spaces[target.landingKey];
-              if (slotLayout && spaceLayout) {
-                animateSlotDrop(slotLayout, spaceLayout, animate);
-                scheduleOnRN(dropPiece, target.slotCoord, id);
-                scheduleOnRN(updateStatus, PieceStatus.onBoard);
-                scheduleOnRN(setMoveInProgressDelayed, false, 400);
+              if (spaceLayout) {
+                snapToLayout(
+                  spaceLayout.pageX,
+                  spaceLayout.pageY,
+                  spaceLayout.width,
+                  spaceLayout.height,
+                  GameElements.PIECE_BOARD_SCALE
+                );
+                animate.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
+                dropPiece(target.slotCoord, id);
+                setPieceStatusMap((prev) => ({
+                  ...prev,
+                  [id]: PieceStatus.onBoard,
+                }));
+                setMoveInProgressDelayed(false, 400);
                 return;
               }
             }
@@ -243,32 +187,75 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               if (wellPieceLocations[target.wellId] === undefined) {
                 const wellLayout = layout.wells[team]?.[target.wellId];
                 if (wellLayout) {
-                  animateToWell(wellLayout, animate);
-                  scheduleOnRN(returnToWell, target.wellId);
-                  scheduleOnRN(updateStatus, PieceStatus.inWell);
-                  scheduleOnRN(setMoveInProgressDelayed, false, 300);
+                  snapToLayout(
+                    wellLayout.pageX,
+                    wellLayout.pageY,
+                    wellLayout.width,
+                    wellLayout.height,
+                    GameElements.PIECE_WELL_SCALE
+                  );
+                  animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
+                  setWellPieceLocations((prev) => ({
+                    ...prev,
+                    [target.wellId]: id,
+                  }));
+                  setPieceStatusMap((prev) => ({
+                    ...prev,
+                    [id]: PieceStatus.inWell,
+                  }));
+                  setMoveInProgressDelayed(false, 300);
                   return;
                 }
               }
             }
 
-            // Dropped on occupied space or blocked slot — return to well
+            // Blocked slot or occupied space — return to original well
             if (currentWellLayout) {
-              animateToWell(currentWellLayout, animate);
+              snapToLayout(
+                currentWellLayout.pageX,
+                currentWellLayout.pageY,
+                currentWellLayout.width,
+                currentWellLayout.height,
+                GameElements.PIECE_WELL_SCALE
+              );
+              animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
             }
-            if (currentWellEntry) scheduleOnRN(returnToWell, currentWellEntry);
-            scheduleOnRN(updateStatus, PieceStatus.inWell);
-            scheduleOnRN(setMoveInProgressDelayed, false, 300);
+            if (currentWellEntry) {
+              setWellPieceLocations((prev) => ({
+                ...prev,
+                [currentWellEntry]: id,
+              }));
+            }
+            setPieceStatusMap((prev) => ({
+              ...prev,
+              [id]: PieceStatus.inWell,
+            }));
+            setMoveInProgressDelayed(false, 300);
             return;
           }
 
           // Missed all cells — return to well
           if (currentWellLayout) {
-            animateToWell(currentWellLayout, animate);
+            snapToLayout(
+              currentWellLayout.pageX,
+              currentWellLayout.pageY,
+              currentWellLayout.width,
+              currentWellLayout.height,
+              GameElements.PIECE_WELL_SCALE
+            );
+            animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
           }
-          if (currentWellEntry) scheduleOnRN(returnToWell, currentWellEntry);
-          scheduleOnRN(updateStatus, PieceStatus.inWell);
-          scheduleOnRN(setMoveInProgressDelayed, false, 300);
+          if (currentWellEntry) {
+            setWellPieceLocations((prev) => ({
+              ...prev,
+              [currentWellEntry]: id,
+            }));
+          }
+          setPieceStatusMap((prev) => ({
+            ...prev,
+            [id]: PieceStatus.inWell,
+          }));
+          setMoveInProgressDelayed(false, 300);
         }),
     [
       status,
@@ -286,7 +273,10 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       currentWellLayout,
       currentWellEntry,
       id,
+      snapToLayout,
       dropPiece,
+      setPieceStatusMap,
+      setWellPieceLocations,
       setMoveInProgress,
       setMoveInProgressDelayed,
     ]

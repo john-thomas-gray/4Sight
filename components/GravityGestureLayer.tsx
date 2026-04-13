@@ -1,4 +1,4 @@
-import animateGravity from "@/animations/animateGravity";
+import { PIECE_RADIUS } from "@/constants/gameElements";
 import { MOVE_IN_PROGRESS_DROP } from "@/constants/logic";
 import { useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
@@ -7,7 +7,6 @@ import { Direction } from "@/engine";
 import React, { memo, useCallback, useEffect, useRef } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
 
 type GravityGestureLayerProps = {
   children: React.ReactNode;
@@ -53,11 +52,10 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
           const targetKey = `${move.to.row}-${move.to.col}`;
           const spaceLayout = spaces[targetKey];
           if (anim && spaceLayout) {
-            animateGravity({
-              translateX: anim.translateX,
-              translateY: anim.translateY,
-              spaceLayout,
-            });
+            anim.translateX.value =
+              spaceLayout.pageX + spaceLayout.width / 2 - PIECE_RADIUS;
+            anim.translateY.value =
+              spaceLayout.pageY + spaceLayout.height / 2 - PIECE_RADIUS;
           }
         }
       }
@@ -91,20 +89,21 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     [gameState.status, executePull, resetCurrentGame]
   );
 
-  const panFling = Gesture.Pan().onEnd((e) => {
-    "worklet";
-    const absVX = Math.abs(e.velocityX);
-    const absVY = Math.abs(e.velocityY);
-    if (absVX < VELOCITY_THRESHOLD && absVY < VELOCITY_THRESHOLD) return;
+  const panFling = Gesture.Pan()
+    .runOnJS(true)
+    .onEnd((e) => {
+      const absVX = Math.abs(e.velocityX);
+      const absVY = Math.abs(e.velocityY);
+      if (absVX < VELOCITY_THRESHOLD && absVY < VELOCITY_THRESHOLD) return;
 
-    let dir: Direction;
-    if (absVX >= absVY) {
-      dir = e.velocityX > 0 ? Direction.Right : Direction.Left;
-    } else {
-      dir = e.velocityY > 0 ? Direction.Down : Direction.Up;
-    }
-    scheduleOnRN(handleFling, dir);
-  });
+      let dir: Direction;
+      if (absVX >= absVY) {
+        dir = e.velocityX > 0 ? Direction.Right : Direction.Left;
+      } else {
+        dir = e.velocityY > 0 ? Direction.Down : Direction.Up;
+      }
+      handleFling(dir);
+    });
 
   return (
     <GestureDetector gesture={panFling}>
