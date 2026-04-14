@@ -34,7 +34,7 @@ function MainMenu() {
   useFocusEffect(
     React.useCallback(() => {
       refreshSavedState();
-    }, [refreshSavedState])
+    }, [refreshSavedState]),
   );
 
   const handlePlay = React.useCallback(async () => {
@@ -66,7 +66,7 @@ function MainMenu() {
         return { ...prev, [id]: width };
       });
     },
-    []
+    [],
   );
 
   React.useEffect(() => {

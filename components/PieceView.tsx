@@ -34,11 +34,15 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     setMoveInProgress,
     setMoveInProgressDelayed,
     setHoverPreview,
+    isPreviewingGravity,
   } = useUi();
 
   const animate = pieceAnims[id];
   const status = pieceStatusMap[id] ?? PieceStatus.inWell;
   const dragYOffset = team === Team.One ? -50 : 50;
+
+  const hiddenByPreview =
+    isPreviewingGravity && status === PieceStatus.onBoard;
 
   useEffect(() => {
     if (!animate) return;
@@ -372,6 +376,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           status === PieceStatus.inWell
             ? { zIndex: GameElements.PIECE_WELL_ZINDEX }
             : null,
+          hiddenByPreview ? { opacity: 0 } : null,
         ]}
       >
         <Glow pieceId={id} />

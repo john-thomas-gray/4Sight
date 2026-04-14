@@ -61,3 +61,13 @@ Tests
 
 = Blocked piece must return to high z index because it goes under the slot rim when it goes back to the well
 = moveInProgress restricts the number of moves you can make and prevents interfering wiht pieces in motion
+
+New:
+
+tapping a space auto-places
+slot visuals
+high fidelity css graphics
+app store release
+purchaseable skins
+music
+animations

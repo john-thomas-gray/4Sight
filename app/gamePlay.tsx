@@ -1,6 +1,8 @@
 import BackButton from "@/components/BackButton";
+import { loopDuration } from "@/animations/loadingAnimations";
 import BoardGridView from "@/components/BoardGridView";
 import GravityGestureLayer from "@/components/GravityGestureLayer";
+import LoadingScreen from "@/components/LoadingScreen";
 import PieceView from "@/components/PieceView";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinOverlay from "@/components/WinOverlay";
@@ -20,8 +22,18 @@ const GamePlay = () => {
   const { hoverPreview, isPreviewingGravity, gravityPreviewBoard } = useUi();
   const { theme } = useSettings();
   const [showWinOverlay, setShowWinOverlay] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const colors = theme.colorTheme;
   const textColor = colors.ODD_SPACE_COLOR;
+
+  useEffect(() => {
+    if (!layout.layoutReady) {
+      setShowLoadingScreen(true);
+      return;
+    }
+    const timer = setTimeout(() => setShowLoadingScreen(false), loopDuration);
+    return () => clearTimeout(timer);
+  }, [layout.layoutReady]);
 
   // Reposition pieces whenever layout updates (wells or spaces register).
   // Runs every time a new cell registers, so pieces land at the right
@@ -169,6 +181,7 @@ const GamePlay = () => {
         winner={gameState.winner === Team.One ? "teamOne" : "teamTwo"}
         onClose={() => setShowWinOverlay(false)}
       />
+      <LoadingScreen visible={showLoadingScreen} />
     </View>
   );
 };
