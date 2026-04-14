@@ -10,7 +10,7 @@ import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import Glow from "./Glow";
-import { resolveDropOutcome } from "./pieceDropController";
+import { resolveDropOutcome, resolveDropTarget } from "./pieceDropController";
 
 type PieceViewProps = {
   id: string;
@@ -29,11 +29,16 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
   } = useGameSession();
   const layout = useLayout();
   const { theme } = useSettings();
-  const { moveInProgress, setMoveInProgress, setMoveInProgressDelayed } =
-    useUi();
+  const {
+    moveInProgress,
+    setMoveInProgress,
+    setMoveInProgressDelayed,
+    setHoverPreview,
+  } = useUi();
 
   const animate = pieceAnims[id];
   const status = pieceStatusMap[id] ?? PieceStatus.inWell;
+  const dragYOffset = team === Team.One ? -50 : 50;
 
   useEffect(() => {
     if (!animate) return;
@@ -134,14 +139,62 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           }
           setPieceStatusMap((prev) => ({ ...prev, [id]: PieceStatus.isHeld }));
           setMoveInProgress(true);
+          setHoverPreview(null);
         })
         .onUpdate((event) => {
           animate.translateX.value =
             event.absoluteX - GameElements.PIECE_RADIUS;
           animate.translateY.value =
-            event.absoluteY - GameElements.PIECE_RADIUS - 50;
+            event.absoluteY - GameElements.PIECE_RADIUS + dragYOffset;
+
+          // Match hover sensing to rendered piece position (same Y offset as drag).
+          const pieceCenterX = event.absoluteX;
+          const pieceCenterY = event.absoluteY + dragYOffset;
+
+          let hitCellId: string | null = null;
+          for (const cell of allCells) {
+            if (!cell.layout) continue;
+            const { pageX, pageY, width, height } = cell.layout;
+            const inBounds =
+              pieceCenterX >= pageX &&
+              pieceCenterX <= pageX + width &&
+              pieceCenterY >= pageY &&
+              pieceCenterY <= pageY + height;
+            if (inBounds) {
+              hitCellId = cell.id;
+              break;
+            }
+          }
+
+          if (!hitCellId) {
+            setHoverPreview((prev) => (prev ? null : prev));
+            return;
+          }
+
+          const target = resolveDropTarget(
+            hitCellId,
+            gameState.board,
+            layout.slots,
+            layout.spaces,
+            layout.wells[team],
+          );
+
+          if (target.kind !== "slot") {
+            setHoverPreview((prev) => (prev ? null : prev));
+            return;
+          }
+
+          const next = { spaceId: target.landingKey, team };
+          setHoverPreview((prev) =>
+            prev &&
+            prev.spaceId === next.spaceId &&
+            prev.team === next.team
+              ? prev
+              : next,
+          );
         })
         .onEnd(() => {
+          setHoverPreview(null);
           const origin = originWellRef.current;
           const pieceCenter = {
             x: animate.translateX.value + GameElements.PIECE_RADIUS,
@@ -280,6 +333,8 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       setWellPieceLocations,
       setMoveInProgress,
       setMoveInProgressDelayed,
+      setHoverPreview,
+      dragYOffset,
     ],
   );
 

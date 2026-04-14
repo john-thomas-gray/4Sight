@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { Team } from "@/engine";
 
 type UiContextType = {
   isGlobalLoading: boolean;
@@ -18,6 +19,14 @@ type UiContextType = {
   setGravityAnimating: React.Dispatch<React.SetStateAction<boolean>>;
   isPreviewingGravity: boolean;
   setIsPreviewingGravity: React.Dispatch<React.SetStateAction<boolean>>;
+  gravityPreviewBoard: Record<string, string> | null;
+  setGravityPreviewBoard: React.Dispatch<
+    React.SetStateAction<Record<string, string> | null>
+  >;
+  hoverPreview: { spaceId: string; team: Team } | null;
+  setHoverPreview: React.Dispatch<
+    React.SetStateAction<{ spaceId: string; team: Team } | null>
+  >;
 };
 
 const UiContext = createContext<UiContextType | undefined>(undefined);
@@ -29,6 +38,13 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({
   const [moveInProgress, setMoveInProgress] = useState(false);
   const [gravityAnimating, setGravityAnimating] = useState(false);
   const [isPreviewingGravity, setIsPreviewingGravity] = useState(false);
+  const [gravityPreviewBoard, setGravityPreviewBoard] = useState<
+    Record<string, string> | null
+  >(null);
+  const [hoverPreview, setHoverPreview] = useState<{
+    spaceId: string;
+    team: Team;
+  } | null>(null);
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setMoveInProgressDelayed = useCallback(
@@ -59,6 +75,10 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({
       setGravityAnimating,
       isPreviewingGravity,
       setIsPreviewingGravity,
+      gravityPreviewBoard,
+      setGravityPreviewBoard,
+      hoverPreview,
+      setHoverPreview,
     }),
     [
       isGlobalLoading,
@@ -66,6 +86,8 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({
       setMoveInProgressDelayed,
       gravityAnimating,
       isPreviewingGravity,
+      gravityPreviewBoard,
+      hoverPreview,
     ]
   );
 
