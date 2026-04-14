@@ -71,3 +71,4 @@ app store release
 purchaseable skins
 music
 animations
+free up piece grabbing a little before turn change

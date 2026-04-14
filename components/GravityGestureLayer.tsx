@@ -1,5 +1,9 @@
 import { PIECE_RADIUS } from "@/constants/gameElements";
-import { MOVE_IN_PROGRESS_DROP } from "@/constants/logic";
+import {
+  MOVE_IN_PROGRESS_DROP,
+  TURN_CHANGE_COMMIT_DELAY_MS,
+  TURN_CHANGE_SETTLE_BUFFER_MS,
+} from "@/constants/logic";
 import { useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useUi } from "@/context/UiContext";
@@ -7,6 +11,7 @@ import { applyGravity, Direction } from "@/engine";
 import React, { memo, useCallback, useEffect, useRef } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
+import { Easing, withTiming } from "react-native-reanimated";
 
 type GravityGestureLayerProps = {
   children: React.ReactNode;
@@ -15,6 +20,8 @@ type GravityGestureLayerProps = {
 
 const VELOCITY_THRESHOLD = 600;
 const PREVIEW_HOLD_MS = 250;
+const GRAVITY_DROP_AXIS_MS = 700;
+const GRAVITY_CROSS_AXIS_MS = 320;
 
 function resolvePullDirectionFromTriangleZone(
   localX: number,
@@ -45,10 +52,12 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     setGravityPreviewBoard,
   } = useUi();
   const gravityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gravityCommitRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (gravityTimeoutRef.current) clearTimeout(gravityTimeoutRef.current);
+      if (gravityCommitRef.current) clearTimeout(gravityCommitRef.current);
     };
   }, []);
 
@@ -62,31 +71,46 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       setMoveInProgress(true);
       setGravityAnimating(true);
 
-      const result = shiftGravity(direction);
-      const gravityEvent = result.events.find(
-        (e) => e.type === "gravity_shifted"
-      );
-
-      if (gravityEvent && gravityEvent.type === "gravity_shifted") {
-        for (const move of gravityEvent.moves) {
+      const preview = applyGravity(gameState.board, direction);
+      if (preview.moves.length > 0) {
+        const isVertical =
+          direction === Direction.Up || direction === Direction.Down;
+        for (const move of preview.moves) {
           const anim = pieceAnims[move.pieceId];
           const targetKey = `${move.to.row}-${move.to.col}`;
           const spaceLayout = spaces[targetKey];
           if (anim && spaceLayout) {
-            anim.translateX.value =
+            const targetX =
               spaceLayout.pageX + spaceLayout.width / 2 - PIECE_RADIUS;
-            anim.translateY.value =
+            const targetY =
               spaceLayout.pageY + spaceLayout.height / 2 - PIECE_RADIUS;
+            anim.translateX.value = withTiming(targetX, {
+              duration: isVertical ? GRAVITY_CROSS_AXIS_MS : GRAVITY_DROP_AXIS_MS,
+              easing: isVertical ? Easing.linear : Easing.bounce,
+            });
+            anim.translateY.value = withTiming(targetY, {
+              duration: isVertical ? GRAVITY_DROP_AXIS_MS : GRAVITY_CROSS_AXIS_MS,
+              easing: isVertical ? Easing.bounce : Easing.linear,
+            });
           }
         }
       }
+
+      if (gravityCommitRef.current) clearTimeout(gravityCommitRef.current);
+      gravityCommitRef.current = setTimeout(() => {
+        shiftGravity(direction);
+        gravityCommitRef.current = null;
+      }, TURN_CHANGE_COMMIT_DELAY_MS);
 
       if (gravityTimeoutRef.current) clearTimeout(gravityTimeoutRef.current);
       gravityTimeoutRef.current = setTimeout(() => {
         setMoveInProgress(false);
         setGravityAnimating(false);
         gravityTimeoutRef.current = null;
-      }, MOVE_IN_PROGRESS_DROP);
+      }, Math.max(
+        MOVE_IN_PROGRESS_DROP,
+        TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS,
+      ));
     },
     [
       gameState.status,

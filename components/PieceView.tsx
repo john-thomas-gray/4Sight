@@ -1,4 +1,8 @@
 import { GameElements } from "@/constants";
+import {
+  TURN_CHANGE_COMMIT_DELAY_MS,
+  TURN_CHANGE_SETTLE_BUFFER_MS,
+} from "@/constants/logic";
 import { PieceStatus, useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -281,7 +285,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             const slotKey = `${outcome.slotCoord.row}-${outcome.slotCoord.col}`;
             const slotLayout = layout.slots[slotKey];
             if (spaceLayout) {
-              const placementCommitDelayMs = 980;
               const landingX =
                 spaceLayout.pageX +
                 spaceLayout.width / 2 -
@@ -386,8 +389,11 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                 // #endregion
               };
               if (slotLayout) {
-                setTimeout(commitPlacement, placementCommitDelayMs);
-                setMoveInProgressDelayed(false, placementCommitDelayMs + 80);
+                setTimeout(commitPlacement, TURN_CHANGE_COMMIT_DELAY_MS);
+                setMoveInProgressDelayed(
+                  false,
+                  TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS,
+                );
               } else {
                 commitPlacement();
                 setMoveInProgressDelayed(false, 300);
