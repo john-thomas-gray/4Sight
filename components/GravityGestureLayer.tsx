@@ -10,8 +10,7 @@ import { useUi } from "@/context/UiContext";
 import { applyGravity, Direction } from "@/engine";
 import React, { memo, useCallback, useEffect, useRef } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated from "react-native-reanimated";
-import { Easing, withTiming } from "react-native-reanimated";
+import Animated, { Easing, withTiming } from "react-native-reanimated";
 
 type GravityGestureLayerProps = {
   children: React.ReactNode;
@@ -85,11 +84,15 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
             const targetY =
               spaceLayout.pageY + spaceLayout.height / 2 - PIECE_RADIUS;
             anim.translateX.value = withTiming(targetX, {
-              duration: isVertical ? GRAVITY_CROSS_AXIS_MS : GRAVITY_DROP_AXIS_MS,
+              duration: isVertical
+                ? GRAVITY_CROSS_AXIS_MS
+                : GRAVITY_DROP_AXIS_MS,
               easing: isVertical ? Easing.linear : Easing.bounce,
             });
             anim.translateY.value = withTiming(targetY, {
-              duration: isVertical ? GRAVITY_DROP_AXIS_MS : GRAVITY_CROSS_AXIS_MS,
+              duration: isVertical
+                ? GRAVITY_DROP_AXIS_MS
+                : GRAVITY_CROSS_AXIS_MS,
               easing: isVertical ? Easing.bounce : Easing.linear,
             });
           }
@@ -103,14 +106,17 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       }, TURN_CHANGE_COMMIT_DELAY_MS);
 
       if (gravityTimeoutRef.current) clearTimeout(gravityTimeoutRef.current);
-      gravityTimeoutRef.current = setTimeout(() => {
-        setMoveInProgress(false);
-        setGravityAnimating(false);
-        gravityTimeoutRef.current = null;
-      }, Math.max(
-        MOVE_IN_PROGRESS_DROP,
-        TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS,
-      ));
+      gravityTimeoutRef.current = setTimeout(
+        () => {
+          setMoveInProgress(false);
+          setGravityAnimating(false);
+          gravityTimeoutRef.current = null;
+        },
+        Math.max(
+          MOVE_IN_PROGRESS_DROP,
+          TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS,
+        ),
+      );
     },
     [
       gameState.status,
@@ -120,7 +126,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       spaces,
       setMoveInProgress,
       setGravityAnimating,
-    ]
+    ],
   );
 
   const handleFling = useCallback(
@@ -132,7 +138,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
         resetCurrentGame();
       }
     },
-    [moveInProgress, gameState.status, executePull, resetCurrentGame]
+    [moveInProgress, gameState.status, executePull, resetCurrentGame],
   );
 
   const previewForPullDirection = useCallback(
@@ -161,7 +167,12 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       setIsPreviewingGravity(true);
       setGravityPreviewBoard({ ...board });
     },
-    [gameState.status, gameState.board, setIsPreviewingGravity, setGravityPreviewBoard],
+    [
+      gameState.status,
+      gameState.board,
+      setIsPreviewingGravity,
+      setGravityPreviewBoard,
+    ],
   );
 
   const clearPreview = useCallback(() => {

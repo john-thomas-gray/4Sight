@@ -9,6 +9,7 @@ import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { Team } from "@/engine";
 import { CellType, EachCellType } from "@/types/board";
+import { RETURN_TO_WELL } from "@/types/animation";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -461,26 +462,55 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           ).catch(() => {});
           // #endregion
           if (origin?.layout) {
-            snapToLayout(
-              origin.layout.pageX,
-              origin.layout.pageY,
-              origin.layout.width,
-              origin.layout.height,
-              GameElements.PIECE_WELL_SCALE,
+            const targetX =
+              origin.layout.pageX +
+              origin.layout.width / 2 -
+              GameElements.PIECE_RADIUS;
+            const targetY =
+              origin.layout.pageY +
+              origin.layout.height / 2 -
+              GameElements.PIECE_RADIUS;
+
+            animate.scaleX.value = GameElements.PIECE_HELD_SCALE;
+            animate.scaleY.value = GameElements.PIECE_HELD_SCALE;
+            animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
+
+            animate.translateX.value = withTiming(
+              targetX,
+              {
+                duration: RETURN_TO_WELL,
+                easing: Easing.inOut(Easing.quad),
+              },
+              () => {
+                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
+                animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
+              },
             );
-            animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
+            animate.translateY.value = withTiming(targetY, {
+              duration: RETURN_TO_WELL,
+              easing: Easing.inOut(Easing.quad),
+            });
           }
-          if (origin?.id) {
-            setWellPieceLocations((prev) => ({
+          const commitReturnToWell = () => {
+            if (origin?.id) {
+              setWellPieceLocations((prev) => ({
+                ...prev,
+                [origin.id]: id,
+              }));
+            }
+            setPieceStatusMap((prev) => ({
               ...prev,
-              [origin.id]: id,
+              [id]: PieceStatus.inWell,
             }));
+          };
+          if (origin?.layout) {
+            setTimeout(commitReturnToWell, RETURN_TO_WELL);
+            setMoveInProgressDelayed(false, RETURN_TO_WELL + 40);
+          } else {
+            commitReturnToWell();
+            setMoveInProgressDelayed(false, 300);
           }
-          setPieceStatusMap((prev) => ({
-            ...prev,
-            [id]: PieceStatus.inWell,
-          }));
-          setMoveInProgressDelayed(false, 300);
         }),
     [
       status,

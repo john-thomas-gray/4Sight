@@ -2,6 +2,7 @@ import type { Coord, EngineResult, GameState, NearWin } from "@/engine";
 import {
   coordToKey,
   createGame,
+  detectWin,
   detectNearWins,
   Direction,
   findSlotForSpace,
@@ -18,7 +19,9 @@ import {
   saveSession,
   serializableToGameState,
 } from "@/storage";
-import { PieceAnimation } from "@/types/animation";
+import { PieceAnimation, RETURN_TO_WELL } from "@/types/animation";
+import { animateWinnerPiece } from "@/animations/animateWinner";
+import { useSettings } from "@/context/SettingsContext";
 import React, {
   createContext,
   ReactNode,
@@ -29,7 +32,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { makeMutable } from "react-native-reanimated";
+import { useLayout } from "./LayoutContext";
+import { Easing, makeMutable, withTiming } from "react-native-reanimated";
 
 export enum PieceStatus {
   inWell = "inWell",
@@ -106,6 +110,8 @@ export function buildInitialWellPieceLocations(): Record<string, string> {
 export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const layout = useLayout();
+  const { theme } = useSettings();
   const [gameState, setGameState] = useState<GameState>(createGame);
   const [nextStartingTeam, setNextStartingTeam] = useState<Team>(Team.One);
   const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>(
@@ -116,6 +122,11 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   >(buildInitialWellPieceLocations);
   const pieceAnimsRef =
     useRef<Record<string, PieceAnimation>>(buildPieceAnims());
+  const resetCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const winnerCascadeKeyRef = useRef<string | null>(null);
+  const winningDropPieceIdsRef = useRef<Set<string>>(new Set());
 
   const nearWins = useMemo(
     () => detectNearWins(gameState.board, gameState.pieces),
@@ -126,6 +137,44 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
     if (gameState.status !== "finished" || !gameState.winner) return;
     setNextStartingTeam(gameState.winner);
   }, [gameState.status, gameState.winner]);
+
+  useEffect(() => {
+    return () => {
+      if (resetCommitTimeoutRef.current) clearTimeout(resetCommitTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (gameState.status !== "finished" || !gameState.winner) {
+      winnerCascadeKeyRef.current = null;
+      return;
+    }
+
+    const winResult = detectWin(gameState.board, gameState.pieces);
+    const winningLine = winResult.lines.find((line) => {
+      const first = line.pieceIds[0];
+      return first && gameState.pieces[first]?.team === gameState.winner;
+    });
+    if (!winningLine) return;
+
+    const cascadeIds = Array.from(new Set(winningLine.pieceIds));
+    const cascadeKey = `${gameState.turnCount}:${cascadeIds.join(",")}`;
+    if (winnerCascadeKeyRef.current === cascadeKey) return;
+    winnerCascadeKeyRef.current = cascadeKey;
+    cascadeIds.forEach((pieceId, idx) => {
+      const anim = pieceAnimsRef.current[pieceId];
+      if (anim) {
+        animateWinnerPiece(anim, idx * 140);
+      }
+    });
+    setPieceStatusMap((prev) => {
+      const next = { ...prev };
+      for (const pieceId of cascadeIds) {
+        next[pieceId] = PieceStatus.winner;
+      }
+      return next;
+    });
+  }, [gameState.status, gameState.winner, gameState.turnCount, gameState.board, gameState.pieces]);
 
   const nextTurnWins = useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -142,6 +191,16 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   const dropPiece = useCallback(
     (slotCoord: Coord, pieceId: string): EngineResult => {
       const result = enginePlacePiece(gameState, slotCoord, pieceId);
+      const hasWinEvent = result.events.some((e) => e.type === "game_won");
+      if (hasWinEvent) {
+        const winningDropEvent = result.events.find(
+          (e): e is Extract<(typeof result.events)[number], { type: "piece_placed" }> =>
+            e.type === "piece_placed",
+        );
+        if (winningDropEvent) {
+          winningDropPieceIdsRef.current.add(winningDropEvent.pieceId);
+        }
+      }
       if (result.events.length > 0) {
         setGameState(result.state);
       }
@@ -170,12 +229,82 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   }, [nextStartingTeam]);
 
   const resetCurrentGame = useCallback(async () => {
+    const initialWellMap = buildInitialWellPieceLocations();
+    const pieceToWellId = Object.entries(initialWellMap).reduce<
+      Record<string, string>
+    >((acc, [wellId, pieceId]) => {
+      acc[pieceId] = wellId;
+      return acc;
+    }, {});
+
+    const boardPieceIds = Object.values(gameState.board);
+    for (const pieceId of boardPieceIds) {
+      const targetWellId = pieceToWellId[pieceId];
+      const piece = gameState.pieces[pieceId];
+      const targetWellLayout =
+        piece && targetWellId ? layout.wells[piece.team]?.[targetWellId] : null;
+      const anim = pieceAnimsRef.current[pieceId];
+      if (!anim || !targetWellLayout) continue;
+      const keepWinnerColor = winningDropPieceIdsRef.current.has(pieceId);
+      const teamDefaultColor =
+        piece.team === Team.One
+          ? theme.colorTheme.TEAM_ONE_COLOR
+          : theme.colorTheme.TEAM_TWO_COLOR;
+
+      const targetX =
+        targetWellLayout.pageX + targetWellLayout.width / 2 - 16;
+      const targetY =
+        targetWellLayout.pageY + targetWellLayout.height / 2 - 16;
+
+      anim.scaleX.value = 1.5;
+      anim.scaleY.value = 1.5;
+      anim.zIndex.value = 5000;
+      anim.color.value = withTiming(
+        keepWinnerColor ? anim.winnerColor.value : teamDefaultColor,
+        {
+          duration: 240,
+          easing: Easing.inOut(Easing.quad),
+        },
+      );
+      anim.translateX.value = withTiming(
+        targetX,
+        {
+          duration: 500,
+          easing: Easing.inOut(Easing.quad),
+        },
+        () => {
+          anim.scaleX.value = 1.1;
+          anim.scaleY.value = 1.1;
+          anim.zIndex.value = 500;
+        },
+      );
+      anim.translateY.value = withTiming(targetY, {
+        duration: 500,
+        easing: Easing.inOut(Easing.quad),
+      });
+    }
+
+    if (resetCommitTimeoutRef.current) clearTimeout(resetCommitTimeoutRef.current);
+    await new Promise<void>((resolve) => {
+      resetCommitTimeoutRef.current = setTimeout(() => {
+        resetCommitTimeoutRef.current = null;
+        resolve();
+      }, Math.max(500, RETURN_TO_WELL));
+    });
+
     const base = engineResetGame();
     setGameState({ ...base, currentTeam: nextStartingTeam });
     setPieceStatusMap(buildInitialPieceStatusMap());
-    setWellPieceLocations(buildInitialWellPieceLocations());
+    setWellPieceLocations(initialWellMap);
     await clearSession();
-  }, [nextStartingTeam]);
+  }, [
+    gameState.board,
+    gameState.pieces,
+    layout.wells,
+    nextStartingTeam,
+    theme.colorTheme.TEAM_ONE_COLOR,
+    theme.colorTheme.TEAM_TWO_COLOR,
+  ]);
 
   const continueGame = useCallback((session: PersistedSessionState) => {
     setGameState(serializableToGameState(session.game));
