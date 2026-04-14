@@ -1,13 +1,35 @@
-import { resolveSlotDrop, isSlot, keyToCoord, coordToKey, findSlotForSpace } from "@/engine";
-import type { Coord } from "@/engine";
+import {
+  resolveSlotDrop,
+  isSlot,
+  keyToCoord,
+  coordToKey,
+  findSlotForSpace,
+  getFirstOccupiedInSlotPath,
+  getSlotEntryDirection,
+} from "@/engine";
+import type { Coord, Direction } from "@/engine";
 
 export type DropTarget =
   | { kind: "slot"; slotCoord: Coord; landingCoord: Coord; landingKey: string }
+  | {
+      kind: "blockedSlot";
+      slotCoord: Coord;
+      blockingPieceId: string;
+      blockingKey: string;
+      entryDirection: Direction;
+    }
   | { kind: "well"; wellId: string }
   | { kind: "miss" };
 
 export type DropOutcome =
   | { kind: "placed"; slotCoord: Coord; landingKey: string }
+  | {
+      kind: "blockedSlot";
+      slotCoord: Coord;
+      blockingPieceId: string;
+      blockingKey: string;
+      entryDirection: Direction;
+    }
   | { kind: "well"; wellId: string }
   | { kind: "returnToWell"; originWellId: string };
 
@@ -23,6 +45,17 @@ export function resolveDropTarget(
   if (cellId in slotIds && isSlot(coord)) {
     const landing = resolveSlotDrop(board, coord);
     if (!landing) {
+      const block = getFirstOccupiedInSlotPath(board, coord);
+      const dir = getSlotEntryDirection(coord);
+      if (block && dir) {
+        return {
+          kind: "blockedSlot",
+          slotCoord: coord,
+          blockingPieceId: block.pieceId,
+          blockingKey: coordToKey(block.coord),
+          entryDirection: dir,
+        };
+      }
       return { kind: "miss" };
     }
     return {
@@ -40,6 +73,17 @@ export function resolveDropTarget(
     }
     const landing = resolveSlotDrop(board, slot);
     if (!landing) {
+      const block = getFirstOccupiedInSlotPath(board, slot);
+      const dir = getSlotEntryDirection(slot);
+      if (block && dir) {
+        return {
+          kind: "blockedSlot",
+          slotCoord: slot,
+          blockingPieceId: block.pieceId,
+          blockingKey: coordToKey(block.coord),
+          entryDirection: dir,
+        };
+      }
       return { kind: "miss" };
     }
     return {
@@ -75,6 +119,16 @@ export function resolveDropOutcome(
   originWellId: string,
 ): DropOutcome {
   const target = resolveDropTarget(cellId, board, slotIds, spaceIds, wellIds);
+
+  if (target.kind === "blockedSlot") {
+    return {
+      kind: "blockedSlot",
+      slotCoord: target.slotCoord,
+      blockingPieceId: target.blockingPieceId,
+      blockingKey: target.blockingKey,
+      entryDirection: target.entryDirection,
+    };
+  }
 
   if (target.kind === "slot") {
     return { kind: "placed", slotCoord: target.slotCoord, landingKey: target.landingKey };

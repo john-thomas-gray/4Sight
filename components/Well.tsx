@@ -3,7 +3,7 @@ import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
 import { CellProps, CellType } from "@/types/board";
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { View } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
@@ -11,7 +11,7 @@ const Well = ({ id, team }: CellProps) => {
   const { registerCell } = useLayout();
   const { theme } = useSettings();
 
-  const reportLayout = () => {
+  const reportLayout = useCallback(() => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       registerCell({
         id,
@@ -20,12 +20,12 @@ const Well = ({ id, team }: CellProps) => {
         layout: { pageX, pageY, width, height },
       });
     });
-  };
+  }, [registerCell, id, team]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [reportLayout]);
 
   const bgColor =
     team === Team.One

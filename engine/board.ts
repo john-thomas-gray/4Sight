@@ -72,6 +72,30 @@ export function resolveSlotDrop(
 }
 
 /**
+ * First occupied cell along the slot entry path (toward the board).
+ * Used when the column/row is full (`resolveSlotDrop` is null) to find
+ * the piece that blocks a drop from this slot.
+ */
+export function getFirstOccupiedInSlotPath(
+  board: Readonly<Record<string, string>>,
+  slot: Coord,
+): { coord: Coord; pieceId: string } | null {
+  const dir = getSlotEntryDirection(slot);
+  if (!dir) return null;
+  const delta = DIRECTION_DELTA[dir];
+  let current: Coord = { row: slot.row + delta.row, col: slot.col + delta.col };
+  while (isPlayable(current)) {
+    const key = coordToKey(current);
+    const pieceId = board[key];
+    if (pieceId !== undefined) {
+      return { coord: current, pieceId };
+    }
+    current = { row: current.row + delta.row, col: current.col + delta.col };
+  }
+  return null;
+}
+
+/**
  * Given a target space on the board, finds the nearest slot that would
  * cause a piece to land on that space (via resolveSlotDrop).
  * Returns null if the space is occupied or no slot can reach it.

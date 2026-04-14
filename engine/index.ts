@@ -1,4 +1,4 @@
-export { coordToKey, keyToCoord, isPlayable, isSlot, getSlotEntryDirection, resolveSlotDrop, findSlotForSpace, createEmptyBoard, createPieces } from "./board";
+export { coordToKey, keyToCoord, isPlayable, isSlot, getSlotEntryDirection, resolveSlotDrop, getFirstOccupiedInSlotPath, findSlotForSpace, createEmptyBoard, createPieces } from "./board";
 export { applyGravity } from "./gravity";
 export { detectWin, detectNearWins } from "./winDetection";
 export { createGame, placePiece, shiftGravity, resetGame } from "./game";

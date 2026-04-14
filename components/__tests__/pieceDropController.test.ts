@@ -1,3 +1,4 @@
+import { Direction } from "@/engine";
 import { resolveDropOutcome } from "../pieceDropController";
 
 function boardFrom(entries: [string, string][]): Record<string, string> {
@@ -10,10 +11,16 @@ const wellIds: Record<string, unknown> = { "well-1": 1 };
 const ORIGIN_WELL = "well-0";
 
 describe("piece retains origin well until placed successfully", () => {
-  it("blocked slot → returns to origin well", () => {
+  it("blocked slot → blockedSlot outcome with first piece on path", () => {
     const board = boardFrom([["1-4", "blocker"]]);
     const outcome = resolveDropOutcome("0-4", board, slotIds, spaceIds, wellIds, {}, ORIGIN_WELL);
-    expect(outcome).toEqual({ kind: "returnToWell", originWellId: ORIGIN_WELL });
+    expect(outcome).toEqual({
+      kind: "blockedSlot",
+      slotCoord: { row: 0, col: 4 },
+      blockingPieceId: "blocker",
+      blockingKey: "1-4",
+      entryDirection: Direction.Down,
+    });
   });
 
   it("unreachable space (all axes blocked) → returns to origin well", () => {

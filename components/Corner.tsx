@@ -8,7 +8,7 @@ import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
 import { CellProps, CellType } from "@/types/board";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Corner = ({ id }: CellProps) => {
@@ -22,7 +22,7 @@ const Corner = ({ id }: CellProps) => {
       ? theme.colorTheme.CORNER_COLOR_ONE
       : theme.colorTheme.CORNER_COLOR_TWO;
 
-  const reportLayout = () => {
+  const reportLayout = useCallback(() => {
     viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
       registerCell({
         id,
@@ -30,12 +30,12 @@ const Corner = ({ id }: CellProps) => {
         layout: { pageX, pageY, width, height },
       });
     });
-  };
+  }, [registerCell, id]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [reportLayout]);
 
   const [rowStr, colStr] = id.split("-");
   const row = parseInt(rowStr, 10);

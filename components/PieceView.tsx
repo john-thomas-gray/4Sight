@@ -20,6 +20,11 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
+import {
+  animateBlockingPieceBump,
+  animateDroppedPieceBlockedInSlot,
+  BLOCKED_DROP_RETURN_START_MS,
+} from "@/animations/blockedSlotDrop";
 import Glow from "./Glow";
 import { resolveDropOutcome, resolveDropTarget } from "./pieceDropController";
 
@@ -286,6 +291,86 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           ).catch(() => {});
           // #endregion
 
+          if (outcome.kind === "blockedSlot") {
+            const slotKey = `${outcome.slotCoord.row}-${outcome.slotCoord.col}`;
+            const slotLayout = layout.slots[slotKey];
+            const blockSpaceLayout = layout.spaces[outcome.blockingKey];
+            const blockerAnim = pieceAnims[outcome.blockingPieceId];
+            const originLayout = origin?.layout;
+            const originWellId = origin?.id;
+            if (
+              slotLayout &&
+              blockSpaceLayout &&
+              blockerAnim &&
+              originLayout &&
+              originWellId
+            ) {
+              animateDroppedPieceBlockedInSlot(
+                animate,
+                slotLayout,
+                outcome.entryDirection,
+              );
+              animateBlockingPieceBump(
+                blockerAnim,
+                blockSpaceLayout,
+                outcome.entryDirection,
+              );
+
+              setTimeout(() => {
+                const targetX =
+                  originLayout.pageX +
+                  originLayout.width / 2 -
+                  GameElements.PIECE_RADIUS;
+                const targetY =
+                  originLayout.pageY +
+                  originLayout.height / 2 -
+                  GameElements.PIECE_RADIUS;
+
+                animate.scaleX.value = GameElements.PIECE_HELD_SCALE;
+                animate.scaleY.value = GameElements.PIECE_HELD_SCALE;
+                animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
+
+                animate.translateX.value = withTiming(
+                  targetX,
+                  {
+                    duration: RETURN_TO_WELL,
+                    easing: Easing.inOut(Easing.quad),
+                  },
+                  () => {
+                    animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
+                    animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
+                    animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
+                  },
+                );
+                animate.translateY.value = withTiming(targetY, {
+                  duration: RETURN_TO_WELL,
+                  easing: Easing.inOut(Easing.quad),
+                });
+              }, BLOCKED_DROP_RETURN_START_MS);
+
+              const commitReturnToWellBlocked = () => {
+                setWellPieceLocations((prev) => ({
+                  ...prev,
+                  [originWellId]: id,
+                }));
+                setPieceStatusMap((prev) => ({
+                  ...prev,
+                  [id]: PieceStatus.inWell,
+                }));
+                originWellRef.current = null;
+              };
+              setTimeout(
+                commitReturnToWellBlocked,
+                BLOCKED_DROP_RETURN_START_MS + RETURN_TO_WELL,
+              );
+              setMoveInProgressDelayed(
+                false,
+                BLOCKED_DROP_RETURN_START_MS + RETURN_TO_WELL + 40,
+              );
+              return;
+            }
+          }
+
           if (outcome.kind === "placed") {
             const spaceLayout = layout.spaces[outcome.landingKey];
             const slotKey = `${outcome.slotCoord.row}-${outcome.slotCoord.col}`;
@@ -533,6 +618,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       currentWellLayout,
       currentWellEntry,
       id,
+      pieceAnims,
       snapToLayout,
       dropPiece,
       setPieceStatusMap,
