@@ -4,7 +4,9 @@ import {
   createGame,
   detectNearWins,
   Direction,
+  findSlotForSpace,
   placePiece as enginePlacePiece,
+  Team,
   resetGame as engineResetGame,
   shiftGravity as engineShiftGravity,
   PIECES_PER_TEAM,
@@ -105,6 +107,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [gameState, setGameState] = useState<GameState>(createGame);
+  const [nextStartingTeam, setNextStartingTeam] = useState<Team>(Team.One);
   const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>(
     buildInitialPieceStatusMap,
   );
@@ -119,13 +122,22 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
     [gameState.board, gameState.pieces],
   );
 
+  useEffect(() => {
+    if (gameState.status !== "finished" || !gameState.winner) return;
+    setNextStartingTeam(gameState.winner);
+  }, [gameState.status, gameState.winner]);
+
   const nextTurnWins = useMemo(() => {
     const map: Record<string, boolean> = {};
+    if (gameState.status !== "playing") return map;
     for (const nw of nearWins) {
-      map[coordToKey(nw.emptyCoord)] = true;
+      const reachableSlot = findSlotForSpace(gameState.board, nw.emptyCoord);
+      if (reachableSlot) {
+        map[coordToKey(nw.emptyCoord)] = true;
+      }
     }
     return map;
-  }, [nearWins]);
+  }, [nearWins, gameState.status, gameState.board]);
 
   const dropPiece = useCallback(
     (slotCoord: Coord, pieceId: string): EngineResult => {
@@ -150,18 +162,20 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const newGame = useCallback(async () => {
-    setGameState(createGame());
+    const base = createGame();
+    setGameState({ ...base, currentTeam: nextStartingTeam });
     setPieceStatusMap(buildInitialPieceStatusMap());
     setWellPieceLocations(buildInitialWellPieceLocations());
     await clearSession();
-  }, []);
+  }, [nextStartingTeam]);
 
   const resetCurrentGame = useCallback(async () => {
-    setGameState(engineResetGame());
+    const base = engineResetGame();
+    setGameState({ ...base, currentTeam: nextStartingTeam });
     setPieceStatusMap(buildInitialPieceStatusMap());
     setWellPieceLocations(buildInitialWellPieceLocations());
     await clearSession();
-  }, []);
+  }, [nextStartingTeam]);
 
   const continueGame = useCallback((session: PersistedSessionState) => {
     setGameState(serializableToGameState(session.game));

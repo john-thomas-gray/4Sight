@@ -8,7 +8,13 @@ import { CellType, EachCellType } from "@/types/board";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  withDelay,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import Glow from "./Glow";
 import { resolveDropOutcome, resolveDropTarget } from "./pieceDropController";
 
@@ -41,8 +47,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
   const status = pieceStatusMap[id] ?? PieceStatus.inWell;
   const dragYOffset = team === Team.One ? -50 : 50;
 
-  const hiddenByPreview =
-    isPreviewingGravity && status === PieceStatus.onBoard;
+  const hiddenByPreview = isPreviewingGravity && status === PieceStatus.onBoard;
 
   useEffect(() => {
     if (!animate) return;
@@ -76,7 +81,10 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     );
   }, [currentWellEntry, layout.wells]);
 
-  const originWellRef = useRef<{ id: string; layout: typeof currentWellLayout } | null>(null);
+  const originWellRef = useRef<{
+    id: string;
+    layout: typeof currentWellLayout;
+  } | null>(null);
 
   const allCells = useMemo((): EachCellType[] => {
     const slots = Object.entries(layout.slots).map(([cid, l]) => ({
@@ -134,7 +142,10 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
 
           if (currentWellEntry) {
-            originWellRef.current = { id: currentWellEntry, layout: currentWellLayout };
+            originWellRef.current = {
+              id: currentWellEntry,
+              layout: currentWellLayout,
+            };
             setWellPieceLocations((prev) => {
               const next = { ...prev };
               delete next[currentWellEntry];
@@ -190,9 +201,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
 
           const next = { spaceId: target.landingKey, team };
           setHoverPreview((prev) =>
-            prev &&
-            prev.spaceId === next.spaceId &&
-            prev.team === next.team
+            prev && prev.spaceId === next.spaceId && prev.team === next.team
               ? prev
               : next,
           );
@@ -233,32 +242,156 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             : { kind: "returnToWell" as const, originWellId: origin?.id ?? "" };
 
           // #region agent log
-          console.log("[DROP]", JSON.stringify({pieceId:id,originWell:origin?.id,hitCellId,outcome}));
-          fetch('http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ed3eae'},body:JSON.stringify({sessionId:'ed3eae',location:'PieceView.tsx:onEnd',message:'drop-resolved',data:{pieceId:id,originWell:origin?.id,hitCellId,outcome},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+          console.log(
+            "[DROP]",
+            JSON.stringify({
+              pieceId: id,
+              originWell: origin?.id,
+              hitCellId,
+              outcome,
+            }),
+          );
+          fetch(
+            "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "ed3eae",
+              },
+              body: JSON.stringify({
+                sessionId: "ed3eae",
+                location: "PieceView.tsx:onEnd",
+                message: "drop-resolved",
+                data: {
+                  pieceId: id,
+                  originWell: origin?.id,
+                  hitCellId,
+                  outcome,
+                },
+                timestamp: Date.now(),
+                hypothesisId: "H4",
+              }),
+            },
+          ).catch(() => {});
           // #endregion
 
           if (outcome.kind === "placed") {
             const spaceLayout = layout.spaces[outcome.landingKey];
+            const slotKey = `${outcome.slotCoord.row}-${outcome.slotCoord.col}`;
+            const slotLayout = layout.slots[slotKey];
             if (spaceLayout) {
-              snapToLayout(
-                spaceLayout.pageX,
-                spaceLayout.pageY,
-                spaceLayout.width,
-                spaceLayout.height,
-                GameElements.PIECE_BOARD_SCALE,
-              );
-              animate.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
-              dropPiece(outcome.slotCoord, id);
-              setPieceStatusMap((prev) => ({
-                ...prev,
-                [id]: PieceStatus.onBoard,
-              }));
-              originWellRef.current = null;
-              // #region agent log
-              console.log("[DROP:PLACED]", JSON.stringify({pieceId:id,landingKey:outcome.landingKey}));
-              fetch('http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ed3eae'},body:JSON.stringify({sessionId:'ed3eae',location:'PieceView.tsx:placed',message:'piece-placed',data:{pieceId:id,landingKey:outcome.landingKey},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-              // #endregion
-              setMoveInProgressDelayed(false, 400);
+              const placementCommitDelayMs = 980;
+              const landingX =
+                spaceLayout.pageX +
+                spaceLayout.width / 2 -
+                GameElements.PIECE_RADIUS;
+              const landingY =
+                spaceLayout.pageY +
+                spaceLayout.height / 2 -
+                GameElements.PIECE_RADIUS;
+
+              if (slotLayout) {
+                const slotX =
+                  slotLayout.pageX +
+                  slotLayout.width / 2 -
+                  GameElements.PIECE_RADIUS;
+                const slotY =
+                  slotLayout.pageY +
+                  slotLayout.height / 2 -
+                  GameElements.PIECE_RADIUS;
+                const isVerticalDrop =
+                  Math.abs(landingY - slotY) >= Math.abs(landingX - slotX);
+
+                // 1) Slide into slot center
+                // 2) Pause briefly
+                // 3) Drop to final space with bounce on the drop axis
+                animate.translateX.value = withSequence(
+                  withTiming(slotX, { duration: 120 }),
+                  withDelay(
+                    90,
+                    withTiming(landingX, {
+                      duration: isVerticalDrop ? 320 : 700,
+                      easing: isVerticalDrop ? Easing.linear : Easing.bounce,
+                    }),
+                  ),
+                );
+                animate.translateY.value = withSequence(
+                  withTiming(slotY, { duration: 120 }),
+                  withDelay(
+                    90,
+                    withTiming(landingY, {
+                      duration: isVerticalDrop ? 700 : 320,
+                      easing: isVerticalDrop ? Easing.bounce : Easing.linear,
+                    }),
+                  ),
+                );
+                animate.scaleX.value = withTiming(
+                  GameElements.PIECE_BOARD_SCALE,
+                  {
+                    duration: 110,
+                  },
+                );
+                animate.scaleY.value = withTiming(
+                  GameElements.PIECE_BOARD_SCALE,
+                  {
+                    duration: 110,
+                  },
+                );
+                // Lower elevation while entering the slot so it appears to sink into the board.
+                animate.zIndex.value = withTiming(900, { duration: 180 });
+              } else {
+                snapToLayout(
+                  spaceLayout.pageX,
+                  spaceLayout.pageY,
+                  spaceLayout.width,
+                  spaceLayout.height,
+                  GameElements.PIECE_BOARD_SCALE,
+                );
+              }
+              const commitPlacement = () => {
+                animate.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
+                dropPiece(outcome.slotCoord, id);
+                setPieceStatusMap((prev) => ({
+                  ...prev,
+                  [id]: PieceStatus.onBoard,
+                }));
+                originWellRef.current = null;
+                // #region agent log
+                console.log(
+                  "[DROP:PLACED]",
+                  JSON.stringify({
+                    pieceId: id,
+                    landingKey: outcome.landingKey,
+                  }),
+                );
+                fetch(
+                  "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Debug-Session-Id": "ed3eae",
+                    },
+                    body: JSON.stringify({
+                      sessionId: "ed3eae",
+                      location: "PieceView.tsx:placed",
+                      message: "piece-placed",
+                      data: { pieceId: id, landingKey: outcome.landingKey },
+                      timestamp: Date.now(),
+                      hypothesisId: "H1",
+                    }),
+                  },
+                ).catch(() => {});
+                // #endregion
+              };
+              if (slotLayout) {
+                setTimeout(commitPlacement, placementCommitDelayMs);
+                setMoveInProgressDelayed(false, placementCommitDelayMs + 80);
+              } else {
+                commitPlacement();
+                setMoveInProgressDelayed(false, 300);
+              }
               return;
             }
           }
@@ -290,8 +423,36 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
 
           // returnToWell — snap back to original well using the ref
           // #region agent log
-          console.log("[DROP:RETURN_TO_WELL]", JSON.stringify({pieceId:id,originWellId:origin?.id,hasLayout:!!origin?.layout}));
-          fetch('http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ed3eae'},body:JSON.stringify({sessionId:'ed3eae',location:'PieceView.tsx:returnToWell',message:'returning-to-well',data:{pieceId:id,originWellId:origin?.id,hasLayout:!!origin?.layout},timestamp:Date.now(),hypothesisId:'H2,H3'})}).catch(()=>{});
+          console.log(
+            "[DROP:RETURN_TO_WELL]",
+            JSON.stringify({
+              pieceId: id,
+              originWellId: origin?.id,
+              hasLayout: !!origin?.layout,
+            }),
+          );
+          fetch(
+            "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "ed3eae",
+              },
+              body: JSON.stringify({
+                sessionId: "ed3eae",
+                location: "PieceView.tsx:returnToWell",
+                message: "returning-to-well",
+                data: {
+                  pieceId: id,
+                  originWellId: origin?.id,
+                  hasLayout: !!origin?.layout,
+                },
+                timestamp: Date.now(),
+                hypothesisId: "H2,H3",
+              }),
+            },
+          ).catch(() => {});
           // #endregion
           if (origin?.layout) {
             snapToLayout(

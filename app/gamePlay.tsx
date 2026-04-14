@@ -4,6 +4,7 @@ import BoardGridView from "@/components/BoardGridView";
 import GravityGestureLayer from "@/components/GravityGestureLayer";
 import LoadingScreen from "@/components/LoadingScreen";
 import PieceView from "@/components/PieceView";
+import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinOverlay from "@/components/WinOverlay";
 import { PIECE_RADIUS } from "@/constants/gameElements";
@@ -116,6 +117,10 @@ const GamePlay = () => {
 
       {piecesToRender.map(([pid, piece]) => (
         <PieceView key={pid} id={pid} team={piece.team} />
+      ))}
+
+      {Object.keys(layout.slots).map((slotId) => (
+        <SlotRim key={`slot-rim-${slotId}`} id={slotId} />
       ))}
 
       {hoverPreview && layout.spaces[hoverPreview.spaceId] ? (

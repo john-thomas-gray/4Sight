@@ -38,6 +38,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     useGameSession();
   const { spaces } = useLayout();
   const {
+    moveInProgress,
     setMoveInProgress,
     setGravityAnimating,
     setIsPreviewingGravity,
@@ -100,13 +101,14 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   const handleFling = useCallback(
     (direction: Direction) => {
+      if (moveInProgress) return;
       if (gameState.status === "playing") {
         executePull(direction);
       } else if (gameState.status === "finished") {
         resetCurrentGame();
       }
     },
-    [gameState.status, executePull, resetCurrentGame]
+    [moveInProgress, gameState.status, executePull, resetCurrentGame]
   );
 
   const previewForPullDirection = useCallback(
@@ -147,6 +149,10 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     .runOnJS(true)
     .minDuration(PREVIEW_HOLD_MS)
     .onStart((event) => {
+      if (moveInProgress) {
+        clearPreview();
+        return;
+      }
       const allSpaceLayouts = Object.values(spaces);
       if (allSpaceLayouts.length === 0) {
         clearPreview();
