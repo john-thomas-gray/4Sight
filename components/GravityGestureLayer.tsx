@@ -6,6 +6,7 @@ import {
 } from "@/constants/logic";
 import { useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
+import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { applyGravity, Direction } from "@/engine";
 import React, { memo, useCallback, useEffect, useRef } from "react";
@@ -43,6 +44,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
   const { gameState, shiftGravity, pieceAnims, resetCurrentGame } =
     useGameSession();
   const { spaces } = useLayout();
+  const { shiftPreviews } = useSettings();
   const {
     moveInProgress,
     setMoveInProgress,
@@ -120,6 +122,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     },
     [
       gameState.status,
+      gameState.board,
       shiftGravity,
       resetCurrentGame,
       pieceAnims,
@@ -143,6 +146,11 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   const previewForPullDirection = useCallback(
     (pullDirection: Direction) => {
+      if (!shiftPreviews) {
+        setIsPreviewingGravity(false);
+        setGravityPreviewBoard(null);
+        return;
+      }
       if (gameState.status !== "playing") {
         setIsPreviewingGravity(false);
         setGravityPreviewBoard(null);
@@ -168,6 +176,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       setGravityPreviewBoard({ ...board });
     },
     [
+      shiftPreviews,
       gameState.status,
       gameState.board,
       setIsPreviewingGravity,
@@ -180,11 +189,21 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     setGravityPreviewBoard(null);
   }, [setIsPreviewingGravity, setGravityPreviewBoard]);
 
+  useEffect(() => {
+    if (!shiftPreviews) {
+      clearPreview();
+    }
+  }, [shiftPreviews, clearPreview]);
+
   const holdPreview = Gesture.LongPress()
     .runOnJS(true)
     .minDuration(PREVIEW_HOLD_MS)
     .onStart((event) => {
       if (moveInProgress) {
+        clearPreview();
+        return;
+      }
+      if (!shiftPreviews) {
         clearPreview();
         return;
       }

@@ -39,7 +39,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     dropPiece,
   } = useGameSession();
   const layout = useLayout();
-  const { theme } = useSettings();
+  const { theme, piecePlacementPreviews } = useSettings();
   const {
     moveInProgress,
     setMoveInProgress,
@@ -184,6 +184,11 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               hitCellId = cell.id;
               break;
             }
+          }
+
+          if (!piecePlacementPreviews) {
+            setHoverPreview((prev) => (prev ? null : prev));
+            return;
           }
 
           if (!hitCellId) {
@@ -536,6 +541,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       setMoveInProgressDelayed,
       setHoverPreview,
       dragYOffset,
+      piecePlacementPreviews,
     ],
   );
 
