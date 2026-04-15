@@ -8,14 +8,17 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-export function animateWinnerPiece({
-  translateX,
-  translateY,
-  scaleX,
-  scaleY,
-  color,
-  winnerColor,
-}: PieceAnimation, startDelayMs = 0) {
+export function animateWinnerPiece(
+  {
+    translateX,
+    translateY,
+    scaleX,
+    scaleY,
+    color,
+    winnerColor,
+  }: PieceAnimation,
+  startDelayMs = 0,
+) {
   const t0x = translateX.value;
   const t0y = translateY.value;
   const t1x = t0x - 5;

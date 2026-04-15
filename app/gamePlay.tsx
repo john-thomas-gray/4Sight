@@ -1,5 +1,5 @@
+import { loadingScreenDismissDelayMs } from "@/animations/loadingAnimations";
 import BackButton from "@/components/BackButton";
-import { loopDuration } from "@/animations/loadingAnimations";
 import BoardGridView from "@/components/BoardGridView";
 import GravityGestureLayer from "@/components/GravityGestureLayer";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -7,32 +7,213 @@ import PieceView from "@/components/PieceView";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinOverlay from "@/components/WinOverlay";
+import { GameElements } from "@/constants";
 import { PIECE_RADIUS } from "@/constants/gameElements";
+import {
+  TURN_CHANGE_COMMIT_DELAY_MS,
+  TURN_CHANGE_SETTLE_BUFFER_MS,
+} from "@/constants/logic";
 import { PieceStatus, useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
-import { Team } from "@/engine";
-import React, { useEffect, useMemo, useState } from "react";
+import type { ScenarioMove } from "@/dev/scenarios";
+import { getScenario, getScenarioDelay } from "@/dev/scenarios";
+import {
+  coordToKey,
+  Direction,
+  findSlotForSpace,
+  resolveSlotDrop,
+  Team,
+} from "@/engine";
+import { useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
+import {
+  Easing,
+  withDelay,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 const GamePlay = () => {
   const layout = useLayout();
-  const { gameState, pieceStatusMap, wellPieceLocations, pieceAnims } =
-    useGameSession();
-  const { hoverPreview, isPreviewingGravity, gravityPreviewBoard } = useUi();
+  const {
+    gameState,
+    pieceStatusMap,
+    setPieceStatusMap,
+    wellPieceLocations,
+    setWellPieceLocations,
+    pieceAnims,
+    dropPiece,
+    loadScenario,
+  } = useGameSession();
+  const {
+    hoverPreview,
+    isPreviewingGravity,
+    gravityPreviewBoard,
+    setMoveInProgress,
+    setMoveInProgressDelayed,
+  } = useUi();
   const { theme } = useSettings();
   const [showWinOverlay, setShowWinOverlay] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const colors = theme.colorTheme;
   const textColor = colors.ODD_SPACE_COLOR;
 
+  const { scenario: scenarioParam } = useLocalSearchParams<{
+    scenario?: string;
+  }>();
+  const moveQueueRef = useRef<ScenarioMove[] | null>(null);
+  const scenarioLoadedRef = useRef(false);
+  const pullRef = useRef<((direction: Direction) => void) | null>(null);
+
+  useEffect(() => {
+    if (!scenarioParam || scenarioLoadedRef.current) return;
+    const scenarioData = getScenario(scenarioParam);
+    if (!scenarioData) return;
+    scenarioLoadedRef.current = true;
+    moveQueueRef.current = loadScenario(scenarioData);
+  }, [scenarioParam, loadScenario]);
+
+  const playNextMove = useCallback(() => {
+    const queue = moveQueueRef.current;
+    if (!queue || queue.length === 0) return;
+    if (gameState.status === "finished") return;
+
+    const move = queue.shift();
+    if (!move) return;
+
+    if (move.type === "gravity") {
+      pullRef.current?.(move.direction);
+      return;
+    }
+
+    const { targetSpace, pieceId } = move;
+    const slotCoord = findSlotForSpace(gameState.board, targetSpace);
+    if (!slotCoord) return;
+
+    const landing = resolveSlotDrop(gameState.board, slotCoord);
+    if (!landing) return;
+
+    const anim = pieceAnims[pieceId];
+    if (!anim) return;
+
+    const slotKey = coordToKey(slotCoord);
+    const landingKey = coordToKey(landing);
+    const slotLayout = layout.slots[slotKey];
+    const spaceLayout = layout.spaces[landingKey];
+    if (!slotLayout || !spaceLayout) return;
+
+    setWellPieceLocations((prev) => {
+      const next = { ...prev };
+      for (const [wellId, pid] of Object.entries(next)) {
+        if (pid === pieceId) {
+          delete next[wellId];
+          break;
+        }
+      }
+      return next;
+    });
+    setPieceStatusMap((prev) => ({ ...prev, [pieceId]: PieceStatus.isHeld }));
+    setMoveInProgress(true);
+
+    const slotX =
+      slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS;
+    const slotY =
+      slotLayout.pageY + slotLayout.height / 2 - GameElements.PIECE_RADIUS;
+    const landingX =
+      spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS;
+    const landingY =
+      spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS;
+    const isVerticalDrop =
+      Math.abs(landingY - slotY) >= Math.abs(landingX - slotX);
+
+    anim.scaleX.value = GameElements.PIECE_HELD_SCALE;
+    anim.scaleY.value = GameElements.PIECE_HELD_SCALE;
+    anim.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
+
+    anim.translateX.value = withSequence(
+      withTiming(slotX, { duration: 120 }),
+      withDelay(
+        90,
+        withTiming(landingX, {
+          duration: isVerticalDrop ? 320 : 700,
+          easing: isVerticalDrop ? Easing.linear : Easing.bounce,
+        }),
+      ),
+    );
+    anim.translateY.value = withSequence(
+      withTiming(slotY, { duration: 120 }),
+      withDelay(
+        90,
+        withTiming(landingY, {
+          duration: isVerticalDrop ? 700 : 320,
+          easing: isVerticalDrop ? Easing.bounce : Easing.linear,
+        }),
+      ),
+    );
+    anim.scaleX.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
+      duration: 110,
+    });
+    anim.scaleY.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
+      duration: 110,
+    });
+    anim.zIndex.value = withTiming(900, { duration: 180 });
+
+    setTimeout(() => {
+      anim.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
+      dropPiece(slotCoord, pieceId);
+      setPieceStatusMap((prev) => ({
+        ...prev,
+        [pieceId]: PieceStatus.onBoard,
+      }));
+    }, TURN_CHANGE_COMMIT_DELAY_MS);
+    setMoveInProgressDelayed(
+      false,
+      TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS,
+    );
+  }, [
+    gameState.board,
+    gameState.status,
+    pieceAnims,
+    layout.slots,
+    layout.spaces,
+    dropPiece,
+    setPieceStatusMap,
+    setWellPieceLocations,
+    setMoveInProgress,
+    setMoveInProgressDelayed,
+  ]);
+
+  useEffect(() => {
+    if (showLoadingScreen) return;
+    const queue = moveQueueRef.current;
+    if (!queue || queue.length === 0) return;
+    if (gameState.status === "finished") return;
+
+    const scenario = scenarioParam ? getScenario(scenarioParam) : null;
+    const delayMs = scenario ? getScenarioDelay(scenario) : 1200;
+
+    const timer = setTimeout(playNextMove, delayMs);
+    return () => clearTimeout(timer);
+  }, [
+    showLoadingScreen,
+    gameState.turnCount,
+    gameState.status,
+    scenarioParam,
+    playNextMove,
+  ]);
+
   useEffect(() => {
     if (!layout.layoutReady) {
       setShowLoadingScreen(true);
       return;
     }
-    const timer = setTimeout(() => setShowLoadingScreen(false), loopDuration);
+    const timer = setTimeout(
+      () => setShowLoadingScreen(false),
+      loadingScreenDismissDelayMs,
+    );
     return () => clearTimeout(timer);
   }, [layout.layoutReady]);
 
@@ -109,7 +290,7 @@ const GamePlay = () => {
       />
       <View className="flex-col items-center justify-center">
         <TeamWellGrid team={Team.Two} />
-        <GravityGestureLayer className="mt-7 mb-7">
+        <GravityGestureLayer className="mt-7 mb-7" pullRef={pullRef}>
           <BoardGridView />
         </GravityGestureLayer>
         <TeamWellGrid team={Team.One} />

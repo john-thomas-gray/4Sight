@@ -173,6 +173,40 @@ function scanLineForWins(
   return results;
 }
 
+/**
+ * Groups winning piece ids into animation tiers: anchor first, then pairs
+ * outward along the line (lower index before higher). Same-distance neighbors
+ * share a tier so their animations start together.
+ *
+ * @param anchorPieceId — piece that completed the win (e.g. last drop); if null or not on the line, uses the line center index.
+ */
+export function winLineCascadeTiers(
+  pieceIds: readonly string[],
+  anchorPieceId: string | null,
+): string[][] {
+  const ids = [...pieceIds];
+  if (ids.length === 0) return [];
+
+  let idx = anchorPieceId !== null ? ids.indexOf(anchorPieceId) : -1;
+  if (idx < 0) idx = Math.floor(ids.length / 2);
+
+  const tiers: string[][] = [];
+  for (let d = 0; d < ids.length; d++) {
+    const tier: string[] = [];
+    if (d === 0) {
+      tier.push(ids[idx]);
+    } else {
+      const left = idx - d;
+      const right = idx + d;
+      if (left >= 0) tier.push(ids[left]);
+      if (right < ids.length) tier.push(ids[right]);
+    }
+    if (tier.length === 0) break;
+    tiers.push(tier);
+  }
+  return tiers;
+}
+
 function* allLines(): Generator<Coord[]> {
   for (let row = 1; row <= BOARD_SIZE; row++) {
     const line: Coord[] = [];

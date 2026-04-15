@@ -4,6 +4,7 @@ import {
   createGame,
   detectWin,
   detectNearWins,
+  winLineCascadeTiers,
   Direction,
   findSlotForSpace,
   placePiece as enginePlacePiece,
@@ -12,6 +13,7 @@ import {
   shiftGravity as engineShiftGravity,
   PIECES_PER_TEAM,
 } from "@/engine";
+import type { Scenario, ScenarioMove } from "@/dev/scenarios";
 import type { PersistedSessionState } from "@/storage";
 import {
   clearSession,
@@ -60,6 +62,7 @@ type GameSessionContextType = {
   newGame: () => Promise<void>;
   resetCurrentGame: () => Promise<void>;
   continueGame: (session: PersistedSessionState) => void;
+  loadScenario: (scenario: Scenario) => ScenarioMove[];
 };
 
 const GameSessionContext = createContext<GameSessionContextType | undefined>(
@@ -151,22 +154,42 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     const winResult = detectWin(gameState.board, gameState.pieces);
-    const winningLine = winResult.lines.find((line) => {
-      const first = line.pieceIds[0];
-      return first && gameState.pieces[first]?.team === gameState.winner;
-    });
+    const droppedIds = winningDropPieceIdsRef.current;
+    const winningLine =
+      winResult.lines.find(
+        (line) =>
+          [...droppedIds].some((pid) => line.pieceIds.includes(pid)) &&
+          line.pieceIds[0] &&
+          gameState.pieces[line.pieceIds[0]]?.team === gameState.winner,
+      ) ??
+      winResult.lines.find((line) => {
+        const first = line.pieceIds[0];
+        return first && gameState.pieces[first]?.team === gameState.winner;
+      });
     if (!winningLine) return;
 
     const cascadeIds = Array.from(new Set(winningLine.pieceIds));
     const cascadeKey = `${gameState.turnCount}:${cascadeIds.join(",")}`;
     if (winnerCascadeKeyRef.current === cascadeKey) return;
     winnerCascadeKeyRef.current = cascadeKey;
-    cascadeIds.forEach((pieceId, idx) => {
-      const anim = pieceAnimsRef.current[pieceId];
-      if (anim) {
-        animateWinnerPiece(anim, idx * 140);
+
+    const anchorId =
+      winningLine.pieceIds.find((pid) =>
+        winningDropPieceIdsRef.current.has(pid),
+      ) ?? null;
+    const tiers = winLineCascadeTiers(winningLine.pieceIds, anchorId);
+    const WINNER_CASCADE_STAGGER_MS = 140;
+    let delayMs = 0;
+    for (const tier of tiers) {
+      for (const pieceId of tier) {
+        const anim = pieceAnimsRef.current[pieceId];
+        if (anim) {
+          animateWinnerPiece(anim, delayMs);
+        }
       }
-    });
+      delayMs += WINNER_CASCADE_STAGGER_MS;
+    }
+
     setPieceStatusMap((prev) => {
       const next = { ...prev };
       for (const pieceId of cascadeIds) {
@@ -312,6 +335,39 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
     setWellPieceLocations(session.wellPieceLocations);
   }, []);
 
+  const loadScenario = useCallback(
+    (scenario: Scenario): ScenarioMove[] => {
+      const base = createGame();
+      setGameState({
+        ...base,
+        board: scenario.board,
+        currentTeam: scenario.currentTeam,
+      });
+
+      const boardPieceIds = new Set(Object.values(scenario.board));
+
+      const statusMap: PieceStatusMap = {};
+      for (let i = 0; i < PIECES_PER_TEAM * 2; i++) {
+        const id = String(i);
+        statusMap[id] = boardPieceIds.has(id)
+          ? PieceStatus.onBoard
+          : PieceStatus.inWell;
+      }
+      setPieceStatusMap(statusMap);
+
+      const wells = buildInitialWellPieceLocations();
+      for (const [wellId, pieceId] of Object.entries(wells)) {
+        if (boardPieceIds.has(pieceId)) {
+          delete wells[wellId];
+        }
+      }
+      setWellPieceLocations(wells);
+
+      return [...scenario.moves];
+    },
+    [],
+  );
+
   // Auto-save game state after every turn change
   const turnCountRef = useRef(gameState.turnCount);
   useEffect(() => {
@@ -341,6 +397,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       newGame,
       resetCurrentGame,
       continueGame,
+      loadScenario,
     }),
     [
       gameState,
@@ -353,6 +410,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       newGame,
       resetCurrentGame,
       continueGame,
+      loadScenario,
     ],
   );
 

@@ -1,3 +1,8 @@
+import {
+  animateBlockingPieceBump,
+  animateDroppedPieceBlockedInSlot,
+  BLOCKED_DROP_RETURN_START_MS,
+} from "@/animations/blockedSlotDrop";
 import { GameElements } from "@/constants";
 import {
   TURN_CHANGE_COMMIT_DELAY_MS,
@@ -8,8 +13,8 @@ import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { Team } from "@/engine";
-import { CellType, EachCellType } from "@/types/board";
 import { RETURN_TO_WELL } from "@/types/animation";
+import { CellType, EachCellType } from "@/types/board";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -20,11 +25,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import {
-  animateBlockingPieceBump,
-  animateDroppedPieceBlockedInSlot,
-  BLOCKED_DROP_RETURN_START_MS,
-} from "@/animations/blockedSlotDrop";
 import Glow from "./Glow";
 import { resolveDropOutcome, resolveDropTarget } from "./pieceDropController";
 
@@ -256,16 +256,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               )
             : { kind: "returnToWell" as const, originWellId: origin?.id ?? "" };
 
-          // #region agent log
-          console.log(
-            "[DROP]",
-            JSON.stringify({
-              pieceId: id,
-              originWell: origin?.id,
-              hitCellId,
-              outcome,
-            }),
-          );
           fetch(
             "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
             {
@@ -451,14 +441,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                   [id]: PieceStatus.onBoard,
                 }));
                 originWellRef.current = null;
-                // #region agent log
-                console.log(
-                  "[DROP:PLACED]",
-                  JSON.stringify({
-                    pieceId: id,
-                    landingKey: outcome.landingKey,
-                  }),
-                );
                 fetch(
                   "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
                   {
@@ -518,16 +500,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             }
           }
 
-          // returnToWell — snap back to original well using the ref
-          // #region agent log
-          console.log(
-            "[DROP:RETURN_TO_WELL]",
-            JSON.stringify({
-              pieceId: id,
-              originWellId: origin?.id,
-              hasLayout: !!origin?.layout,
-            }),
-          );
           fetch(
             "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
             {

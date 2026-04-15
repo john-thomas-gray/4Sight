@@ -16,6 +16,7 @@ import Animated, { Easing, withTiming } from "react-native-reanimated";
 type GravityGestureLayerProps = {
   children: React.ReactNode;
   className?: string;
+  pullRef?: React.MutableRefObject<((direction: Direction) => void) | null>;
 };
 
 const VELOCITY_THRESHOLD = 600;
@@ -40,6 +41,7 @@ function resolvePullDirectionFromTriangleZone(
 const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
   children,
   className,
+  pullRef,
 }) => {
   const { gameState, shiftGravity, pieceAnims, resetCurrentGame } =
     useGameSession();
@@ -131,6 +133,10 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       setGravityAnimating,
     ],
   );
+
+  useEffect(() => {
+    if (pullRef) pullRef.current = executePull;
+  });
 
   const handleFling = useCallback(
     (direction: Direction) => {

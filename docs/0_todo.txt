@@ -7,17 +7,13 @@ Final:
 - If it's a tie, the person who shifted gravity's pieces light up first, then the other players pieces light up. A little "gotcha". Only then do the corners change to alternating / both colors
 - Purchasable theme
 - Send game to a friend / review game (continue changes to 'review' when the game is over and you hit menu)
-- Loading screen lags
 - Allow pieces to be taken off the board anyone can put pieces on the board with no restrictions in postGame
 - Winner aura and color fades immediately when reset is called, not once the pieces reach the well
-- set winner z index to 5000 so they don't go under slots (mind the glass)
 
 - Animated screen transitions
 
 - Available/unavailable slot visualizations
 - all slot arrows turn the direction of the pull (make a feed forward?)
-
-- Make gravity shift exactly 1/4 of the board
 
 - Settings page animates when theme changes
 
@@ -26,6 +22,10 @@ Final:
 - Shiny sheen flashing(in sync or does the sheen appear to cross between pieces?),
   slight pulsing. Highlight undulates and shimmers.
 - prevent winner intro animation from playing again, unless a new piece is added to the row
+- if one piece drops in during pull, animations radiate from that
+
+- don't reset piece colors on continue
+- don't show win screen on continue
 
 4 Player:
 

@@ -12,6 +12,7 @@ import {
   applyGravity,
   detectWin,
   detectNearWins,
+  winLineCascadeTiers,
   createPieces,
   Team,
   Direction,
@@ -222,6 +223,34 @@ describe("detectWin", () => {
     for (let c = 1; c <= 4; c++) board[`5-${c}`] = String(PIECES_PER_TEAM + c - 1);
     const result = detectWin(board, pieces);
     expect(result.winner).toBe(Team.Two);
+  });
+});
+
+describe("winLineCascadeTiers", () => {
+  const line = ["a", "b", "c", "d"] as const;
+
+  it("radiates from anchor with same-distance neighbors in one tier", () => {
+    expect(winLineCascadeTiers(line, "c")).toEqual([
+      ["c"],
+      ["b", "d"],
+      ["a"],
+    ]);
+  });
+
+  it("uses line center when anchor is null", () => {
+    expect(winLineCascadeTiers(line, null)).toEqual([
+      ["c"],
+      ["b", "d"],
+      ["a"],
+    ]);
+  });
+
+  it("radiates from an end when anchor is first", () => {
+    expect(winLineCascadeTiers(line, "a")).toEqual([["a"], ["b"], ["c"], ["d"]]);
+  });
+
+  it("radiates from an end when anchor is last", () => {
+    expect(winLineCascadeTiers(line, "d")).toEqual([["d"], ["c"], ["b"], ["a"]]);
   });
 });
 

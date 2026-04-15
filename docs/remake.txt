@@ -1,0 +1,23 @@
+Stage for iPhone release
+Tutorial
+In-app purchases
+Fix Memory leak
+Animation:
+- pieces jiggle when held
+- indicate winning pieces
+- slot arrows turn direction of pull
+- Slots "turn off" when blocked
+- Animate theme change
+In a tie, the person who last dropped a piece's pieces light up first
+
+
+
+
+
+v2
+4 Player
+Send game to friend / ask for review
+Animation:
+- Something special happens when you get all your pieces golden
+- Putting 4 gold pieces in a row in your well makes them jump
+Web and Android

@@ -12,6 +12,18 @@ import {
 export const loopDuration = 4000;
 const D = loopDuration;
 
+/**
+ * When `true`, GamePlay waits a full `loopDuration` after layout is ready before
+ * hiding the loading screen (stays in sync with one animation loop).
+ * Set to `false` during development to dismiss as soon as layout is ready.
+ */
+const LOADING_ENFORCE_MIN_ONE_LOOP = false;
+
+/** Passed to GamePlay’s hide timer; independent of `D` used by the looping motion. */
+export const loadingScreenDismissDelayMs = LOADING_ENFORCE_MIN_ONE_LOOP
+  ? loopDuration
+  : 0;
+
 type LoadingTextAnimation = {
   translateX: SharedValue<number>;
   fontSize: SharedValue<number>;
