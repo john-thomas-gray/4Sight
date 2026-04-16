@@ -32,6 +32,8 @@ export type GameState = {
   readonly currentTeam: Team;
   readonly turnCount: number;
   readonly winner: Team | null;
+  /** Both teams completed a winning line on the same move (e.g. same gravity pull). */
+  readonly tie: boolean;
   readonly status: GameStatus;
 };
 
@@ -51,6 +53,7 @@ export type GameEvent =
   | { type: "gravity_shifted"; direction: Direction; moves: readonly PieceMove[] }
   | { type: "turn_advanced"; team: Team }
   | { type: "game_won"; team: Team; lines: readonly WinLine[] }
+  | { type: "game_tied"; lines: readonly WinLine[] }
   | { type: "no_moves"; direction: Direction };
 
 export type EngineResult = {

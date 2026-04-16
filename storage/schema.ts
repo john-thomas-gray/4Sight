@@ -14,6 +14,7 @@ export type PersistedGameState = {
   currentTeam: string;
   turnCount: number;
   winner: string | null;
+  tie?: boolean;
   status: string;
 };
 
@@ -55,6 +56,7 @@ export function gameStateToSerializable(state: GameState): PersistedGameState {
     currentTeam: state.currentTeam,
     turnCount: state.turnCount,
     winner: state.winner,
+    tie: state.tie,
     status: state.status,
   };
 }
@@ -73,6 +75,7 @@ export function serializableToGameState(
     currentTeam: persisted.currentTeam as GameState["currentTeam"],
     turnCount: persisted.turnCount,
     winner: (persisted.winner as GameState["winner"]) ?? null,
+    tie: persisted.tie ?? false,
     status: persisted.status as GameState["status"],
   };
 }

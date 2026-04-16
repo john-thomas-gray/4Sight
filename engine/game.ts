@@ -10,6 +10,7 @@ export function createGame(): GameState {
     currentTeam: Team.One,
     turnCount: 0,
     winner: null,
+    tie: false,
     status: "playing",
   };
 }
@@ -43,12 +44,26 @@ export function placePiece(
 
   const winResult = detectWin(newBoard, state.pieces);
 
+  if (winResult.tie) {
+    const finishedState: GameState = {
+      ...state,
+      board: newBoard,
+      turnCount: state.turnCount + 1,
+      winner: null,
+      tie: true,
+      status: "finished",
+    };
+    events.push({ type: "game_tied", lines: winResult.lines });
+    return { state: finishedState, events };
+  }
+
   if (winResult.winner) {
     const finishedState: GameState = {
       ...state,
       board: newBoard,
       turnCount: state.turnCount + 1,
       winner: winResult.winner,
+      tie: false,
       status: "finished",
     };
     events.push({ type: "game_won", team: winResult.winner, lines: winResult.lines });
@@ -61,6 +76,7 @@ export function placePiece(
     board: newBoard,
     currentTeam: nextTeam,
     turnCount: state.turnCount + 1,
+    tie: false,
   };
   events.push({ type: "turn_advanced", team: nextTeam });
   return { state: advancedState, events };
@@ -91,12 +107,26 @@ export function shiftGravity(
 
   const winResult = detectWin(newBoard, state.pieces);
 
+  if (winResult.tie) {
+    const finishedState: GameState = {
+      ...state,
+      board: newBoard,
+      turnCount: state.turnCount + 1,
+      winner: null,
+      tie: true,
+      status: "finished",
+    };
+    events.push({ type: "game_tied", lines: winResult.lines });
+    return { state: finishedState, events };
+  }
+
   if (winResult.winner) {
     const finishedState: GameState = {
       ...state,
       board: newBoard,
       turnCount: state.turnCount + 1,
       winner: winResult.winner,
+      tie: false,
       status: "finished",
     };
     events.push({ type: "game_won", team: winResult.winner, lines: winResult.lines });
@@ -109,6 +139,7 @@ export function shiftGravity(
     board: newBoard,
     currentTeam: nextTeam,
     turnCount: state.turnCount + 1,
+    tie: false,
   };
   events.push({ type: "turn_advanced", team: nextTeam });
   return { state: advancedState, events };

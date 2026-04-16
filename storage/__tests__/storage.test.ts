@@ -20,6 +20,7 @@ describe("gameStateToSerializable / serializableToGameState", () => {
     expect(restored.currentTeam).toBe(original.currentTeam);
     expect(restored.turnCount).toBe(original.turnCount);
     expect(restored.winner).toBe(original.winner);
+    expect(restored.tie).toBe(original.tie);
     expect(restored.status).toBe(original.status);
     expect(Object.keys(restored.pieces)).toHaveLength(PIECES_PER_TEAM * 2);
   });
@@ -51,6 +52,23 @@ describe("gameStateToSerializable / serializableToGameState", () => {
     const restored = serializableToGameState(serialized);
 
     expect(restored.winner).toBe(Team.One);
+    expect(restored.status).toBe("finished");
+    expect(restored.tie).toBe(false);
+  });
+
+  it("round-trips a tied finished game", () => {
+    const original: GameState = {
+      ...createGame(),
+      board: { "7-1": "0", "7-2": "1", "7-3": "2", "7-4": "3" },
+      winner: null,
+      tie: true,
+      status: "finished",
+      turnCount: 8,
+    };
+    const serialized = gameStateToSerializable(original);
+    const restored = serializableToGameState(serialized);
+    expect(restored.tie).toBe(true);
+    expect(restored.winner).toBeNull();
     expect(restored.status).toBe("finished");
   });
 

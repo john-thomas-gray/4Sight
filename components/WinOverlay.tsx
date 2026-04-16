@@ -84,6 +84,13 @@ const WinOverlay: React.FC<WinOverlayProps> = ({
         displayText: `${t2Name} Wins!`,
       };
     }
+    if (winner === "tie") {
+      return {
+        backgroundColor: "#FFA500",
+        textColor: "#000000",
+        displayText: "It's a Tie!",
+      };
+    }
     return {
       backgroundColor: "#FFA500",
       textColor: "#000000",

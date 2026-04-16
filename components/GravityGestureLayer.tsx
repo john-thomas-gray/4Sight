@@ -136,7 +136,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   useEffect(() => {
     if (pullRef) pullRef.current = executePull;
-  });
+  }, [pullRef, executePull]);
 
   const handleFling = useCallback(
     (direction: Direction) => {

@@ -1,8 +1,12 @@
-import { coordToKey, keyToCoord } from "./board";
+import { TIE_WIN_SECOND_CASCADE_BEAT_MS } from "@/constants/logic";
+import { WINNER_V0, WINNER_V1 } from "@/types/animation";
+import { coordToKey } from "./board";
 import { BOARD_SIZE, Coord, Piece, Team, WIN_LENGTH, WinLine } from "./types";
 
 export type WinResult = {
   winner: Team | null;
+  /** Both teams have at least one winning line on this board. */
+  tie: boolean;
   lines: WinLine[];
 };
 
@@ -20,18 +24,32 @@ export function detectWin(
   pieces: Readonly<Record<string, Piece>>,
 ): WinResult {
   const lines: WinLine[] = [];
-  let winner: Team | null = null;
 
   for (const line of allLines()) {
     const found = scanLineForWins(line, board, pieces);
     for (const winLine of found) {
-      const team = pieces[winLine.pieceIds[0]].team;
-      if (!winner) winner = team;
       lines.push(winLine);
     }
   }
 
-  return { winner, lines };
+  const teamsWithWin = new Set<Team>();
+  for (const winLine of lines) {
+    const firstId = winLine.pieceIds[0];
+    const p = firstId !== undefined ? pieces[firstId] : undefined;
+    if (p) teamsWithWin.add(p.team);
+  }
+  const tie = teamsWithWin.size > 1;
+  const winner =
+    lines.length === 0
+      ? null
+      : tie
+        ? null
+        : (() => {
+            const firstId = lines[0].pieceIds[0];
+            return firstId !== undefined ? pieces[firstId]?.team ?? null : null;
+          })();
+
+  return { winner, tie, lines };
 }
 
 /**
@@ -205,6 +223,103 @@ export function winLineCascadeTiers(
     tiers.push(tier);
   }
   return tiers;
+}
+
+/** Stagger between cascade tiers (shared global clock across simultaneous line cascades). */
+export const WINNER_CASCADE_STAGGER_MS = 140;
+
+export function winningLinesForTeam(
+  lines: readonly WinLine[],
+  pieces: Readonly<Record<string, Piece>>,
+  team: Team,
+): WinLine[] {
+  return lines.filter(
+    (line) =>
+      line.pieceIds.length > 0 && pieces[line.pieceIds[0]]?.team === team,
+  );
+}
+
+/**
+ * Each winning line gets its own radiating cascade from that line’s anchor
+ * (preferred id on the line, else line center). All lines share the same
+ * global tier clock: tier 0 at 0 ms, tier 1 at `staggerMs`, … so cascades
+ * start together but pieces do not all fire at once.
+ *
+ * If a piece sits on several winning lines, it animates once at the minimum
+ * tier delay among those lines.
+ */
+export function pieceStaggerDelaysForSyncedWinCascades(
+  lines: readonly WinLine[],
+  pieces: Readonly<Record<string, Piece>>,
+  winnerTeam: Team,
+  preferredAnchorPieceIds: readonly string[],
+  staggerMs: number = WINNER_CASCADE_STAGGER_MS,
+): Map<string, number> {
+  const anchors = new Set(preferredAnchorPieceIds.filter(Boolean));
+  const winningLines = winningLinesForTeam(lines, pieces, winnerTeam);
+  const delays = new Map<string, number>();
+
+  for (const line of winningLines) {
+    const anchor =
+      line.pieceIds.find((pid) => anchors.has(pid)) ?? null;
+    const tiers = winLineCascadeTiers(line.pieceIds, anchor);
+    tiers.forEach((tier, tierIndex) => {
+      const t = tierIndex * staggerMs;
+      for (const pid of tier) {
+        const prev = delays.get(pid);
+        if (prev === undefined || t < prev) delays.set(pid, t);
+      }
+    });
+  }
+  return delays;
+}
+
+/** Time from motion start to the peak of the first winner-motion phase (aligns with color sweep end). */
+export const WINNER_MOTION_APEX_MS = WINNER_V1;
+
+/**
+ * Delay before showing the tie modal: after both teams’ cascades complete
+ * (last piece’s entry bounce finished), plus a short buffer.
+ */
+export function computeTieWinOverlayDelayMs(
+  board: Readonly<Record<string, string>>,
+  pieces: Readonly<Record<string, Piece>>,
+  pullerTeam: Team,
+  preferredAnchorPieceIds: readonly string[],
+): number | null {
+  const winResult = detectWin(board, pieces);
+  if (!winResult.tie) return null;
+
+  const other = pullerTeam === Team.One ? Team.Two : Team.One;
+  const delaysPuller = pieceStaggerDelaysForSyncedWinCascades(
+    winResult.lines,
+    pieces,
+    pullerTeam,
+    preferredAnchorPieceIds,
+  );
+  const delaysOther = pieceStaggerDelaysForSyncedWinCascades(
+    winResult.lines,
+    pieces,
+    other,
+    preferredAnchorPieceIds,
+  );
+
+  let maxPullerStart = 0;
+  for (const d of delaysPuller.values()) {
+    maxPullerStart = Math.max(maxPullerStart, d);
+  }
+  const entryMs = WINNER_V1 + WINNER_V0;
+  const otherPhaseStart =
+    maxPullerStart + entryMs + TIE_WIN_SECOND_CASCADE_BEAT_MS;
+
+  let maxEnd = 0;
+  for (const d of delaysPuller.values()) {
+    maxEnd = Math.max(maxEnd, d + entryMs);
+  }
+  for (const d of delaysOther.values()) {
+    maxEnd = Math.max(maxEnd, otherPhaseStart + d + entryMs);
+  }
+  return maxEnd + 150;
 }
 
 function* allLines(): Generator<Coord[]> {

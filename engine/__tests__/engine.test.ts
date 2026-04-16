@@ -1,3 +1,4 @@
+import { scenarios } from "@/dev/scenarios";
 import {
   createGame,
   placePiece,
@@ -21,6 +22,9 @@ import {
   PIECES_PER_TEAM,
   GameState,
   Coord,
+  WinLine,
+  pieceStaggerDelaysForSyncedWinCascades,
+  WINNER_CASCADE_STAGGER_MS,
 } from "../index";
 
 // ---------------------------------------------------------------------------
@@ -216,6 +220,7 @@ describe("detectWin", () => {
     const board = { "1-1": "0", "1-3": "1", "1-5": "2" };
     const result = detectWin(board, pieces);
     expect(result.winner).toBeNull();
+    expect(result.tie).toBe(false);
   });
 
   it("detects a Team Two win", () => {
@@ -223,6 +228,42 @@ describe("detectWin", () => {
     for (let c = 1; c <= 4; c++) board[`5-${c}`] = String(PIECES_PER_TEAM + c - 1);
     const result = detectWin(board, pieces);
     expect(result.winner).toBe(Team.Two);
+  });
+});
+
+describe("pieceStaggerDelaysForSyncedWinCascades", () => {
+  const pieces = createPieces();
+  const stagger = WINNER_CASCADE_STAGGER_MS;
+
+  it("runs two line cascades on the same global tier clock", () => {
+    const lineA: WinLine = { pieceIds: ["0", "1", "2", "3"], coords: [] };
+    const lineB: WinLine = { pieceIds: ["10", "11", "12", "13"], coords: [] };
+    const delays = pieceStaggerDelaysForSyncedWinCascades(
+      [lineA, lineB],
+      pieces,
+      Team.One,
+      ["2"],
+    );
+    expect(delays.get("2")).toBe(0);
+    expect(delays.get("12")).toBe(0);
+    expect(delays.get("1")).toBe(stagger);
+    expect(delays.get("3")).toBe(stagger);
+    expect(delays.get("11")).toBe(stagger);
+    expect(delays.get("13")).toBe(stagger);
+    expect(delays.get("0")).toBe(stagger * 2);
+    expect(delays.get("10")).toBe(stagger * 2);
+  });
+
+  it("uses earliest tier when a piece belongs to two lines", () => {
+    const lineA: WinLine = { pieceIds: ["0", "1", "2", "4"], coords: [] };
+    const lineB: WinLine = { pieceIds: ["4", "5", "6", "7"], coords: [] };
+    const delays = pieceStaggerDelaysForSyncedWinCascades(
+      [lineA, lineB],
+      pieces,
+      Team.One,
+      ["2"],
+    );
+    expect(delays.get("4")).toBe(stagger);
   });
 });
 
@@ -357,6 +398,7 @@ describe("placePiece", () => {
       ...createGame(),
       status: "finished",
       winner: Team.One,
+      tie: false,
     };
     const result = placePiece(finished, { row: 0, col: 4 }, "10");
     expect(result.events).toHaveLength(0);
@@ -401,7 +443,22 @@ describe("shiftGravity", () => {
     expect(result.state.board["7-3"]).toBe("2");
     expect(result.state.board["7-4"]).toBe("3");
     expect(result.state.winner).toBe(Team.One);
+    expect(result.state.tie).toBe(false);
     expect(result.state.status).toBe("finished");
+  });
+
+  it("tieGame scenario: simultaneous wins end in tie after gravity left", () => {
+    const { board, currentTeam } = scenarios.tieGame;
+    const state: GameState = {
+      ...createGame(),
+      board,
+      currentTeam,
+    };
+    const result = shiftGravity(state, Direction.Left);
+    expect(result.state.tie).toBe(true);
+    expect(result.state.winner).toBeNull();
+    expect(result.state.status).toBe("finished");
+    expect(result.events.some((e) => e.type === "game_tied")).toBe(true);
   });
 });
 

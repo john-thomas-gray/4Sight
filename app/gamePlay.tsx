@@ -47,6 +47,7 @@ const GamePlay = () => {
     pieceAnims,
     dropPiece,
     loadScenario,
+    tieWinOverlayDelayMs,
   } = useGameSession();
   const {
     hoverPreview,
@@ -259,9 +260,18 @@ const GamePlay = () => {
   );
 
   useEffect(() => {
-    if (gameState.status !== "finished" || !gameState.winner) {
+    if (
+      gameState.status !== "finished" ||
+      (!gameState.winner && !gameState.tie)
+    ) {
       setShowWinOverlay(false);
       return;
+    }
+    if (gameState.tie) {
+      const delayMs = tieWinOverlayDelayMs;
+      if (delayMs == null) return;
+      const timer = setTimeout(() => setShowWinOverlay(true), delayMs);
+      return () => clearTimeout(timer);
     }
     const winnerCount = Object.values(pieceStatusMap).filter(
       (s) => s === PieceStatus.winner,
@@ -269,7 +279,13 @@ const GamePlay = () => {
     if (winnerCount === 0) return;
     const timer = setTimeout(() => setShowWinOverlay(true), 1200);
     return () => clearTimeout(timer);
-  }, [gameState.status, gameState.winner, pieceStatusMap]);
+  }, [
+    gameState.status,
+    gameState.winner,
+    gameState.tie,
+    pieceStatusMap,
+    tieWinOverlayDelayMs,
+  ]);
 
   return (
     <View
@@ -363,8 +379,17 @@ const GamePlay = () => {
         : null}
 
       <WinOverlay
-        visible={showWinOverlay && gameState.winner !== null}
-        winner={gameState.winner === Team.One ? "teamOne" : "teamTwo"}
+        visible={
+          showWinOverlay &&
+          (gameState.winner !== null || gameState.tie)
+        }
+        winner={
+          gameState.tie
+            ? "tie"
+            : gameState.winner === Team.One
+              ? "teamOne"
+              : "teamTwo"
+        }
         onClose={() => setShowWinOverlay(false)}
       />
       <LoadingScreen visible={showLoadingScreen} />

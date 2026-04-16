@@ -61,14 +61,19 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
 
   useEffect(() => {
     if (!animate) return;
-    const isTeamOne = team === Team.One;
-    animate.color.value = isTeamOne
-      ? theme.colorTheme.TEAM_ONE_COLOR
-      : theme.colorTheme.TEAM_TWO_COLOR;
-    animate.winnerColor.value = isTeamOne
-      ? theme.colorTheme.TEAM_ONE_WINNER_COLOR
-      : theme.colorTheme.TEAM_TWO_WINNER_COLOR;
-  }, [animate, team, theme]);
+    animate.winnerColor.value =
+      team === Team.One
+        ? theme.colorTheme.TEAM_ONE_WINNER_COLOR
+        : theme.colorTheme.TEAM_TWO_WINNER_COLOR;
+    if (status === PieceStatus.winner) {
+      animate.color.value = animate.winnerColor.value;
+      return;
+    }
+    animate.color.value =
+      team === Team.One
+        ? theme.colorTheme.TEAM_ONE_COLOR
+        : theme.colorTheme.TEAM_TWO_COLOR;
+  }, [animate, team, theme, status]);
 
   const isMyTurn = useMemo(() => {
     const piece = gameState.pieces[id];

@@ -30,6 +30,45 @@ export const scenarios: Record<string, Scenario> = {
     delayMs: 1500,
   },
 
+  tripleWin: {
+    board: {
+      "4-3": "0",
+      "4-5": "1",
+      "4-6": "2",
+      "5-4": "3",
+      "6-4": "4",
+      "7-4": "5",
+      "5-5": "6",
+      "6-6": "7",
+      "7-7": "8",
+      "2-2": "24",
+      "2-6": "25",
+      "3-5": "26",
+      "6-2": "27",
+    },
+    currentTeam: Team.One,
+    moves: [
+      { type: "place", targetSpace: { row: 4, col: 4 }, pieceId: "9" },
+    ],
+    delayMs: 1500,
+  },
+
+  tieGame: {
+    board: {
+      "3-2": "0",
+      "3-4": "1",
+      "3-5": "2",
+      "3-7": "3",
+      "5-3": "24",
+      "5-5": "25",
+      "5-6": "26",
+      "5-7": "27",
+    },
+    currentTeam: Team.One,
+    moves: [{ type: "gravity", direction: Direction.Left }],
+    delayMs: 1500,
+  },
+
   gravityWin: {
     board: {
       "5-2": "0",

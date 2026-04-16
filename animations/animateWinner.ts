@@ -8,6 +8,11 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
+export type AnimateWinnerPieceOptions = {
+  /** Motion/scale only; omit gold color sweep (caller reveals gold at apex separately). */
+  skipColor?: boolean;
+};
+
 export function animateWinnerPiece(
   {
     translateX,
@@ -18,6 +23,7 @@ export function animateWinnerPiece(
     winnerColor,
   }: PieceAnimation,
   startDelayMs = 0,
+  options?: AnimateWinnerPieceOptions,
 ) {
   const t0x = translateX.value;
   const t0y = translateY.value;
@@ -82,13 +88,15 @@ export function animateWinnerPiece(
     }),
   );
 
-  color.value = withDelay(
-    startDelayMs,
-    withTiming(winnerColor.value, {
-      duration: WINNER_V1,
-      easing: Easing.inOut(Easing.exp),
-    }),
-  );
+  if (!options?.skipColor) {
+    color.value = withDelay(
+      startDelayMs,
+      withTiming(winnerColor.value, {
+        duration: WINNER_V1,
+        easing: Easing.inOut(Easing.exp),
+      }),
+    );
+  }
 
   // Start a subtle pulse after the entry animation completes.
   const pulseDelay = startDelayMs + WINNER_V1 + WINNER_V0;

@@ -135,7 +135,8 @@ describe("win detection edge cases", () => {
     for (let c = 1; c <= 4; c++) board[`7-${c}`] = String(c - 1);
     for (let c = 4; c <= 7; c++) board[`6-${c}`] = String(PIECES_PER_TEAM + c - 4);
     const result = detectWin(board, pieces);
-    expect(result.winner).not.toBeNull();
+    expect(result.tie).toBe(true);
+    expect(result.winner).toBeNull();
     expect(result.lines.length).toBeGreaterThanOrEqual(2);
   });
 
