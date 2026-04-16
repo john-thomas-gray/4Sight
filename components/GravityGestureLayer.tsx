@@ -5,6 +5,7 @@ import {
   TURN_CHANGE_SETTLE_BUFFER_MS,
 } from "@/constants/logic";
 import { useGameSession } from "@/context/GameSessionContext";
+import { usePlayfieldFrameOptional } from "@/context/PlayfieldFrameContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
@@ -46,6 +47,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
   const { gameState, shiftGravity, pieceAnims, resetCurrentGame } =
     useGameSession();
   const { spaces } = useLayout();
+  const playfield = usePlayfieldFrameOptional();
   const { shiftPreviews } = useSettings();
   const {
     moveInProgress,
@@ -229,17 +231,22 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       const boardMaxX = minX + boardSize;
       const boardMaxY = minY + boardSize;
 
-      const x = event.absoluteX;
-      const y = event.absoluteY;
+      const ox = playfield?.windowOriginRef.current.x ?? 0;
+      const oy = playfield?.windowOriginRef.current.y ?? 0;
+      const pointerX = event.absoluteX - ox;
+      const pointerY = event.absoluteY - oy;
       const inBounds =
-        x >= minX && x <= boardMaxX && y >= minY && y <= boardMaxY;
+        pointerX >= minX &&
+        pointerX <= boardMaxX &&
+        pointerY >= minY &&
+        pointerY <= boardMaxY;
       if (!inBounds) {
         clearPreview();
         return;
       }
 
-      const localX = x - minX;
-      const localY = y - minY;
+      const localX = pointerX - minX;
+      const localY = pointerY - minY;
       const pullDirection = resolvePullDirectionFromTriangleZone(
         localX,
         localY,

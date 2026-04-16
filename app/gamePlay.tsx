@@ -16,6 +16,7 @@ import {
 } from "@/constants/logic";
 import { PieceStatus, useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
+import { PlayfieldFrameProvider } from "@/context/PlayfieldFrameContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import type { ScenarioMove } from "@/dev/scenarios";
@@ -28,7 +29,13 @@ import {
   Team,
 } from "@/engine";
 import { useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { View } from "react-native";
 import {
   Easing,
@@ -308,85 +315,84 @@ const GamePlay = () => {
           borderWidth: 1,
         }}
       />
-      <View className="flex-col items-center justify-center">
-        <TeamWellGrid team={Team.Two} />
-        <GravityGestureLayer className="mt-7 mb-7" pullRef={pullRef}>
-          <BoardGridView />
-        </GravityGestureLayer>
-        <TeamWellGrid team={Team.One} />
-      </View>
+      <PlayfieldFrameProvider>
+        <View className="flex-col items-center justify-center">
+          <TeamWellGrid team={Team.Two} />
+          <GravityGestureLayer className="mt-7 mb-7" pullRef={pullRef}>
+            <BoardGridView />
+          </GravityGestureLayer>
+          <TeamWellGrid team={Team.One} />
+        </View>
 
-      {piecesToRender.map(([pid, piece]) => (
-        <PieceView key={pid} id={pid} team={piece.team} />
-      ))}
+        {piecesToRender.map(([pid, piece]) => (
+          <PieceView key={pid} id={pid} team={piece.team} />
+        ))}
 
-      {Object.keys(layout.slots).map((slotId) => (
-        <SlotRim key={`slot-rim-${slotId}`} id={slotId} />
-      ))}
+        {Object.keys(layout.slots).map((slotId) => (
+          <SlotRim key={`slot-rim-${slotId}`} id={slotId} />
+        ))}
 
-      {hoverPreview && layout.spaces[hoverPreview.spaceId] ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            width: PIECE_RADIUS * 2,
-            height: PIECE_RADIUS * 2,
-            borderRadius: PIECE_RADIUS,
-            borderWidth: 2,
-            borderColor: colors.SLOT_BORDER_COLOR,
-            backgroundColor:
-              hoverPreview.team === Team.One
-                ? colors.TEAM_ONE_COLOR
-                : colors.TEAM_TWO_COLOR,
-            opacity: 0.35,
-            left:
-              layout.spaces[hoverPreview.spaceId].pageX +
-              layout.spaces[hoverPreview.spaceId].width / 2 -
-              PIECE_RADIUS,
-            top:
-              layout.spaces[hoverPreview.spaceId].pageY +
-              layout.spaces[hoverPreview.spaceId].height / 2 -
-              PIECE_RADIUS,
-            zIndex: 2500,
-          }}
-        />
-      ) : null}
+        {hoverPreview && layout.spaces[hoverPreview.spaceId] ? (
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              width: PIECE_RADIUS * 2,
+              height: PIECE_RADIUS * 2,
+              borderRadius: PIECE_RADIUS,
+              borderWidth: 2,
+              borderColor: colors.SLOT_BORDER_COLOR,
+              backgroundColor:
+                hoverPreview.team === Team.One
+                  ? colors.TEAM_ONE_COLOR
+                  : colors.TEAM_TWO_COLOR,
+              opacity: 0.35,
+              left:
+                layout.spaces[hoverPreview.spaceId].pageX +
+                layout.spaces[hoverPreview.spaceId].width / 2 -
+                PIECE_RADIUS,
+              top:
+                layout.spaces[hoverPreview.spaceId].pageY +
+                layout.spaces[hoverPreview.spaceId].height / 2 -
+                PIECE_RADIUS,
+              zIndex: 2500,
+            }}
+          />
+        ) : null}
 
-      {isPreviewingGravity && gravityPreviewBoard
-        ? Object.entries(gravityPreviewBoard).map(([spaceId, pieceId]) => {
-            const space = layout.spaces[spaceId];
-            const piece = gameState.pieces[pieceId];
-            if (!space || !piece) return null;
-            return (
-              <View
-                key={`gravity-preview-${pieceId}-${spaceId}`}
-                pointerEvents="none"
-                style={{
-                  position: "absolute",
-                  width: PIECE_RADIUS * 2,
-                  height: PIECE_RADIUS * 2,
-                  borderRadius: PIECE_RADIUS,
-                  borderWidth: 2,
-                  borderColor: colors.SLOT_BORDER_COLOR,
-                  backgroundColor:
-                    piece.team === Team.One
-                      ? colors.TEAM_ONE_COLOR
-                      : colors.TEAM_TWO_COLOR,
-                  opacity: 0.3,
-                  left: space.pageX + space.width / 2 - PIECE_RADIUS,
-                  top: space.pageY + space.height / 2 - PIECE_RADIUS,
-                  zIndex: 2400,
-                }}
-              />
-            );
-          })
-        : null}
+        {isPreviewingGravity && gravityPreviewBoard
+          ? Object.entries(gravityPreviewBoard).map(([spaceId, pieceId]) => {
+              const space = layout.spaces[spaceId];
+              const piece = gameState.pieces[pieceId];
+              if (!space || !piece) return null;
+              return (
+                <View
+                  key={`gravity-preview-${pieceId}-${spaceId}`}
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    width: PIECE_RADIUS * 2,
+                    height: PIECE_RADIUS * 2,
+                    borderRadius: PIECE_RADIUS,
+                    borderWidth: 2,
+                    borderColor: colors.SLOT_BORDER_COLOR,
+                    backgroundColor:
+                      piece.team === Team.One
+                        ? colors.TEAM_ONE_COLOR
+                        : colors.TEAM_TWO_COLOR,
+                    opacity: 0.3,
+                    left: space.pageX + space.width / 2 - PIECE_RADIUS,
+                    top: space.pageY + space.height / 2 - PIECE_RADIUS,
+                    zIndex: 2400,
+                  }}
+                />
+              );
+            })
+          : null}
+      </PlayfieldFrameProvider>
 
       <WinOverlay
-        visible={
-          showWinOverlay &&
-          (gameState.winner !== null || gameState.tie)
-        }
+        visible={showWinOverlay && (gameState.winner !== null || gameState.tie)}
         winner={
           gameState.tie
             ? "tie"

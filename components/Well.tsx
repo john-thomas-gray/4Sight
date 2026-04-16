@@ -1,4 +1,9 @@
 import { WELL_STYLE } from "@/constants/gameElements";
+import {
+  EMPTY_PLAYFIELD_REF,
+  measureLayoutRelativeToPlayfield,
+  usePlayfieldFrameOptional,
+} from "@/context/PlayfieldFrameContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
@@ -10,17 +15,19 @@ const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
   const { registerCell } = useLayout();
   const { theme } = useSettings();
+  const playfield = usePlayfieldFrameOptional();
+  const playfieldRef = playfield?.playfieldRef ?? EMPTY_PLAYFIELD_REF;
 
   const reportLayout = useCallback(() => {
-    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
+    measureLayoutRelativeToPlayfield(viewRef, playfieldRef, (layout) => {
       registerCell({
         id,
         type: CellType.Well,
         team,
-        layout: { pageX, pageY, width, height },
+        layout,
       });
     });
-  }, [registerCell, id, team]);
+  }, [registerCell, id, team, playfieldRef]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);

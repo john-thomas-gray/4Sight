@@ -1,6 +1,11 @@
 import { GameElements } from "@/constants";
 import { useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
+import {
+  EMPTY_PLAYFIELD_REF,
+  measureLayoutRelativeToPlayfield,
+  usePlayfieldFrameOptional,
+} from "@/context/PlayfieldFrameContext";
 import { useSettings } from "@/context/SettingsContext";
 import { CellProps, CellType } from "@/types/board";
 import { useCallback, useEffect, useRef } from "react";
@@ -11,16 +16,18 @@ const Space = ({ id }: CellProps) => {
   const { nextTurnWins } = useGameSession();
   const { theme, highlightWinningMoves } = useSettings();
   const viewRef = useRef<View>(null);
+  const playfield = usePlayfieldFrameOptional();
+  const playfieldRef = playfield?.playfieldRef ?? EMPTY_PLAYFIELD_REF;
 
   const reportLayout = useCallback(() => {
-    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
+    measureLayoutRelativeToPlayfield(viewRef, playfieldRef, (layout) => {
       registerCell({
         id,
         type: CellType.Space,
-        layout: { pageX, pageY, width, height },
+        layout,
       });
     });
-  }, [registerCell, id]);
+  }, [registerCell, id, playfieldRef]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);

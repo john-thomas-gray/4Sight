@@ -5,6 +5,11 @@ import {
 } from "@/constants/gameElements";
 import { useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
+import {
+  EMPTY_PLAYFIELD_REF,
+  measureLayoutRelativeToPlayfield,
+  usePlayfieldFrameOptional,
+} from "@/context/PlayfieldFrameContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
 import { CellProps, CellType } from "@/types/board";
@@ -16,6 +21,8 @@ const Corner = ({ id }: CellProps) => {
   const { gameState } = useGameSession();
   const { theme } = useSettings();
   const viewRef = useRef<View>(null);
+  const playfield = usePlayfieldFrameOptional();
+  const playfieldRef = playfield?.playfieldRef ?? EMPTY_PLAYFIELD_REF;
 
   const cornerColor =
     gameState.currentTeam === Team.One
@@ -23,14 +30,14 @@ const Corner = ({ id }: CellProps) => {
       : theme.colorTheme.CORNER_COLOR_TWO;
 
   const reportLayout = useCallback(() => {
-    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
+    measureLayoutRelativeToPlayfield(viewRef, playfieldRef, (layout) => {
       registerCell({
         id,
         type: CellType.Corner,
-        layout: { pageX, pageY, width, height },
+        layout,
       });
     });
-  }, [registerCell, id]);
+  }, [registerCell, id, playfieldRef]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);

@@ -10,6 +10,7 @@ import {
 } from "@/constants/logic";
 import { PieceStatus, useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
+import { usePlayfieldFrameOptional } from "@/context/PlayfieldFrameContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { Team } from "@/engine";
@@ -44,6 +45,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     dropPiece,
   } = useGameSession();
   const layout = useLayout();
+  const playfield = usePlayfieldFrameOptional();
   const { theme, piecePlacementPreviews } = useSettings();
   const {
     moveInProgress,
@@ -152,6 +154,11 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
+          playfield?.playfieldRef.current?.measureInWindow((x, y) => {
+            if (playfield) {
+              playfield.windowOriginRef.current = { x, y };
+            }
+          });
           animate.scaleX.value = GameElements.PIECE_HELD_SCALE;
           animate.scaleY.value = GameElements.PIECE_HELD_SCALE;
           animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
@@ -172,14 +179,16 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           setHoverPreview(null);
         })
         .onUpdate((event) => {
+          const ox = playfield?.windowOriginRef.current.x ?? 0;
+          const oy = playfield?.windowOriginRef.current.y ?? 0;
           animate.translateX.value =
-            event.absoluteX - GameElements.PIECE_RADIUS;
+            event.absoluteX - ox - GameElements.PIECE_RADIUS;
           animate.translateY.value =
-            event.absoluteY - GameElements.PIECE_RADIUS + dragYOffset;
+            event.absoluteY - oy - GameElements.PIECE_RADIUS + dragYOffset;
 
           // Match hover sensing to rendered piece position (same Y offset as drag).
-          const pieceCenterX = event.absoluteX;
-          const pieceCenterY = event.absoluteY + dragYOffset;
+          const pieceCenterX = event.absoluteX - ox;
+          const pieceCenterY = event.absoluteY - oy + dragYOffset;
 
           let hitCellId: string | null = null;
           for (const cell of allCells) {
@@ -605,6 +614,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       setHoverPreview,
       dragYOffset,
       piecePlacementPreviews,
+      playfield,
     ],
   );
 

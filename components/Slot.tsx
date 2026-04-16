@@ -1,6 +1,11 @@
 import slotArrowClear from "@/assets/images/slot-arrow-clear.png";
 import { GameElements } from "@/constants";
 import { useGameSession } from "@/context/GameSessionContext";
+import {
+  EMPTY_PLAYFIELD_REF,
+  measureLayoutRelativeToPlayfield,
+  usePlayfieldFrameOptional,
+} from "@/context/PlayfieldFrameContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import {
@@ -18,13 +23,15 @@ const Slot = ({ id }: CellProps) => {
   const { registerCell, slots } = useLayout();
   const { gameState } = useGameSession();
   const { theme } = useSettings();
+  const playfield = usePlayfieldFrameOptional();
+  const playfieldRef = playfield?.playfieldRef ?? EMPTY_PLAYFIELD_REF;
 
   const currentTeam = gameState.currentTeam;
 
   const reportLayout = useCallback(() => {
-    viewRef.current?.measure((x, y, width, height, pageX, pageY) => {
+    measureLayoutRelativeToPlayfield(viewRef, playfieldRef, (layout) => {
       const prev = slots[id];
-      const next = { pageX, pageY, width, height } as const;
+      const next = layout;
       const changed =
         !prev ||
         prev.pageX !== next.pageX ||
@@ -35,7 +42,7 @@ const Slot = ({ id }: CellProps) => {
         registerCell({ id, type: CellType.Slot, layout: next });
       }
     });
-  }, [id, registerCell, slots]);
+  }, [id, registerCell, slots, playfieldRef]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);
