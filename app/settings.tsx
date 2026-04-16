@@ -1,10 +1,17 @@
+import type { ThemeAvailability } from "@/commerce";
 import BackButton from "@/components/BackButton";
+import { THEME_REGISTRY } from "@/constants/themes/registry";
 import { useCommerce } from "@/context/CommerceContext";
 import { useSettings } from "@/context/SettingsContext";
-import { THEME_REGISTRY } from "@/constants/themes/registry";
-import type { ThemeAvailability } from "@/commerce";
 import React, { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Switch, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 
 const Settings = () => {
   const {
@@ -62,7 +69,7 @@ const Settings = () => {
         "Restored",
         count > 0
           ? `${count} theme${count > 1 ? "s" : ""} restored.`
-          : "No purchases to restore."
+          : "No purchases to restore.",
       );
     } else {
       Alert.alert("Restore Failed", result.message);
@@ -138,7 +145,9 @@ const Settings = () => {
           {restoring ? (
             <ActivityIndicator color={textColor} />
           ) : (
-            <Text style={{ color: subtextColor, textDecorationLine: "underline" }}>
+            <Text
+              style={{ color: subtextColor, textDecorationLine: "underline" }}
+            >
               Restore Purchases
             </Text>
           )}
@@ -223,7 +232,7 @@ const ThemeCard: React.FC<ThemeCardProps> = ({
       ? null
       : availability === "owned"
         ? "Owned"
-        : price ?? "Locked";
+        : (price ?? "Locked");
 
   return (
     <Pressable
@@ -267,7 +276,7 @@ type SettingsToggleProps = {
   description: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
-  colors: typeof THEME_REGISTRY[0]["theme"]["colorTheme"];
+  colors: (typeof THEME_REGISTRY)[0]["theme"]["colorTheme"];
   textColor: string;
   subtextColor: string;
   cardStyle: object;

@@ -3,9 +3,14 @@ import { GameElements } from "@/constants";
 import { useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
-import { Team } from "@/engine";
+import {
+  Team,
+  getFirstOccupiedInSlotPath,
+  keyToCoord,
+  resolveSlotDrop,
+} from "@/engine";
 import { CellProps, CellType } from "@/types/board";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Image, View } from "react-native";
 
 const Slot = ({ id }: CellProps) => {
@@ -46,13 +51,20 @@ const Slot = ({ id }: CellProps) => {
   const row = parseInt(rowStr, 10);
   const col = parseInt(colStr, 10);
   const rotation =
-    row === 0
-      ? "90deg"
-      : row === 8
-        ? "270deg"
-        : col === 0
-          ? "0deg"
-          : "180deg";
+    row === 0 ? "90deg" : row === 8 ? "270deg" : col === 0 ? "0deg" : "180deg";
+
+  const slotCoord = useMemo(() => keyToCoord(id), [id]);
+  const isBlocked = useMemo(() => {
+    if (resolveSlotDrop(gameState.board, slotCoord) !== null) return false;
+    return getFirstOccupiedInSlotPath(gameState.board, slotCoord) !== null;
+  }, [gameState.board, slotCoord]);
+
+  const slotDiscColor = isBlocked
+    ? theme.colorTheme.BLOCKED_SLOT_BG_COLOR
+    : theme.colorTheme.PIECE_TO_SLOT_COLOR;
+  const arrowFillColor = isBlocked
+    ? theme.colorTheme.BLOCKED_SLOT_ARROW_COLOR
+    : currentTeamColor;
 
   return (
     <View
@@ -69,7 +81,7 @@ const Slot = ({ id }: CellProps) => {
           width: 36,
           height: 36,
           borderRadius: 14,
-          backgroundColor: theme.colorTheme.PIECE_TO_SLOT_COLOR,
+          backgroundColor: slotDiscColor,
           zIndex: 0,
         }}
       />
@@ -80,7 +92,7 @@ const Slot = ({ id }: CellProps) => {
           height: 8,
           marginEnd: 2,
           borderRadius: 14,
-          backgroundColor: currentTeamColor,
+          backgroundColor: arrowFillColor,
         }}
       />
       <Image

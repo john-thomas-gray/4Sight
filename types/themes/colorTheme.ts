@@ -12,6 +12,8 @@ export type ColorThemeType = {
   SLOT_BORDER_COLOR: string;
   SLOT_FOREGROUND_COLOR: string;
   PIECE_TO_SLOT_COLOR: string;
+  BLOCKED_SLOT_BG_COLOR: string;
+  BLOCKED_SLOT_ARROW_COLOR: string;
   ODD_SPACE_COLOR: string;
   EVEN_SPACE_COLOR: string;
   FELT_TOP: string;
