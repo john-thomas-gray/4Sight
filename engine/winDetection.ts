@@ -1,4 +1,7 @@
-import { TIE_WIN_SECOND_CASCADE_BEAT_MS } from "@/constants/logic";
+import {
+  TIE_WIN_SECOND_CASCADE_BEAT_MS,
+  WIN_OVERLAY_DELAY_MS,
+} from "@/constants/logic";
 import { WINNER_V0, WINNER_V1 } from "@/types/animation";
 import { coordToKey } from "./board";
 import { BOARD_SIZE, Coord, Piece, Team, WIN_LENGTH, WinLine } from "./types";
@@ -46,7 +49,9 @@ export function detectWin(
         ? null
         : (() => {
             const firstId = lines[0].pieceIds[0];
-            return firstId !== undefined ? pieces[firstId]?.team ?? null : null;
+            return firstId !== undefined
+              ? (pieces[firstId]?.team ?? null)
+              : null;
           })();
 
   return { winner, tie, lines };
@@ -69,7 +74,8 @@ export function detectNearWins(
     const items = line.map((coord) => {
       const key = coordToKey(coord);
       const pieceId = board[key];
-      const team = pieceId !== undefined ? pieces[pieceId]?.team ?? null : null;
+      const team =
+        pieceId !== undefined ? (pieces[pieceId]?.team ?? null) : null;
       return { coord, key, pieceId: pieceId ?? null, team };
     });
 
@@ -91,7 +97,8 @@ export function detectNearWins(
 
       let nearTeam: Team | null = null;
       if (oneCount === WIN_LENGTH - 1 && twoCount === 0) nearTeam = Team.One;
-      else if (twoCount === WIN_LENGTH - 1 && oneCount === 0) nearTeam = Team.Two;
+      else if (twoCount === WIN_LENGTH - 1 && oneCount === 0)
+        nearTeam = Team.Two;
 
       if (nearTeam && isReachableFromSlot(board, emptyItem.coord)) {
         const dedupKey = `${nearTeam}-${emptyItem.key}`;
@@ -260,8 +267,7 @@ export function pieceStaggerDelaysForSyncedWinCascades(
   const delays = new Map<string, number>();
 
   for (const line of winningLines) {
-    const anchor =
-      line.pieceIds.find((pid) => anchors.has(pid)) ?? null;
+    const anchor = line.pieceIds.find((pid) => anchors.has(pid)) ?? null;
     const tiers = winLineCascadeTiers(line.pieceIds, anchor);
     tiers.forEach((tier, tierIndex) => {
       const t = tierIndex * staggerMs;
@@ -277,10 +283,6 @@ export function pieceStaggerDelaysForSyncedWinCascades(
 /** Time from motion start to the peak of the first winner-motion phase (aligns with color sweep end). */
 export const WINNER_MOTION_APEX_MS = WINNER_V1;
 
-/**
- * Delay before showing the tie modal: after both teams’ cascades complete
- * (last piece’s entry bounce finished), plus a short buffer.
- */
 export function computeTieWinOverlayDelayMs(
   board: Readonly<Record<string, string>>,
   pieces: Readonly<Record<string, Piece>>,
@@ -290,17 +292,10 @@ export function computeTieWinOverlayDelayMs(
   const winResult = detectWin(board, pieces);
   if (!winResult.tie) return null;
 
-  const other = pullerTeam === Team.One ? Team.Two : Team.One;
   const delaysPuller = pieceStaggerDelaysForSyncedWinCascades(
     winResult.lines,
     pieces,
     pullerTeam,
-    preferredAnchorPieceIds,
-  );
-  const delaysOther = pieceStaggerDelaysForSyncedWinCascades(
-    winResult.lines,
-    pieces,
-    other,
     preferredAnchorPieceIds,
   );
 
@@ -312,14 +307,7 @@ export function computeTieWinOverlayDelayMs(
   const otherPhaseStart =
     maxPullerStart + entryMs + TIE_WIN_SECOND_CASCADE_BEAT_MS;
 
-  let maxEnd = 0;
-  for (const d of delaysPuller.values()) {
-    maxEnd = Math.max(maxEnd, d + entryMs);
-  }
-  for (const d of delaysOther.values()) {
-    maxEnd = Math.max(maxEnd, otherPhaseStart + d + entryMs);
-  }
-  return maxEnd + 150;
+  return otherPhaseStart + WIN_OVERLAY_DELAY_MS;
 }
 
 function* allLines(): Generator<Coord[]> {
@@ -338,19 +326,23 @@ function* allLines(): Generator<Coord[]> {
   // Down-right diagonals
   for (let startCol = 1; startCol <= BOARD_SIZE; startCol++) {
     const line: Coord[] = [];
-    let r = 1, c = startCol;
+    let r = 1,
+      c = startCol;
     while (r <= BOARD_SIZE && c <= BOARD_SIZE) {
       line.push({ row: r, col: c });
-      r++; c++;
+      r++;
+      c++;
     }
     if (line.length >= WIN_LENGTH) yield line;
   }
   for (let startRow = 2; startRow <= BOARD_SIZE; startRow++) {
     const line: Coord[] = [];
-    let r = startRow, c = 1;
+    let r = startRow,
+      c = 1;
     while (r <= BOARD_SIZE && c <= BOARD_SIZE) {
       line.push({ row: r, col: c });
-      r++; c++;
+      r++;
+      c++;
     }
     if (line.length >= WIN_LENGTH) yield line;
   }
@@ -358,19 +350,23 @@ function* allLines(): Generator<Coord[]> {
   // Down-left diagonals (anti-diagonals)
   for (let startCol = BOARD_SIZE; startCol >= 1; startCol--) {
     const line: Coord[] = [];
-    let r = 1, c = startCol;
+    let r = 1,
+      c = startCol;
     while (r <= BOARD_SIZE && c >= 1) {
       line.push({ row: r, col: c });
-      r++; c--;
+      r++;
+      c--;
     }
     if (line.length >= WIN_LENGTH) yield line;
   }
   for (let startRow = 2; startRow <= BOARD_SIZE; startRow++) {
     const line: Coord[] = [];
-    let r = startRow, c = BOARD_SIZE;
+    let r = startRow,
+      c = BOARD_SIZE;
     while (r <= BOARD_SIZE && c >= 1) {
       line.push({ row: r, col: c });
-      r++; c--;
+      r++;
+      c--;
     }
     if (line.length >= WIN_LENGTH) yield line;
   }

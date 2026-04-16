@@ -1,6 +1,9 @@
-Stage for iPhone release
 Tutorial
-In-app purchases
+Stage for iPhone release
+In-app purchases:
+    themes
+    - beach
+    - street
 Fix Memory leak
 Animation:
 - pieces jiggle when held
@@ -8,11 +11,7 @@ Animation:
 - slot arrows turn direction of pull
 - Slots "turn off" when blocked
 - Animate theme change
-In a tie, the person who last dropped a piece's pieces light up first
-
-
-
-
+- keep gold winning piece to track wins
 
 v2
 4 Player

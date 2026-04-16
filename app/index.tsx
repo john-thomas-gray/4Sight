@@ -41,7 +41,7 @@ function MainMenu() {
     setIsGlobalLoading(true);
     await newGame();
     await clearSession();
-    router.replace("/gamePlay?scenario=tieGame");
+    router.replace("/gamePlay?scenario=nearWin");
   }, [router, newGame, setIsGlobalLoading]);
 
   const handleContinue = React.useCallback(async () => {

@@ -12,6 +12,7 @@ import { PIECE_RADIUS } from "@/constants/gameElements";
 import {
   TURN_CHANGE_COMMIT_DELAY_MS,
   TURN_CHANGE_SETTLE_BUFFER_MS,
+  WIN_OVERLAY_DELAY_MS,
 } from "@/constants/logic";
 import { PieceStatus, useGameSession } from "@/context/GameSessionContext";
 import { useLayout } from "@/context/LayoutContext";
@@ -277,7 +278,10 @@ const GamePlay = () => {
       (s) => s === PieceStatus.winner,
     ).length;
     if (winnerCount === 0) return;
-    const timer = setTimeout(() => setShowWinOverlay(true), 1200);
+    const timer = setTimeout(
+      () => setShowWinOverlay(true),
+      WIN_OVERLAY_DELAY_MS,
+    );
     return () => clearTimeout(timer);
   }, [
     gameState.status,
