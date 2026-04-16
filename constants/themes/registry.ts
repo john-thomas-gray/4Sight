@@ -2,6 +2,7 @@ import type { ThemeAvailability } from "@/commerce";
 import { ThemeType } from "@/types/themes/theme";
 import { CLASSIC } from "./classic";
 import { SCHOOLHOUSE } from "./schoolhouse";
+import { SEASIDE } from "./seaside";
 
 export type ThemeEntry = {
   id: string;
@@ -25,6 +26,13 @@ export const THEME_REGISTRY: ThemeEntry[] = [
     theme: SCHOOLHOUSE,
     defaultAvailability: "locked",
     productId: "theme_schoolhouse",
+  },
+  {
+    id: "seaside",
+    label: "Seaside",
+    theme: SEASIDE,
+    defaultAvailability: "free",
+    productId: null,
   },
 ];
 
