@@ -1,12 +1,12 @@
 import slotArrowClear from "@/assets/images/slot-arrow-clear.png";
 import { GameElements } from "@/constants";
 import { useGameSession } from "@/context/GameSessionContext";
+import { useLayout } from "@/context/LayoutContext";
 import {
   EMPTY_PLAYFIELD_REF,
   measureLayoutRelativeToPlayfield,
   usePlayfieldFrameOptional,
 } from "@/context/PlayfieldFrameContext";
-import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import {
   Team,

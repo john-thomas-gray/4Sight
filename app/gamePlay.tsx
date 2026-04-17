@@ -7,43 +7,20 @@ import PieceView from "@/components/PieceView";
 import SlotRim from "@/components/SlotRim";
 import TeamWellGrid from "@/components/TeamWellGrid";
 import WinOverlay from "@/components/WinOverlay";
-import { GameElements } from "@/constants";
 import { PIECE_RADIUS } from "@/constants/gameElements";
-import {
-  TURN_CHANGE_COMMIT_DELAY_MS,
-  TURN_CHANGE_SETTLE_BUFFER_MS,
-  WIN_OVERLAY_DELAY_MS,
-} from "@/constants/logic";
+import { WIN_OVERLAY_DELAY_MS } from "@/constants/logic";
 import { PieceStatus, useGameSession } from "@/context/GameSessionContext";
+import { useScenarioPlayback } from "@/dev/useScenarioPlayback";
 import { useLayout } from "@/context/LayoutContext";
 import { PlayfieldFrameProvider } from "@/context/PlayfieldFrameContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
-import type { ScenarioMove } from "@/dev/scenarios";
-import { getScenario, getScenarioDelay } from "@/dev/scenarios";
-import {
-  coordToKey,
-  Direction,
-  findSlotForSpace,
-  resolveSlotDrop,
-  Team,
-} from "@/engine";
+import { Direction, Team } from "@/engine";
+import TutorialStepBanner from "@/components/tutorial/TutorialStepBanner";
+import { useGamePlayTutorial } from "@/tutorial/useGamePlayTutorial";
 import { useLocalSearchParams } from "expo-router";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
-import {
-  Easing,
-  withDelay,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
-
 const GamePlay = () => {
   const layout = useLayout();
   const {
@@ -63,6 +40,7 @@ const GamePlay = () => {
     gravityPreviewBoard,
     setMoveInProgress,
     setMoveInProgressDelayed,
+    setSlotDropHintActive,
   } = useUi();
   const { theme } = useSettings();
   const [showWinOverlay, setShowWinOverlay] = useState(false);
@@ -70,149 +48,39 @@ const GamePlay = () => {
   const colors = theme.colorTheme;
   const textColor = colors.ODD_SPACE_COLOR;
 
-  const { scenario: scenarioParam } = useLocalSearchParams<{
-    scenario?: string;
-  }>();
-  const moveQueueRef = useRef<ScenarioMove[] | null>(null);
-  const scenarioLoadedRef = useRef(false);
+  const { scenario: scenarioParam, tutorialStep: tutorialStepParam } =
+    useLocalSearchParams<{
+      scenario?: string;
+      tutorialStep?: string;
+    }>();
   const pullRef = useRef<((direction: Direction) => void) | null>(null);
 
-  useEffect(() => {
-    if (!scenarioParam || scenarioLoadedRef.current) return;
-    const scenarioData = getScenario(scenarioParam);
-    if (!scenarioData) return;
-    scenarioLoadedRef.current = true;
-    moveQueueRef.current = loadScenario(scenarioData);
-  }, [scenarioParam, loadScenario]);
-
-  const playNextMove = useCallback(() => {
-    const queue = moveQueueRef.current;
-    if (!queue || queue.length === 0) return;
-    if (gameState.status === "finished") return;
-
-    const move = queue.shift();
-    if (!move) return;
-
-    if (move.type === "gravity") {
-      pullRef.current?.(move.direction);
-      return;
-    }
-
-    const { targetSpace, pieceId } = move;
-    const slotCoord = findSlotForSpace(gameState.board, targetSpace);
-    if (!slotCoord) return;
-
-    const landing = resolveSlotDrop(gameState.board, slotCoord);
-    if (!landing) return;
-
-    const anim = pieceAnims[pieceId];
-    if (!anim) return;
-
-    const slotKey = coordToKey(slotCoord);
-    const landingKey = coordToKey(landing);
-    const slotLayout = layout.slots[slotKey];
-    const spaceLayout = layout.spaces[landingKey];
-    if (!slotLayout || !spaceLayout) return;
-
-    setWellPieceLocations((prev) => {
-      const next = { ...prev };
-      for (const [wellId, pid] of Object.entries(next)) {
-        if (pid === pieceId) {
-          delete next[wellId];
-          break;
-        }
-      }
-      return next;
+  const { showBanner: showTutorialBanner, bannerMessage: tutorialBannerMessage } =
+    useGamePlayTutorial({
+      scenarioParam,
+      tutorialStepParam,
+      pieceStatusMap,
+      setSlotDropHintActive,
     });
-    setPieceStatusMap((prev) => ({ ...prev, [pieceId]: PieceStatus.isHeld }));
-    setMoveInProgress(true);
 
-    const slotX =
-      slotLayout.pageX + slotLayout.width / 2 - GameElements.PIECE_RADIUS;
-    const slotY =
-      slotLayout.pageY + slotLayout.height / 2 - GameElements.PIECE_RADIUS;
-    const landingX =
-      spaceLayout.pageX + spaceLayout.width / 2 - GameElements.PIECE_RADIUS;
-    const landingY =
-      spaceLayout.pageY + spaceLayout.height / 2 - GameElements.PIECE_RADIUS;
-    const isVerticalDrop =
-      Math.abs(landingY - slotY) >= Math.abs(landingX - slotX);
-
-    anim.scaleX.value = GameElements.PIECE_HELD_SCALE;
-    anim.scaleY.value = GameElements.PIECE_HELD_SCALE;
-    anim.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
-
-    anim.translateX.value = withSequence(
-      withTiming(slotX, { duration: 120 }),
-      withDelay(
-        90,
-        withTiming(landingX, {
-          duration: isVerticalDrop ? 320 : 700,
-          easing: isVerticalDrop ? Easing.linear : Easing.bounce,
-        }),
-      ),
-    );
-    anim.translateY.value = withSequence(
-      withTiming(slotY, { duration: 120 }),
-      withDelay(
-        90,
-        withTiming(landingY, {
-          duration: isVerticalDrop ? 700 : 320,
-          easing: isVerticalDrop ? Easing.bounce : Easing.linear,
-        }),
-      ),
-    );
-    anim.scaleX.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
-      duration: 110,
-    });
-    anim.scaleY.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
-      duration: 110,
-    });
-    anim.zIndex.value = withTiming(900, { duration: 180 });
-
-    setTimeout(() => {
-      anim.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
-      dropPiece(slotCoord, pieceId);
-      setPieceStatusMap((prev) => ({
-        ...prev,
-        [pieceId]: PieceStatus.onBoard,
-      }));
-    }, TURN_CHANGE_COMMIT_DELAY_MS);
-    setMoveInProgressDelayed(
-      false,
-      TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS,
-    );
-  }, [
-    gameState.board,
-    gameState.status,
+  useScenarioPlayback({
+    scenarioParam,
+    showLoadingScreen,
+    gameState: {
+      board: gameState.board,
+      status: gameState.status,
+      turnCount: gameState.turnCount,
+    },
+    loadScenario,
+    layout: { slots: layout.slots, spaces: layout.spaces },
     pieceAnims,
-    layout.slots,
-    layout.spaces,
-    dropPiece,
-    setPieceStatusMap,
     setWellPieceLocations,
+    setPieceStatusMap,
+    dropPiece,
     setMoveInProgress,
     setMoveInProgressDelayed,
-  ]);
-
-  useEffect(() => {
-    if (showLoadingScreen) return;
-    const queue = moveQueueRef.current;
-    if (!queue || queue.length === 0) return;
-    if (gameState.status === "finished") return;
-
-    const scenario = scenarioParam ? getScenario(scenarioParam) : null;
-    const delayMs = scenario ? getScenarioDelay(scenario) : 1200;
-
-    const timer = setTimeout(playNextMove, delayMs);
-    return () => clearTimeout(timer);
-  }, [
-    showLoadingScreen,
-    gameState.turnCount,
-    gameState.status,
-    scenarioParam,
-    playNextMove,
-  ]);
+    pullRef,
+  });
 
   useEffect(() => {
     if (!layout.layoutReady) {
@@ -390,6 +258,14 @@ const GamePlay = () => {
             })
           : null}
       </PlayfieldFrameProvider>
+
+      <TutorialStepBanner
+        visible={showTutorialBanner}
+        message={tutorialBannerMessage}
+        textColor={textColor}
+        slotBorderColor={colors.SLOT_BORDER_COLOR}
+        wellBgColor={colors.WELL_BG_COLOR_TWO}
+      />
 
       <WinOverlay
         visible={showWinOverlay && (gameState.winner !== null || gameState.tie)}

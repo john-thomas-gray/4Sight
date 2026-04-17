@@ -5,8 +5,8 @@ Tutorial:
 A tutorial that runs the first time a user navigates to @gamePlay.tsx. If they don't complete the tutorial and go back to the main menu or close the app before completion, reset the tutorial. Add a toggle in settings "Tutorial" Description: An interactive tutorial explains the rules.
 Tutorial:
 (Each step is accompanied by a new Component "TutorialModal.tsx")
-Step 1: "Drag a piece and release over a slot to drop the piece into the board."
-Dims everwhere except for the 0-4 slot and its row up to the top space, and the white piece well. Waits for a player to drop a piece, then the dim fades out.
+Step 1(modal): "Drag a piece and release over a slot to drop the piece into the board."
+
 Step 2: Players take turns dropping pieces.
 Press modal. Modal disappears and a black piece animates from the black piece well (mirroring the well space where the white piece was taken from) to slot 0-4 and drops on top of the white piece the player dropped.
 Step 2: "Pieces can be dropped from any side of the board."

@@ -14,6 +14,7 @@ function createDefaultState(): PersistedAppState {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     session: null,
     settings: { ...DEFAULT_SETTINGS },
+    tutorialCompleted: false,
   };
 }
 
@@ -39,6 +40,11 @@ function validateState(raw: unknown): PersistedAppState | null {
     if (!isValidSession(state.session)) {
       state.session = null;
     }
+  }
+
+  if (typeof state.tutorialCompleted !== "boolean") {
+    // Older installs had no flag; treat as already onboarded.
+    state.tutorialCompleted = true;
   }
 
   return state;
@@ -120,6 +126,18 @@ export async function clearSession(): Promise<void> {
   try {
     const current = await loadAppState();
     current.session = null;
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+  } catch {
+    // Silently fail
+  }
+}
+
+export async function saveTutorialCompleted(
+  completed: boolean,
+): Promise<void> {
+  try {
+    const current = await loadAppState();
+    current.tutorialCompleted = completed;
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(current));
   } catch {
     // Silently fail

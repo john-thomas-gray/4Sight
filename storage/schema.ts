@@ -1,5 +1,5 @@
 import type { GameState } from "@/engine";
-import type { PieceStatusMap } from "@/context/GameSessionContext";
+import type { PieceStatusMap } from "@/types/pieceStatus";
 
 export const CURRENT_SCHEMA_VERSION = 1;
 
@@ -35,6 +35,8 @@ export type PersistedAppState = {
   schemaVersion: number;
   session: PersistedSessionState | null;
   settings: PersistedSettings;
+  /** When false, main menu offers the interactive tutorial instead of New Game. */
+  tutorialCompleted?: boolean;
 };
 
 export const DEFAULT_SETTINGS: PersistedSettings = {

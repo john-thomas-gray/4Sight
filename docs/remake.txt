@@ -2,7 +2,6 @@ Tutorial
 Stage for iPhone release
 In-app purchases:
     themes
-    - beach
     - street
 Fix Memory leak
 Animation:
@@ -12,6 +11,7 @@ Animation:
 - Slots "turn off" when blocked
 - Animate theme change
 - keep gold winning piece to track wins
+Computer
 
 v2
 4 Player
@@ -20,3 +20,5 @@ Animation:
 - Something special happens when you get all your pieces golden
 - Putting 4 gold pieces in a row in your well makes them jump
 Web and Android
+Earn a gold piece for each win. Winning with four gold pieces gets you an extra-special piece.
+There are special pieces for different types of wins(double win, triple, cross, x, quad)

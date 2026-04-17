@@ -10,6 +10,8 @@ export type Scenario = {
   currentTeam: Team;
   moves: ScenarioMove[];
   delayMs?: number;
+  /** When set, replaces default well layout (e.g. tutorial with a single spare piece). */
+  wellPieceLocations?: Record<string, string>;
 };
 
 const DEFAULT_DELAY_MS = 1200;
@@ -82,6 +84,54 @@ export const scenarios: Record<string, Scenario> = {
     currentTeam: Team.Two,
     moves: [{ type: "gravity", direction: Direction.Left }],
     delayMs: 1500,
+  },
+
+  /** Tutorial step 1: drag white's only spare piece from the well onto the board. */
+  tutorialStep1: {
+    board: {},
+    currentTeam: Team.One,
+    moves: [],
+    wellPieceLocations: {
+      "12-10": "0",
+    },
+  },
+
+  /**
+   * Dev drill: lone piece in column 1 (interior) runs four gravity pulls, then
+   * alternating drops stack columns 3–5 and finish with a horizontal Team One win.
+   * See `dev/__tests__/fullInteractionDrill.test.ts` for tie, drop outcomes, and previews.
+   */
+  fullInteractionDrill: {
+    board: {
+      "2-1": "10",
+    },
+    currentTeam: Team.One,
+    moves: [
+      { type: "gravity", direction: Direction.Down },
+      { type: "gravity", direction: Direction.Up },
+      { type: "gravity", direction: Direction.Right },
+      { type: "gravity", direction: Direction.Left },
+      { type: "place", targetSpace: { row: 7, col: 3 }, pieceId: "0" },
+      { type: "place", targetSpace: { row: 6, col: 3 }, pieceId: "24" },
+      { type: "place", targetSpace: { row: 5, col: 3 }, pieceId: "1" },
+      { type: "place", targetSpace: { row: 4, col: 3 }, pieceId: "25" },
+      { type: "place", targetSpace: { row: 3, col: 3 }, pieceId: "2" },
+      { type: "place", targetSpace: { row: 7, col: 4 }, pieceId: "26" },
+      { type: "place", targetSpace: { row: 6, col: 4 }, pieceId: "3" },
+      { type: "place", targetSpace: { row: 5, col: 4 }, pieceId: "27" },
+      { type: "place", targetSpace: { row: 4, col: 4 }, pieceId: "4" },
+      { type: "place", targetSpace: { row: 7, col: 7 }, pieceId: "28" },
+      { type: "place", targetSpace: { row: 3, col: 4 }, pieceId: "5" },
+      { type: "place", targetSpace: { row: 7, col: 5 }, pieceId: "29" },
+      { type: "place", targetSpace: { row: 6, col: 5 }, pieceId: "6" },
+      { type: "place", targetSpace: { row: 5, col: 5 }, pieceId: "30" },
+      { type: "place", targetSpace: { row: 4, col: 5 }, pieceId: "7" },
+      { type: "place", targetSpace: { row: 7, col: 2 }, pieceId: "31" },
+      { type: "place", targetSpace: { row: 3, col: 5 }, pieceId: "8" },
+      { type: "place", targetSpace: { row: 6, col: 2 }, pieceId: "32" },
+      { type: "place", targetSpace: { row: 3, col: 6 }, pieceId: "9" },
+    ],
+    delayMs: 800,
   },
 };
 

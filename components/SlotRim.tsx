@@ -1,9 +1,17 @@
 import { GameElements } from "@/constants";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useUi } from "@/context/UiContext";
 import React, { memo } from "react";
 import { View } from "react-native";
+import Animated, { useAnimatedProps } from "react-native-reanimated";
 import Svg, { Circle, Mask, Rect } from "react-native-svg";
+
+const MASK_INNER_R = 16;
+const MASK_CX = 20;
+const MASK_CY = 20;
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 type Props = {
   id: string;
@@ -23,10 +31,15 @@ const getRotationForSlot = (id: string) => {
 const SlotRim: React.FC<Props> = ({ id }) => {
   const layout = useLayout();
   const { theme } = useSettings();
+  const { slotRimOpeningScale } = useUi();
   const slotLayout = layout.slots[id];
   if (!slotLayout) return null;
 
   const rotation = getRotationForSlot(id);
+
+  const animatedHoleProps = useAnimatedProps(() => ({
+    r: MASK_INNER_R * slotRimOpeningScale.value,
+  }));
 
   return (
     <View
@@ -44,7 +57,12 @@ const SlotRim: React.FC<Props> = ({ id }) => {
       <Svg height="40" width="40">
         <Mask id={`slotrim-mask-${id}`}>
           <Rect x="0" y="0" width="40" height="40" fill="white" />
-          <Circle cx="20" cy="20" r="16" fill="black" />
+          <AnimatedCircle
+            cx={MASK_CX}
+            cy={MASK_CY}
+            fill="black"
+            animatedProps={animatedHoleProps}
+          />
         </Mask>
         <Rect
           x="0"

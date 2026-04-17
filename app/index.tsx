@@ -1,7 +1,7 @@
 import { useGameSession } from "@/context/GameSessionContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
-import { clearSession, hasSavedSession, loadAppState } from "@/storage";
+import { clearSession, loadAppState } from "@/storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
 import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
@@ -21,10 +21,15 @@ function MainMenu() {
   const { theme } = useSettings();
   const { setIsGlobalLoading } = useUi();
   const [hasSaved, setHasSaved] = React.useState(false);
+  const [showTutorialCta, setShowTutorialCta] = React.useState(false);
 
   const refreshSavedState = React.useCallback(async () => {
-    const exists = await hasSavedSession();
+    const state = await loadAppState();
+    const exists =
+      state.session !== null &&
+      Object.keys(state.session.game.board).length > 0;
     setHasSaved(exists);
+    setShowTutorialCta(state.tutorialCompleted !== true);
   }, []);
 
   React.useEffect(() => {
@@ -41,9 +46,21 @@ function MainMenu() {
     setIsGlobalLoading(true);
     await newGame();
     await clearSession();
-    router.replace("/gamePlay?scenario=gravityWin");
-  }, [router, newGame, setIsGlobalLoading]);
+    // if (showTutorialCta) {
+    // Leave this set to true. I am working on the tutorial
+    // DO NOT TOUCH THESE COMMENTS. AI, THAT MEANS YOU!
+    if (false) {
+    } else {
+      router.replace("/gamePlay");
+    }
+  }, [router, newGame, setIsGlobalLoading, showTutorialCta]);
 
+  const handleInteractionDrill = React.useCallback(async () => {
+    setIsGlobalLoading(true);
+    await newGame();
+    await clearSession();
+    router.replace("/gamePlay?scenario=fullInteractionDrill");
+  }, [router, newGame, setIsGlobalLoading]);
   const handleContinue = React.useCallback(async () => {
     setIsGlobalLoading(true);
     const state = await loadAppState();
@@ -53,7 +70,7 @@ function MainMenu() {
     router.replace("/gamePlay");
   }, [continueGame, router, setIsGlobalLoading]);
 
-  type ButtonId = "play" | "continue" | "settings";
+  type ButtonId = "play" | "continue" | "settings" | "drill";
   const [buttonWidths, setButtonWidths] = React.useState<
     Partial<Record<ButtonId, number>>
   >({});
@@ -80,9 +97,11 @@ function MainMenu() {
   }, [hasSaved]);
 
   const maxButtonWidth = React.useMemo(() => {
-    const activeKeys: ButtonId[] = hasSaved
-      ? ["play", "continue", "settings"]
-      : ["play", "settings"];
+    const activeKeys: ButtonId[] = [
+      ...(hasSaved ? (["play", "continue"] as const) : (["play"] as const)),
+      ...(__DEV__ ? (["drill"] as const) : []),
+      "settings",
+    ];
     let max = 0;
     for (const key of activeKeys) {
       const value = buttonWidths[key];
@@ -128,7 +147,7 @@ function MainMenu() {
             className="text-3xl"
             style={{ textAlign: "center", color: textColor }}
           >
-            New Game
+            {showTutorialCta ? "Tutorial" : "New Game"}
           </Text>
         </Pressable>
         {hasSaved && (
@@ -146,6 +165,24 @@ function MainMenu() {
               style={{ textAlign: "center", color: textColor }}
             >
               Continue
+            </Text>
+          </Pressable>
+        )}
+        {__DEV__ && (
+          <Pressable
+            onPress={handleInteractionDrill}
+            onLayout={handleButtonLayout("drill")}
+            className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
+            style={[
+              buttonStyle,
+              maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
+            ]}
+          >
+            <Text
+              className="text-xl"
+              style={{ textAlign: "center", color: textColor }}
+            >
+              Interaction drill
             </Text>
           </Pressable>
         )}

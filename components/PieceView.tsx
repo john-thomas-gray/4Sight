@@ -3,6 +3,8 @@ import {
   animateDroppedPieceBlockedInSlot,
   BLOCKED_DROP_RETURN_START_MS,
 } from "@/animations/blockedSlotDrop";
+import { animatePieceReturnToWellResting } from "@/animations/pieceReturnToWell";
+import { animatePieceSlotThroughSpaceDrop } from "@/animations/pieceSlotThroughSpaceDrop";
 import { GameElements } from "@/constants";
 import {
   TURN_CHANGE_COMMIT_DELAY_MS,
@@ -19,13 +21,7 @@ import { CellType, EachCellType } from "@/types/board";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  withDelay,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import Glow from "./Glow";
 import { resolveDropOutcome, resolveDropTarget } from "./pieceDropController";
 
@@ -88,6 +84,9 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     );
     return entry ? entry[0] : null;
   }, [wellPieceLocations, id]);
+
+  const hiddenOffWell =
+    status === PieceStatus.inWell && currentWellEntry === null;
 
   const currentWellLayout = useMemo(() => {
     if (!currentWellEntry) return null;
@@ -270,31 +269,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               )
             : { kind: "returnToWell" as const, originWellId: origin?.id ?? "" };
 
-          fetch(
-            "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Debug-Session-Id": "ed3eae",
-              },
-              body: JSON.stringify({
-                sessionId: "ed3eae",
-                location: "PieceView.tsx:onEnd",
-                message: "drop-resolved",
-                data: {
-                  pieceId: id,
-                  originWell: origin?.id,
-                  hitCellId,
-                  outcome,
-                },
-                timestamp: Date.now(),
-                hypothesisId: "H4",
-              }),
-            },
-          ).catch(() => {});
-          // #endregion
-
           if (outcome.kind === "blockedSlot") {
             const slotKey = `${outcome.slotCoord.row}-${outcome.slotCoord.col}`;
             const slotLayout = layout.slots[slotKey];
@@ -329,27 +303,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                   originLayout.pageY +
                   originLayout.height / 2 -
                   GameElements.PIECE_RADIUS;
-
-                animate.scaleX.value = GameElements.PIECE_HELD_SCALE;
-                animate.scaleY.value = GameElements.PIECE_HELD_SCALE;
-                animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
-
-                animate.translateX.value = withTiming(
-                  targetX,
-                  {
-                    duration: RETURN_TO_WELL,
-                    easing: Easing.inOut(Easing.quad),
-                  },
-                  () => {
-                    animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-                    animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
-                    animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
-                  },
-                );
-                animate.translateY.value = withTiming(targetY, {
-                  duration: RETURN_TO_WELL,
-                  easing: Easing.inOut(Easing.quad),
-                });
+                animatePieceReturnToWellResting(animate, targetX, targetY);
               }, BLOCKED_DROP_RETURN_START_MS);
 
               const commitReturnToWellBlocked = () => {
@@ -380,64 +334,12 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             const slotKey = `${outcome.slotCoord.row}-${outcome.slotCoord.col}`;
             const slotLayout = layout.slots[slotKey];
             if (spaceLayout) {
-              const landingX =
-                spaceLayout.pageX +
-                spaceLayout.width / 2 -
-                GameElements.PIECE_RADIUS;
-              const landingY =
-                spaceLayout.pageY +
-                spaceLayout.height / 2 -
-                GameElements.PIECE_RADIUS;
-
               if (slotLayout) {
-                const slotX =
-                  slotLayout.pageX +
-                  slotLayout.width / 2 -
-                  GameElements.PIECE_RADIUS;
-                const slotY =
-                  slotLayout.pageY +
-                  slotLayout.height / 2 -
-                  GameElements.PIECE_RADIUS;
-                const isVerticalDrop =
-                  Math.abs(landingY - slotY) >= Math.abs(landingX - slotX);
-
-                // 1) Slide into slot center
-                // 2) Pause briefly
-                // 3) Drop to final space with bounce on the drop axis
-                animate.translateX.value = withSequence(
-                  withTiming(slotX, { duration: 120 }),
-                  withDelay(
-                    90,
-                    withTiming(landingX, {
-                      duration: isVerticalDrop ? 320 : 700,
-                      easing: isVerticalDrop ? Easing.linear : Easing.bounce,
-                    }),
-                  ),
+                animatePieceSlotThroughSpaceDrop(
+                  animate,
+                  slotLayout,
+                  spaceLayout,
                 );
-                animate.translateY.value = withSequence(
-                  withTiming(slotY, { duration: 120 }),
-                  withDelay(
-                    90,
-                    withTiming(landingY, {
-                      duration: isVerticalDrop ? 700 : 320,
-                      easing: isVerticalDrop ? Easing.bounce : Easing.linear,
-                    }),
-                  ),
-                );
-                animate.scaleX.value = withTiming(
-                  GameElements.PIECE_BOARD_SCALE,
-                  {
-                    duration: 110,
-                  },
-                );
-                animate.scaleY.value = withTiming(
-                  GameElements.PIECE_BOARD_SCALE,
-                  {
-                    duration: 110,
-                  },
-                );
-                // Lower elevation while entering the slot so it appears to sink into the board.
-                animate.zIndex.value = withTiming(900, { duration: 180 });
               } else {
                 snapToLayout(
                   spaceLayout.pageX,
@@ -455,25 +357,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                   [id]: PieceStatus.onBoard,
                 }));
                 originWellRef.current = null;
-                fetch(
-                  "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "X-Debug-Session-Id": "ed3eae",
-                    },
-                    body: JSON.stringify({
-                      sessionId: "ed3eae",
-                      location: "PieceView.tsx:placed",
-                      message: "piece-placed",
-                      data: { pieceId: id, landingKey: outcome.landingKey },
-                      timestamp: Date.now(),
-                      hypothesisId: "H1",
-                    }),
-                  },
-                ).catch(() => {});
-                // #endregion
               };
               if (slotLayout) {
                 setTimeout(commitPlacement, TURN_CHANGE_COMMIT_DELAY_MS);
@@ -514,29 +397,6 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             }
           }
 
-          fetch(
-            "http://127.0.0.1:7550/ingest/52e59372-0baa-4c90-83e2-0c082cfd8bb2",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Debug-Session-Id": "ed3eae",
-              },
-              body: JSON.stringify({
-                sessionId: "ed3eae",
-                location: "PieceView.tsx:returnToWell",
-                message: "returning-to-well",
-                data: {
-                  pieceId: id,
-                  originWellId: origin?.id,
-                  hasLayout: !!origin?.layout,
-                },
-                timestamp: Date.now(),
-                hypothesisId: "H2,H3",
-              }),
-            },
-          ).catch(() => {});
-          // #endregion
           if (origin?.layout) {
             const targetX =
               origin.layout.pageX +
@@ -546,27 +406,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               origin.layout.pageY +
               origin.layout.height / 2 -
               GameElements.PIECE_RADIUS;
-
-            animate.scaleX.value = GameElements.PIECE_HELD_SCALE;
-            animate.scaleY.value = GameElements.PIECE_HELD_SCALE;
-            animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
-
-            animate.translateX.value = withTiming(
-              targetX,
-              {
-                duration: RETURN_TO_WELL,
-                easing: Easing.inOut(Easing.quad),
-              },
-              () => {
-                animate.scaleX.value = GameElements.PIECE_WELL_SCALE;
-                animate.scaleY.value = GameElements.PIECE_WELL_SCALE;
-                animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
-              },
-            );
-            animate.translateY.value = withTiming(targetY, {
-              duration: RETURN_TO_WELL,
-              easing: Easing.inOut(Easing.quad),
-            });
+            animatePieceReturnToWellResting(animate, targetX, targetY);
           }
           const commitReturnToWell = () => {
             if (origin?.id) {
@@ -652,7 +492,8 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           status === PieceStatus.inWell
             ? { zIndex: GameElements.PIECE_WELL_ZINDEX }
             : null,
-          hiddenByPreview ? { opacity: 0 } : null,
+          hiddenByPreview || hiddenOffWell ? { opacity: 0 } : null,
+          hiddenOffWell ? { pointerEvents: "none" } : null,
         ]}
       >
         <Glow pieceId={id} />

@@ -119,6 +119,7 @@ describe("loadAppState validation", () => {
     expect(result.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(result.session).toBeNull();
     expect(result.settings).toEqual(DEFAULT_SETTINGS);
+    expect(result.tutorialCompleted).toBe(false);
   });
 
   it("returns defaults when storage contains invalid JSON", async () => {
