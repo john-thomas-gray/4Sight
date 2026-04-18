@@ -7,3 +7,6 @@ export const TURN_CHANGE_SETTLE_BUFFER_MS = 80;
 export const TIE_WIN_SECOND_CASCADE_BEAT_MS = 0;
 /** Delay before win/tie overlay after the relevant win cascade timing (matches normal win). */
 export const WIN_OVERLAY_DELAY_MS = 1600;
+
+/** Banner-only time on tutorial step 4 before loading the near-win board. */
+export const TUTORIAL_NEAR_WIN_INTRO_MS = 3000;

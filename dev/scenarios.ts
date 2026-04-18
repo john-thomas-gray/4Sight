@@ -1,5 +1,6 @@
-import { Team, Direction } from "@/engine";
 import type { Coord } from "@/engine";
+import { Direction, Team } from "@/engine";
+import { TUTORIAL_STEP_ONE_SOURCE_WELL_CELL_ID } from "@/tutorial/constants";
 
 export type ScenarioMove =
   | { type: "place"; targetSpace: Coord; pieceId: string }
@@ -12,6 +13,11 @@ export type Scenario = {
   delayMs?: number;
   /** When set, replaces default well layout (e.g. tutorial with a single spare piece). */
   wellPieceLocations?: Record<string, string>;
+  /**
+   * When true, `loadScenario` keeps the current board and only reapplies
+   * well layout + piece statuses from the live board (tutorial hand-off).
+   */
+  continuation?: boolean;
 };
 
 const DEFAULT_DELAY_MS = 1200;
@@ -26,9 +32,7 @@ export const scenarios: Record<string, Scenario> = {
       "4-4": "25",
     },
     currentTeam: Team.One,
-    moves: [
-      { type: "place", targetSpace: { row: 3, col: 6 }, pieceId: "3" },
-    ],
+    moves: [{ type: "place", targetSpace: { row: 3, col: 6 }, pieceId: "3" }],
     delayMs: 1500,
   },
 
@@ -49,9 +53,7 @@ export const scenarios: Record<string, Scenario> = {
       "6-2": "27",
     },
     currentTeam: Team.One,
-    moves: [
-      { type: "place", targetSpace: { row: 4, col: 4 }, pieceId: "9" },
-    ],
+    moves: [{ type: "place", targetSpace: { row: 4, col: 4 }, pieceId: "9" }],
     delayMs: 1500,
   },
 
@@ -92,46 +94,79 @@ export const scenarios: Record<string, Scenario> = {
     currentTeam: Team.One,
     moves: [],
     wellPieceLocations: {
-      "12-10": "0",
+      [TUTORIAL_STEP_ONE_SOURCE_WELL_CELL_ID]: "0",
     },
   },
 
   /**
-   * Dev drill: lone piece in column 1 (interior) runs four gravity pulls, then
-   * alternating drops stack columns 3–5 and finish with a horizontal Team One win.
-   * See `dev/__tests__/fullInteractionDrill.test.ts` for tie, drop outcomes, and previews.
+   * Tutorial step 2: continues from step 1; fills every well except the cell
+   * that held piece `"0"` in step 1.
    */
-  fullInteractionDrill: {
+  tutorialStep2: {
+    continuation: true,
+    board: {},
+    /** White already moved; scripted black stack runs next. */
+    currentTeam: Team.Two,
+    moves: [],
+  },
+  tutorialNearWin: {
     board: {
-      "2-1": "10",
+      "3-1": "0",
+      "4-1": "1",
+      "5-1": "2",
+      "1-4": "24",
+      "7-1": "25",
+      "7-2": "3",
+      "7-3": "26",
+      "6-2": "27",
+      "7-6": "4",
     },
     currentTeam: Team.One,
-    moves: [
-      { type: "gravity", direction: Direction.Down },
-      { type: "gravity", direction: Direction.Up },
-      { type: "gravity", direction: Direction.Right },
-      { type: "gravity", direction: Direction.Left },
-      { type: "place", targetSpace: { row: 7, col: 3 }, pieceId: "0" },
-      { type: "place", targetSpace: { row: 6, col: 3 }, pieceId: "24" },
-      { type: "place", targetSpace: { row: 5, col: 3 }, pieceId: "1" },
-      { type: "place", targetSpace: { row: 4, col: 3 }, pieceId: "25" },
-      { type: "place", targetSpace: { row: 3, col: 3 }, pieceId: "2" },
-      { type: "place", targetSpace: { row: 7, col: 4 }, pieceId: "26" },
-      { type: "place", targetSpace: { row: 6, col: 4 }, pieceId: "3" },
-      { type: "place", targetSpace: { row: 5, col: 4 }, pieceId: "27" },
-      { type: "place", targetSpace: { row: 4, col: 4 }, pieceId: "4" },
-      { type: "place", targetSpace: { row: 7, col: 7 }, pieceId: "28" },
-      { type: "place", targetSpace: { row: 3, col: 4 }, pieceId: "5" },
-      { type: "place", targetSpace: { row: 7, col: 5 }, pieceId: "29" },
-      { type: "place", targetSpace: { row: 6, col: 5 }, pieceId: "6" },
-      { type: "place", targetSpace: { row: 5, col: 5 }, pieceId: "30" },
-      { type: "place", targetSpace: { row: 4, col: 5 }, pieceId: "7" },
-      { type: "place", targetSpace: { row: 7, col: 2 }, pieceId: "31" },
-      { type: "place", targetSpace: { row: 3, col: 5 }, pieceId: "8" },
-      { type: "place", targetSpace: { row: 6, col: 2 }, pieceId: "32" },
-      { type: "place", targetSpace: { row: 3, col: 6 }, pieceId: "9" },
-    ],
-    delayMs: 800,
+    moves: [],
+  },
+  tutorialGravityNearWin: {
+    board: {
+      "1-2": "0",
+      "3-1": "23",
+      "7-3": "1",
+      "7-4": "2",
+      "7-5": "3",
+      "7-7": "4",
+      "6-3": "24",
+      "6-4": "25",
+      "6-5": "5",
+      "5-4": "26",
+      "5-5": "27",
+      "4-5": "6",
+      "4-7": "28",
+    },
+    currentTeam: Team.One,
+    moves: [],
+  },
+  tutorialTightSpot: {
+    board: {
+      "1-2": "0",
+      "2-7": "1",
+      "3-7": "24",
+      "4-7": "3",
+      "4-3": "27",
+      "4-4": "25",
+      "4-5": "26",
+      "5-3": "2",
+      "5-4": "5",
+      "6-4": "28",
+      "6-5": "29",
+      "6-6": "4",
+      "7-1": "6",
+      "7-3": "30",
+      "7-4": "7",
+      "7-5": "8",
+      "7-6": "31",
+      "4-1": "9",
+      "4-2": "10",
+    },
+    currentTeam: Team.One,
+    moves: [],
   },
 };
 

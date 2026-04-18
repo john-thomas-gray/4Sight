@@ -15,7 +15,8 @@ import { useLayout } from "@/context/LayoutContext";
 import { usePlayfieldFrameOptional } from "@/context/PlayfieldFrameContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
-import { Team } from "@/engine";
+import { TUTORIAL_STEP_ONE_FOCUS_PIECE_ID } from "@/tutorial/gamePlayTutorialSteps";
+import { getSlotEntryDirection, Team } from "@/engine";
 import { RETURN_TO_WELL } from "@/types/animation";
 import { CellType, EachCellType } from "@/types/board";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
@@ -39,6 +40,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     wellPieceLocations,
     setWellPieceLocations,
     dropPiece,
+    tutorialWhiteDropEntryDirectionRef,
   } = useGameSession();
   const layout = useLayout();
   const playfield = usePlayfieldFrameOptional();
@@ -49,6 +51,8 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     setMoveInProgressDelayed,
     setHoverPreview,
     isPreviewingGravity,
+    tutorialWellPieceIdlePulseActive,
+    tutorialWellPiecePulseScale,
   } = useUi();
 
   const animate = pieceAnims[id];
@@ -87,6 +91,11 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
 
   const hiddenOffWell =
     status === PieceStatus.inWell && currentWellEntry === null;
+
+  const applyTutorialWellIdlePulse =
+    id === TUTORIAL_STEP_ONE_FOCUS_PIECE_ID &&
+    status === PieceStatus.inWell &&
+    tutorialWellPieceIdlePulseActive;
 
   const currentWellLayout = useMemo(() => {
     if (!currentWellEntry) return null;
@@ -352,6 +361,12 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               const commitPlacement = () => {
                 animate.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
                 dropPiece(outcome.slotCoord, id);
+                if (id === TUTORIAL_STEP_ONE_FOCUS_PIECE_ID) {
+                  const entryDir = getSlotEntryDirection(outcome.slotCoord);
+                  if (entryDir != null) {
+                    tutorialWhiteDropEntryDirectionRef.current = entryDir;
+                  }
+                }
                 setPieceStatusMap((prev) => ({
                   ...prev,
                   [id]: PieceStatus.onBoard,
@@ -455,19 +470,25 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       dragYOffset,
       piecePlacementPreviews,
       playfield,
+      tutorialWhiteDropEntryDirectionRef,
     ],
   );
 
-  const animatedStyles = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: animate.translateX.value },
-      { translateY: animate.translateY.value },
-      { scaleX: animate.scaleX.value },
-      { scaleY: animate.scaleY.value },
-    ],
-    zIndex: animate.zIndex.value,
-    backgroundColor: animate.color.value,
-  }));
+  const animatedStyles = useAnimatedStyle(() => {
+    const pulse = applyTutorialWellIdlePulse
+      ? tutorialWellPiecePulseScale.value
+      : 1;
+    return {
+      transform: [
+        { translateX: animate.translateX.value },
+        { translateY: animate.translateY.value },
+        { scaleX: animate.scaleX.value * pulse },
+        { scaleY: animate.scaleY.value * pulse },
+      ],
+      zIndex: animate.zIndex.value,
+      backgroundColor: animate.color.value,
+    };
+  }, [applyTutorialWellIdlePulse, animate, tutorialWellPiecePulseScale]);
 
   const baseStyle: ViewStyle = {
     height: GameElements.PIECE_SIZE,

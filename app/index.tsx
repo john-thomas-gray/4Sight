@@ -2,6 +2,7 @@ import { useGameSession } from "@/context/GameSessionContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { clearSession, loadAppState } from "@/storage";
+import { TUTORIAL_STEP_ONE_GAMEPLAY_PATH } from "@/tutorial/gamePlayTutorialSteps";
 import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
 import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
@@ -29,7 +30,8 @@ function MainMenu() {
       state.session !== null &&
       Object.keys(state.session.game.board).length > 0;
     setHasSaved(exists);
-    setShowTutorialCta(state.tutorialCompleted !== true);
+    // Persisted flag is always a boolean after load/validate; only `false` means "offer tutorial".
+    setShowTutorialCta(state.tutorialCompleted === false);
   }, []);
 
   React.useEffect(() => {
@@ -42,24 +44,20 @@ function MainMenu() {
     }, [refreshSavedState]),
   );
 
+  const showTutorialEntry = __DEV__ || showTutorialCta;
+
   const handlePlay = React.useCallback(async () => {
     setIsGlobalLoading(true);
     await newGame();
     await clearSession();
-    // if (showTutorialCta) {
-    // Leave this set to true. I am working on the tutorial
-    // DO NOT TOUCH THESE COMMENTS. AI, THAT MEANS YOU!
-    if (false) {
-    } else {
-      router.replace("/gamePlay");
-    }
-  }, [router, newGame, setIsGlobalLoading, showTutorialCta]);
+    router.replace("/gamePlay");
+  }, [router, newGame, setIsGlobalLoading]);
 
-  const handleInteractionDrill = React.useCallback(async () => {
+  const handleTutorial = React.useCallback(async () => {
     setIsGlobalLoading(true);
     await newGame();
     await clearSession();
-    router.replace("/gamePlay?scenario=fullInteractionDrill");
+    router.replace(TUTORIAL_STEP_ONE_GAMEPLAY_PATH);
   }, [router, newGame, setIsGlobalLoading]);
   const handleContinue = React.useCallback(async () => {
     setIsGlobalLoading(true);
@@ -70,7 +68,7 @@ function MainMenu() {
     router.replace("/gamePlay");
   }, [continueGame, router, setIsGlobalLoading]);
 
-  type ButtonId = "play" | "continue" | "settings" | "drill";
+  type ButtonId = "play" | "continue" | "tutorial" | "settings";
   const [buttonWidths, setButtonWidths] = React.useState<
     Partial<Record<ButtonId, number>>
   >({});
@@ -97,18 +95,21 @@ function MainMenu() {
   }, [hasSaved]);
 
   const maxButtonWidth = React.useMemo(() => {
-    const activeKeys: ButtonId[] = [
-      ...(hasSaved ? (["play", "continue"] as const) : (["play"] as const)),
-      ...(__DEV__ ? (["drill"] as const) : []),
-      "settings",
-    ];
+    const withContinue: ButtonId[] = hasSaved
+      ? ["play", "continue", "settings"]
+      : ["play", "settings"];
+    const activeKeys: ButtonId[] = showTutorialEntry
+      ? hasSaved
+        ? ["play", "continue", "tutorial", "settings"]
+        : ["play", "tutorial", "settings"]
+      : withContinue;
     let max = 0;
     for (const key of activeKeys) {
       const value = buttonWidths[key];
       if (typeof value === "number" && value > max) max = value;
     }
     return max;
-  }, [buttonWidths, hasSaved]);
+  }, [buttonWidths, hasSaved, showTutorialEntry]);
 
   const textColor = theme.colorTheme.ODD_SPACE_COLOR;
   const buttonStyle = {
@@ -147,7 +148,7 @@ function MainMenu() {
             className="text-3xl"
             style={{ textAlign: "center", color: textColor }}
           >
-            {showTutorialCta ? "Tutorial" : "New Game"}
+            New Game
           </Text>
         </Pressable>
         {hasSaved && (
@@ -168,10 +169,10 @@ function MainMenu() {
             </Text>
           </Pressable>
         )}
-        {__DEV__ && (
+        {showTutorialEntry ? (
           <Pressable
-            onPress={handleInteractionDrill}
-            onLayout={handleButtonLayout("drill")}
+            onPress={handleTutorial}
+            onLayout={handleButtonLayout("tutorial")}
             className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
             style={[
               buttonStyle,
@@ -179,13 +180,13 @@ function MainMenu() {
             ]}
           >
             <Text
-              className="text-xl"
+              className="text-3xl"
               style={{ textAlign: "center", color: textColor }}
             >
-              Interaction drill
+              {__DEV__ ? "Tutorial (dev)" : "Tutorial"}
             </Text>
           </Pressable>
-        )}
+        ) : null}
         <Pressable
           onPress={() => router.push("/settings")}
           onLayout={handleButtonLayout("settings")}

@@ -1,7 +1,13 @@
+import { buildInitialWellPieceLocations } from "@/constants/wells";
+import {
+  buildTutorialStepTwoWellPieceLocations,
+  pieceStatusMapForBoardAndWells,
+} from "@/tutorial/tutorialWellLayout";
 import { useSettings } from "@/context/SettingsContext";
 import type { Scenario, ScenarioMove } from "@/dev/scenarios";
 import type { Coord, EngineResult, GameState, NearWin } from "@/engine";
 import {
+  computeTieWinOverlayDelayMs,
   coordToKey,
   createGame,
   detectNearWins,
@@ -12,11 +18,9 @@ import {
   findSlotForSpace,
   PIECES_PER_TEAM,
   Team,
-  computeTieWinOverlayDelayMs,
 } from "@/engine";
 import type { PersistedSessionState } from "@/storage";
 import { clearSession, serializableToGameState } from "@/storage";
-import { buildInitialWellPieceLocations } from "@/constants/wells";
 import {
   PieceAnimation,
   RESET_TO_WELL_BEAT_MS,
@@ -27,6 +31,7 @@ import {
   RESET_TO_WELL_TOTAL_MS,
   RESET_TO_WELL_ZIP_MS,
 } from "@/types/animation";
+import { PieceStatus, type PieceStatusMap } from "@/types/pieceStatus";
 import React, {
   createContext,
   ReactNode,
@@ -42,7 +47,6 @@ import {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { PieceStatus, type PieceStatusMap } from "@/types/pieceStatus";
 import { useLayout } from "./LayoutContext";
 import { useGameSessionSideEffects } from "./useGameSessionSideEffects";
 
@@ -65,6 +69,15 @@ type GameSessionContextType = {
   resetCurrentGame: () => Promise<void>;
   continueGame: (session: PersistedSessionState) => void;
   loadScenario: (scenario: Scenario) => ScenarioMove[];
+  /**
+   * Tutorial: fill wells from the current board (step 1 → 2) without reloading scenario/route.
+   */
+  applyTutorialStepTwoWells: () => void;
+  /**
+   * Tutorial: entry direction of the slot white used when placing the focus
+   * piece (step 1); used to script black's follow-up from another side.
+   */
+  tutorialWhiteDropEntryDirectionRef: React.MutableRefObject<Direction | null>;
   /** Milliseconds until tie modal should show (both cascades done); null when not a tie. */
   tieWinOverlayDelayMs: number | null;
 };
@@ -111,6 +124,8 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   const [wellPieceLocations, setWellPieceLocations] = useState<
     Record<string, string>
   >(buildInitialWellPieceLocations);
+  const gameStateRef = useRef(gameState);
+  gameStateRef.current = gameState;
   const pieceAnimsRef =
     useRef<Record<string, PieceAnimation>>(buildPieceAnims());
   const resetCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -118,6 +133,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   );
   const winnerCascadeKeyRef = useRef<string | null>(null);
   const winningDropPieceIdsRef = useRef<Set<string>>(new Set());
+  const tutorialWhiteDropEntryDirectionRef = useRef<Direction | null>(null);
 
   const nearWins = useMemo(
     () => detectNearWins(gameState.board, gameState.pieces),
@@ -198,13 +214,17 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       if (result.state !== gameState) {
         if (result.state.status === "finished") {
           const grav = result.events.find(
-            (e): e is Extract<
+            (
+              e,
+            ): e is Extract<
               (typeof result.events)[number],
               { type: "gravity_shifted" }
             > => e.type === "gravity_shifted",
           );
           const winEv = result.events.find(
-            (e): e is Extract<
+            (
+              e,
+            ): e is Extract<
               (typeof result.events)[number],
               { type: "game_won" | "game_tied" }
             > => e.type === "game_won" || e.type === "game_tied",
@@ -229,6 +249,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const newGame = useCallback(async () => {
+    tutorialWhiteDropEntryDirectionRef.current = null;
     const base = createGame();
     setGameState({ ...base, currentTeam: nextStartingTeam });
     setPieceStatusMap(buildInitialPieceStatusMap());
@@ -300,15 +321,19 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
           easing: zipEase,
         }),
         withTiming(hoverY, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(targetY, {
-          duration: RESET_TO_WELL_LOWER_MS,
-          easing: Easing.out(Easing.quad),
-        }, (finished) => {
-          if (!finished) return;
-          anim.scaleX.value = 1.1;
-          anim.scaleY.value = 1.1;
-          anim.zIndex.value = 500;
-        }),
+        withTiming(
+          targetY,
+          {
+            duration: RESET_TO_WELL_LOWER_MS,
+            easing: Easing.out(Easing.quad),
+          },
+          (finished) => {
+            if (!finished) return;
+            anim.scaleX.value = 1.1;
+            anim.scaleY.value = 1.1;
+            anim.zIndex.value = 500;
+          },
+        ),
       );
     }
 
@@ -345,7 +370,23 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
     setWellPieceLocations(session.wellPieceLocations);
   }, []);
 
+  const applyTutorialStepTwoWells = useCallback(() => {
+    const board = gameStateRef.current.board;
+    const wells = buildTutorialStepTwoWellPieceLocations(board);
+    setWellPieceLocations(wells);
+    setPieceStatusMap(pieceStatusMapForBoardAndWells(board, wells));
+  }, []);
+
   const loadScenario = useCallback((scenario: Scenario): ScenarioMove[] => {
+    if (scenario.continuation) {
+      applyTutorialStepTwoWells();
+      setGameState((prev) => ({
+        ...prev,
+        currentTeam: scenario.currentTeam,
+      }));
+      return [...scenario.moves];
+    }
+
     const base = createGame();
     setGameState({
       ...base,
@@ -383,7 +424,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
     setWellPieceLocations(wells);
 
     return [...scenario.moves];
-  }, []);
+  }, [applyTutorialStepTwoWells]);
 
   const value = useMemo<GameSessionContextType>(
     () => ({
@@ -401,6 +442,8 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       resetCurrentGame,
       continueGame,
       loadScenario,
+      applyTutorialStepTwoWells,
+      tutorialWhiteDropEntryDirectionRef,
       tieWinOverlayDelayMs,
     }),
     [
@@ -415,6 +458,7 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       resetCurrentGame,
       continueGame,
       loadScenario,
+      applyTutorialStepTwoWells,
       tieWinOverlayDelayMs,
     ],
   );

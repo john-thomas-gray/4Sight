@@ -26,8 +26,8 @@ Tutorial should introduce the concepts of:
 
 - dropping a piece from any direction
 - stacking pieces in any direction
-- escaping a seemingly insermountable situation by pulling (I want the classic three in a row with either side open)
-- pulling for defence/offense
+- escaping a seemingly insurmountable situation by pulling (I want the classic three in a row with either side open)
+- pulling for defense/offense
 
 The automatic moves in step 2 should not move directly to the space. They should move the piece to the slot that will get them to that space, and trigger the normal slot to space animation from @pieceAnimations.ts.
 Also, the pieces are placed incorrectly. The first black should be dropped in slot 0-4, the second white should be dropped in 6-0, the second black should be dropped in slot 0-4, the third white piece should be dropped in 7-8, and the third black piece should be should be dropped in 8-1.

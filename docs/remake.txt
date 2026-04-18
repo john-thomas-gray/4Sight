@@ -1,14 +1,13 @@
 Tutorial
+- block swiping for first few moves
 Stage for iPhone release
 In-app purchases:
     themes
     - street
-Fix Memory leak
 Animation:
 - pieces jiggle when held
 - indicate winning pieces
 - slot arrows turn direction of pull
-- Slots "turn off" when blocked
 - Animate theme change
 - keep gold winning piece to track wins
 Computer
@@ -22,3 +21,8 @@ Animation:
 Web and Android
 Earn a gold piece for each win. Winning with four gold pieces gets you an extra-special piece.
 There are special pieces for different types of wins(double win, triple, cross, x, quad)
+
+Dev: a scenario that tests each function one by one.
+
+
+In tutorial make the first win a diagonal or horizontal or vertical.

@@ -41,6 +41,10 @@ type UiContextType = {
   slotDropHintActive: boolean;
   setSlotDropHintActive: React.Dispatch<React.SetStateAction<boolean>>;
   slotRimOpeningScale: SharedValue<number>;
+  /** Tutorial: true before pickup — focus well piece scales in sync with slot rim pulse timing. */
+  tutorialWellPieceIdlePulseActive: boolean;
+  setTutorialWellPieceIdlePulseActive: React.Dispatch<React.SetStateAction<boolean>>;
+  tutorialWellPiecePulseScale: SharedValue<number>;
 };
 
 const UiContext = createContext<UiContextType | undefined>(undefined);
@@ -61,26 +65,34 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [slotDropHintActive, setSlotDropHintActive] = useState(false);
   const slotRimOpeningScale = useSharedValue(1);
   const hadSlotPulseRef = useRef(false);
+  const [tutorialWellPieceIdlePulseActive, setTutorialWellPieceIdlePulseActive] =
+    useState(false);
+  const tutorialWellPiecePulseScale = useSharedValue(1);
+  const hadWellPiecePulseRef = useRef(false);
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const runSlotRimStylePulse = useCallback((scale: SharedValue<number>) => {
+    cancelAnimation(scale);
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.09, {
+          duration: 700,
+          easing: Easing.inOut(Easing.quad),
+        }),
+        withTiming(1, {
+          duration: 700,
+          easing: Easing.inOut(Easing.quad),
+        }),
+      ),
+      -1,
+      false,
+    );
+  }, []);
 
   useEffect(() => {
     if (slotDropHintActive) {
-      cancelAnimation(slotRimOpeningScale);
+      runSlotRimStylePulse(slotRimOpeningScale);
       hadSlotPulseRef.current = true;
-      slotRimOpeningScale.value = withRepeat(
-        withSequence(
-          withTiming(1.09, {
-            duration: 700,
-            easing: Easing.inOut(Easing.quad),
-          }),
-          withTiming(1, {
-            duration: 700,
-            easing: Easing.inOut(Easing.quad),
-          }),
-        ),
-        -1,
-        false,
-      );
       return;
     }
 
@@ -96,7 +108,32 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     cancelAnimation(slotRimOpeningScale);
     slotRimOpeningScale.value = 1;
-  }, [slotDropHintActive, slotRimOpeningScale]);
+  }, [slotDropHintActive, slotRimOpeningScale, runSlotRimStylePulse]);
+
+  useEffect(() => {
+    if (tutorialWellPieceIdlePulseActive) {
+      runSlotRimStylePulse(tutorialWellPiecePulseScale);
+      hadWellPiecePulseRef.current = true;
+      return;
+    }
+
+    if (hadWellPiecePulseRef.current) {
+      cancelAnimation(tutorialWellPiecePulseScale);
+      hadWellPiecePulseRef.current = false;
+      tutorialWellPiecePulseScale.value = withTiming(1, {
+        duration: 550,
+        easing: Easing.inOut(Easing.quad),
+      });
+      return;
+    }
+
+    cancelAnimation(tutorialWellPiecePulseScale);
+    tutorialWellPiecePulseScale.value = 1;
+  }, [
+    tutorialWellPieceIdlePulseActive,
+    tutorialWellPiecePulseScale,
+    runSlotRimStylePulse,
+  ]);
 
   const setMoveInProgressDelayed = useCallback(
     (value: boolean, delayMs: number) => {
@@ -133,6 +170,9 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       slotDropHintActive,
       setSlotDropHintActive,
       slotRimOpeningScale,
+      tutorialWellPieceIdlePulseActive,
+      setTutorialWellPieceIdlePulseActive,
+      tutorialWellPiecePulseScale,
     }),
     [
       isGlobalLoading,
@@ -144,6 +184,8 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       hoverPreview,
       slotDropHintActive,
       slotRimOpeningScale,
+      tutorialWellPieceIdlePulseActive,
+      tutorialWellPiecePulseScale,
     ],
   );
 

@@ -1,6 +1,18 @@
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const BANNER_ENTRANCE_SPRING = {
+  damping: 10,
+  stiffness: 280,
+  mass: 0.5,
+} as const;
 
 type Props = {
   visible: boolean;
@@ -12,6 +24,7 @@ type Props = {
 
 /**
  * Floating copy card for in-game tutorial steps (safe-area aware).
+ * Springs in from a small scale when shown (matches tutorial well-fill timing).
  */
 const TutorialStepBanner = ({
   visible,
@@ -21,6 +34,21 @@ const TutorialStepBanner = ({
   wellBgColor,
 }: Props) => {
   const insets = useSafeAreaInsets();
+  const scale = useSharedValue(0.08);
+
+  useEffect(() => {
+    if (visible) {
+      scale.value = 0.08;
+      scale.value = withSpring(1, BANNER_ENTRANCE_SPRING);
+    } else {
+      cancelAnimation(scale);
+      scale.value = 0.08;
+    }
+  }, [visible, scale]);
+
+  const animatedCard = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   if (!visible) return null;
 
@@ -36,20 +64,23 @@ const TutorialStepBanner = ({
         zIndex: 5000,
       }}
     >
-      <View
+      <Animated.View
         pointerEvents="none"
-        style={{
-          marginHorizontal: 24,
-          maxWidth: 360,
-          width: 300,
-          borderRadius: 12,
-          backgroundColor: "transparent",
-          shadowColor: "#000",
-          shadowOffset: { width: 6, height: 6 },
-          shadowOpacity: 0.99,
-          shadowRadius: 16,
-          elevation: 9,
-        }}
+        style={[
+          {
+            marginHorizontal: 24,
+            maxWidth: 360,
+            width: 300,
+            borderRadius: 12,
+            backgroundColor: "transparent",
+            shadowColor: "#000",
+            shadowOffset: { width: 6, height: 6 },
+            shadowOpacity: 0.99,
+            shadowRadius: 16,
+            elevation: 9,
+          },
+          animatedCard,
+        ]}
       >
         <View
           pointerEvents="none"
@@ -79,7 +110,7 @@ const TutorialStepBanner = ({
             </Text>
           </View>
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 };
