@@ -1,5 +1,18 @@
-Tutorial
-- block swiping for first few moves
+Tutorial Polishes:
+- Elements animate in (board, wells, pieces, message)
+- Block swiping for first few moves
+- Message appears over the board and moves out of the way when you pick up a piece
+- Top left black piece flickers in well
+- Smooth transition to near win screen
+- Near win screen lets you win vertically, horizontally or diagonally
+- Contingency if player picks a move that does not win
+- Pieces are greyed out while it asks you to pull gravity (message blocks pieces?)
+- Step to preview gravity
+- Gravity shift win animation must be allowed to play out
+- Explain swipe to restart / shake to concede
+- Make transition to regular game seamless
+- Enable multiple messages?
+
 Stage for iPhone release
 In-app purchases:
     themes
