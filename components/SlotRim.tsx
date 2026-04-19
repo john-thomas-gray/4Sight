@@ -32,14 +32,13 @@ const SlotRim: React.FC<Props> = ({ id }) => {
   const layout = useLayout();
   const { theme } = useSettings();
   const { slotRimOpeningScale } = useUi();
+  const animatedHoleProps = useAnimatedProps(() => ({
+    r: MASK_INNER_R * slotRimOpeningScale.value,
+  }));
   const slotLayout = layout.slots[id];
   if (!slotLayout) return null;
 
   const rotation = getRotationForSlot(id);
-
-  const animatedHoleProps = useAnimatedProps(() => ({
-    r: MASK_INNER_R * slotRimOpeningScale.value,
-  }));
 
   return (
     <View
