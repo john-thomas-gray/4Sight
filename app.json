@@ -10,7 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.johnthomasgray.4Sight"
+      "bundleIdentifier": "com.johnthomasgray.4Sight",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMotionUsageDescription": "4Sight uses motion sensors for shake-to-reset gameplay interactions.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
