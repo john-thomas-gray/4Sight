@@ -1,4 +1,4 @@
-import { Team } from "@/engine";
+import { Direction, Team } from "@/engine";
 import React, {
   createContext,
   ReactNode,
@@ -45,6 +45,16 @@ type UiContextType = {
   tutorialWellPieceIdlePulseActive: boolean;
   setTutorialWellPieceIdlePulseActive: React.Dispatch<React.SetStateAction<boolean>>;
   tutorialWellPiecePulseScale: SharedValue<number>;
+  gravityPullEnabled: boolean;
+  setGravityPullEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  tutorialPiecePickupLocked: boolean;
+  setTutorialPiecePickupLocked: React.Dispatch<React.SetStateAction<boolean>>;
+  tutorialBannerAttentionSignal: number;
+  requestTutorialBannerAttention: () => void;
+  tutorialInaccessibleSlotEntryDirection: Direction | null;
+  setTutorialInaccessibleSlotEntryDirection: React.Dispatch<
+    React.SetStateAction<Direction | null>
+  >;
 };
 
 const UiContext = createContext<UiContextType | undefined>(undefined);
@@ -69,6 +79,15 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     useState(false);
   const tutorialWellPiecePulseScale = useSharedValue(1);
   const hadWellPiecePulseRef = useRef(false);
+  const [gravityPullEnabled, setGravityPullEnabled] = useState(true);
+  const [tutorialPiecePickupLocked, setTutorialPiecePickupLocked] =
+    useState(false);
+  const [tutorialBannerAttentionSignal, setTutorialBannerAttentionSignal] =
+    useState(0);
+  const [
+    tutorialInaccessibleSlotEntryDirection,
+    setTutorialInaccessibleSlotEntryDirection,
+  ] = useState<Direction | null>(null);
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runSlotRimStylePulse = useCallback((scale: SharedValue<number>) => {
@@ -146,6 +165,10 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     [],
   );
 
+  const requestTutorialBannerAttention = useCallback(() => {
+    setTutorialBannerAttentionSignal((signal) => signal + 1);
+  }, []);
+
   React.useEffect(() => {
     return () => {
       if (delayRef.current) clearTimeout(delayRef.current);
@@ -173,6 +196,14 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       tutorialWellPieceIdlePulseActive,
       setTutorialWellPieceIdlePulseActive,
       tutorialWellPiecePulseScale,
+      gravityPullEnabled,
+      setGravityPullEnabled,
+      tutorialPiecePickupLocked,
+      setTutorialPiecePickupLocked,
+      tutorialBannerAttentionSignal,
+      requestTutorialBannerAttention,
+      tutorialInaccessibleSlotEntryDirection,
+      setTutorialInaccessibleSlotEntryDirection,
     }),
     [
       isGlobalLoading,
@@ -186,6 +217,11 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       slotRimOpeningScale,
       tutorialWellPieceIdlePulseActive,
       tutorialWellPiecePulseScale,
+      gravityPullEnabled,
+      tutorialPiecePickupLocked,
+      tutorialBannerAttentionSignal,
+      requestTutorialBannerAttention,
+      tutorialInaccessibleSlotEntryDirection,
     ],
   );
 

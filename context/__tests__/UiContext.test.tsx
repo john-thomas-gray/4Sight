@@ -1,4 +1,4 @@
-import { Team } from "@/engine";
+import { Direction, Team } from "@/engine";
 import { act, fireEvent, render } from "@testing-library/react-native";
 import React from "react";
 import { Pressable, Text } from "react-native";
@@ -20,6 +20,14 @@ function UiProbe() {
       <Text testID="well-pulse">
         {String(ui.tutorialWellPieceIdlePulseActive)}
       </Text>
+      <Text testID="gravity-pulls">{String(ui.gravityPullEnabled)}</Text>
+      <Text testID="pickup-locked">{String(ui.tutorialPiecePickupLocked)}</Text>
+      <Text testID="banner-attention">
+        {String(ui.tutorialBannerAttentionSignal)}
+      </Text>
+      <Text testID="inaccessible-slot">
+        {ui.tutorialInaccessibleSlotEntryDirection ?? ""}
+      </Text>
       <Text testID="slot-scale">{String(ui.slotRimOpeningScale.value)}</Text>
       <Pressable testID="toggle-ui" onPress={() => {
         ui.setIsGlobalLoading(true);
@@ -29,6 +37,10 @@ function UiProbe() {
         ui.setHoverPreview({ spaceId: "3-3", team: Team.One });
         ui.setSlotDropHintActive(true);
         ui.setTutorialWellPieceIdlePulseActive(true);
+        ui.setGravityPullEnabled(false);
+        ui.setTutorialPiecePickupLocked(true);
+        ui.setTutorialInaccessibleSlotEntryDirection(Direction.Down);
+        ui.requestTutorialBannerAttention();
       }}>
         <Text>Toggle</Text>
       </Pressable>
@@ -63,6 +75,10 @@ describe("UiProvider", () => {
 
     expect(getByTestId("loading")).toHaveTextContent("false");
     expect(getByTestId("slot-scale")).toHaveTextContent("1");
+    expect(getByTestId("gravity-pulls")).toHaveTextContent("true");
+    expect(getByTestId("pickup-locked")).toHaveTextContent("false");
+    expect(getByTestId("banner-attention")).toHaveTextContent("0");
+    expect(getByTestId("inaccessible-slot")).toHaveTextContent("");
 
     fireEvent.press(getByTestId("toggle-ui"));
 
@@ -73,6 +89,10 @@ describe("UiProvider", () => {
     expect(getByTestId("hover")).toHaveTextContent("3-3");
     expect(getByTestId("slot-hint")).toHaveTextContent("true");
     expect(getByTestId("well-pulse")).toHaveTextContent("true");
+    expect(getByTestId("gravity-pulls")).toHaveTextContent("false");
+    expect(getByTestId("pickup-locked")).toHaveTextContent("true");
+    expect(getByTestId("banner-attention")).toHaveTextContent("1");
+    expect(getByTestId("inaccessible-slot")).toHaveTextContent(Direction.Down);
   });
 
   it("delays move-in-progress changes and keeps the latest timer", () => {

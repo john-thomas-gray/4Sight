@@ -8,6 +8,10 @@ import {
 } from "@/tutorial/tutorialWellLayout";
 
 describe("buildTutorialStepTwoWellPieceLocations", () => {
+  it("starts the tutorial with piece 0 in the center of player one's well", () => {
+    expect(TUTORIAL_STEP_ONE_SOURCE_WELL_CELL_ID).toBe("12-10");
+  });
+
   it("keeps exactly one empty well (the tutorial hole) when piece 0 is on the board", () => {
     const board = { "4-4": "0" };
     const wells = buildTutorialStepTwoWellPieceLocations(board);

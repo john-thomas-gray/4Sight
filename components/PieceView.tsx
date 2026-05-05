@@ -161,6 +161,9 @@ const PieceView: React.FC<PieceViewProps> = ({
     isPreviewingGravity,
     tutorialWellPieceIdlePulseActive,
     tutorialWellPiecePulseScale,
+    tutorialPiecePickupLocked,
+    requestTutorialBannerAttention,
+    tutorialInaccessibleSlotEntryDirection,
   } = useUi();
 
   const animate = pieceAnims[id];
@@ -223,6 +226,7 @@ const PieceView: React.FC<PieceViewProps> = ({
     layout: typeof currentWellLayout;
   } | null>(null);
   const releaseHandledRef = useRef(false);
+  const blockedPickupRef = useRef(false);
   const shadowGradientId = useMemo(() => `piece-shadow-${id}`, [id]);
 
   const allCells = useMemo((): EachCellType[] => {
@@ -430,11 +434,22 @@ const PieceView: React.FC<PieceViewProps> = ({
             status !== PieceStatus.winner &&
             gameState.status === "playing" &&
             isMyTurn &&
-            (status === PieceStatus.isHeld || !moveInProgress),
+            (tutorialPiecePickupLocked ||
+              status === PieceStatus.isHeld ||
+              !moveInProgress),
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
           releaseHandledRef.current = false;
+          if (tutorialPiecePickupLocked) {
+            blockedPickupRef.current = true;
+            releaseHandledRef.current = true;
+            requestTutorialBannerAttention();
+            setHoverPreview(null);
+            return;
+          }
+
+          blockedPickupRef.current = false;
           playfield?.playfieldRef.current?.measureInWindow((x, y) => {
             if (playfield) {
               playfield.windowOriginRef.current = { x, y };
@@ -461,6 +476,7 @@ const PieceView: React.FC<PieceViewProps> = ({
           setHoverPreview(null);
         })
         .onUpdate((event) => {
+          if (blockedPickupRef.current) return;
           const ox = playfield?.windowOriginRef.current.x ?? 0;
           const oy = playfield?.windowOriginRef.current.y ?? 0;
           animate.translateX.value =
@@ -470,6 +486,7 @@ const PieceView: React.FC<PieceViewProps> = ({
           setHoverPreview((prev) => (prev ? null : prev));
         })
         .onEnd(() => {
+          if (blockedPickupRef.current) return;
           releaseHandledRef.current = true;
           stopHeldJiggle();
           setHoverPreview(null);
@@ -503,6 +520,7 @@ const PieceView: React.FC<PieceViewProps> = ({
                 layout.wells[team],
                 wellPieceLocations,
                 origin?.id ?? "",
+                tutorialInaccessibleSlotEntryDirection,
               )
             : { kind: "returnToWell" as const, originWellId: origin?.id ?? "" };
 
@@ -683,6 +701,10 @@ const PieceView: React.FC<PieceViewProps> = ({
           }
         })
         .onFinalize(() => {
+          if (blockedPickupRef.current) {
+            blockedPickupRef.current = false;
+            return;
+          }
           if (!releaseHandledRef.current) {
             stopHeldJiggle();
             reversePieceLift(PIECE_RETURN_TO_WELL_LOWER_MS);
@@ -694,6 +716,9 @@ const PieceView: React.FC<PieceViewProps> = ({
       gameState.board,
       isMyTurn,
       moveInProgress,
+      tutorialPiecePickupLocked,
+      requestTutorialBannerAttention,
+      tutorialInaccessibleSlotEntryDirection,
       animate,
       allCells,
       layout.slots,

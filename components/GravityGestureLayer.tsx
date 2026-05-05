@@ -55,6 +55,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     setGravityAnimating,
     setIsPreviewingGravity,
     setGravityPreviewBoard,
+    gravityPullEnabled,
   } = useUi();
   const gravityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gravityCommitRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,6 +69,8 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   const executePull = useCallback(
     (direction: Direction) => {
+      if (!gravityPullEnabled) return;
+
       if (gameState.status === "finished") {
         resetCurrentGame();
         return;
@@ -133,6 +136,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       spaces,
       setMoveInProgress,
       setGravityAnimating,
+      gravityPullEnabled,
     ],
   );
 
@@ -142,6 +146,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   const handleFling = useCallback(
     (direction: Direction) => {
+      if (!gravityPullEnabled) return;
       if (moveInProgress) return;
       if (gameState.status === "playing") {
         executePull(direction);
@@ -149,11 +154,22 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
         resetCurrentGame();
       }
     },
-    [moveInProgress, gameState.status, executePull, resetCurrentGame],
+    [
+      gravityPullEnabled,
+      moveInProgress,
+      gameState.status,
+      executePull,
+      resetCurrentGame,
+    ],
   );
 
   const previewForPullDirection = useCallback(
     (pullDirection: Direction) => {
+      if (!gravityPullEnabled) {
+        setIsPreviewingGravity(false);
+        setGravityPreviewBoard(null);
+        return;
+      }
       if (!shiftPreviews) {
         setIsPreviewingGravity(false);
         setGravityPreviewBoard(null);
@@ -189,6 +205,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       gameState.board,
       setIsPreviewingGravity,
       setGravityPreviewBoard,
+      gravityPullEnabled,
     ],
   );
 
@@ -198,15 +215,20 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
   }, [setIsPreviewingGravity, setGravityPreviewBoard]);
 
   useEffect(() => {
-    if (!shiftPreviews) {
+    if (!shiftPreviews || !gravityPullEnabled) {
       clearPreview();
     }
-  }, [shiftPreviews, clearPreview]);
+  }, [shiftPreviews, gravityPullEnabled, clearPreview]);
 
   const holdPreview = Gesture.LongPress()
     .runOnJS(true)
+    .enabled(gravityPullEnabled)
     .minDuration(PREVIEW_HOLD_MS)
     .onStart((event) => {
+      if (!gravityPullEnabled) {
+        clearPreview();
+        return;
+      }
       if (moveInProgress) {
         clearPreview();
         return;
@@ -260,6 +282,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   const panFling = Gesture.Pan()
     .runOnJS(true)
+    .enabled(gravityPullEnabled)
     .onEnd((e) => {
       const absVX = Math.abs(e.velocityX);
       const absVY = Math.abs(e.velocityY);

@@ -119,7 +119,7 @@ const GAME_PLAY_TUTORIAL_STEPS: readonly GamePlayTutorialStep[] = [
     scenarioId: "tutorialStep5",
     tutorialStepQuery: "5",
     bannerMessage:
-      "On your turn, instead of dropping a piece, you can shift gravity. Swipe up, down, left, or right on the board to pull all the pieces in that direction! Pull gravity to win the game.",
+      "Instead of dropping a piece, you may swipe the board up, down, left or right to make the pieces drop in that direction. Shift gravity to win the game!",
     matchesScenario: (scenario, step) =>
       matchesTutorialHandoff(scenario, step, "5"),
     showBanner: (_map, context?: TutorialShowBannerContext) =>

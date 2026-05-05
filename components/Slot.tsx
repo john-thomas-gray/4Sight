@@ -8,9 +8,11 @@ import {
   usePlayfieldFrameOptional,
 } from "@/context/PlayfieldFrameContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useUi } from "@/context/UiContext";
 import {
   Team,
   getFirstOccupiedInSlotPath,
+  getSlotEntryDirection,
   keyToCoord,
   resolveSlotDrop,
 } from "@/engine";
@@ -23,6 +25,7 @@ const Slot = ({ id }: CellProps) => {
   const { registerCell, slots } = useLayout();
   const { gameState } = useGameSession();
   const { theme } = useSettings();
+  const { tutorialInaccessibleSlotEntryDirection } = useUi();
   const playfield = usePlayfieldFrameOptional();
   const playfieldRef = playfield?.playfieldRef ?? EMPTY_PLAYFIELD_REF;
 
@@ -61,10 +64,13 @@ const Slot = ({ id }: CellProps) => {
     row === 0 ? "90deg" : row === 8 ? "270deg" : col === 0 ? "0deg" : "180deg";
 
   const slotCoord = useMemo(() => keyToCoord(id), [id]);
+  const isInaccessible =
+    getSlotEntryDirection(slotCoord) === tutorialInaccessibleSlotEntryDirection;
   const isBlocked = useMemo(() => {
+    if (isInaccessible) return true;
     if (resolveSlotDrop(gameState.board, slotCoord) !== null) return false;
     return getFirstOccupiedInSlotPath(gameState.board, slotCoord) !== null;
-  }, [gameState.board, slotCoord]);
+  }, [gameState.board, isInaccessible, slotCoord]);
 
   const slotDiscColor = isBlocked
     ? theme.colorTheme.BLOCKED_SLOT_BG_COLOR

@@ -1,7 +1,6 @@
 import { render } from "@testing-library/react-native";
 import React from "react";
 import { View } from "react-native";
-import BoardGridView from "../BoardGridView";
 
 const mockCorner = ({ id }: { id: string }) => (
   <View testID="corner" nativeID={id} />
@@ -30,6 +29,8 @@ jest.mock("../Space", () => ({
 
 describe("BoardGridView", () => {
   it("renders the full 9x9 playfield frame with corners, slots, and spaces", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const BoardGridView = require("../BoardGridView").default;
     const { getAllByTestId } = render(<BoardGridView />);
 
     expect(getAllByTestId("corner")).toHaveLength(4);

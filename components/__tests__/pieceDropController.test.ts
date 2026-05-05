@@ -50,6 +50,24 @@ describe("piece retains origin well until placed successfully", () => {
     const outcome = resolveDropOutcome("well-1", {}, slotIds, spaceIds, wellIds, occupied, ORIGIN_WELL);
     expect(outcome).toEqual({ kind: "returnToWell", originWellId: ORIGIN_WELL });
   });
+
+  it("tutorial-inaccessible slot edge → returns to origin well", () => {
+    const outcome = resolveDropOutcome(
+      "0-4",
+      {},
+      slotIds,
+      spaceIds,
+      wellIds,
+      {},
+      ORIGIN_WELL,
+      Direction.Down,
+    );
+
+    expect(outcome).toEqual({
+      kind: "returnToWell",
+      originWellId: ORIGIN_WELL,
+    });
+  });
 });
 
 describe("successful placements", () => {
@@ -70,6 +88,34 @@ describe("successful placements", () => {
     if (outcome.kind === "placed") {
       expect(outcome.landingKey).toBe("2-4");
     }
+  });
+
+  it("space drop avoids a tutorial-inaccessible slot edge", () => {
+    const board = boardFrom([
+      ["5-4", "top-blocker"],
+      ["4-5", "left-blocker"],
+    ]);
+    const outcome = resolveDropOutcome(
+      "4-4",
+      board,
+      {
+        "0-4": 1,
+        "4-0": 1,
+        "4-8": 1,
+        "8-4": 1,
+      },
+      { "4-4": 1 },
+      wellIds,
+      {},
+      ORIGIN_WELL,
+      Direction.Down,
+    );
+
+    expect(outcome).toEqual({
+      kind: "placed",
+      slotCoord: { row: 4, col: 0 },
+      landingKey: "4-4",
+    });
   });
 
   it("empty well cell → piece moves to that well", () => {

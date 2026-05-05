@@ -108,6 +108,37 @@ describe("useGamePlayTutorial", () => {
     await waitFor(() => {
       expect(applyTutorialStepTwoWells).toHaveBeenCalledTimes(1);
       expect(getByTestId("resolved")).toHaveTextContent("2");
+      expect(setSlotDropHintActive).toHaveBeenLastCalledWith(false);
+    });
+  });
+
+  it("pulses slot openings only while the focus piece is held", async () => {
+    const setSlotDropHintActive = jest.fn();
+    const setTutorialWellPieceIdlePulseActive = jest.fn();
+    const { rerender } = render(
+      <HookProbe
+        pieceStatusMap={{ "0": PieceStatus.inWell }}
+        setSlotDropHintActive={setSlotDropHintActive}
+        setTutorialWellPieceIdlePulseActive={setTutorialWellPieceIdlePulseActive}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(setTutorialWellPieceIdlePulseActive).toHaveBeenLastCalledWith(true);
+      expect(setSlotDropHintActive).toHaveBeenLastCalledWith(false);
+    });
+
+    rerender(
+      <HookProbe
+        pieceStatusMap={{ "0": PieceStatus.isHeld }}
+        setSlotDropHintActive={setSlotDropHintActive}
+        setTutorialWellPieceIdlePulseActive={setTutorialWellPieceIdlePulseActive}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(setTutorialWellPieceIdlePulseActive).toHaveBeenLastCalledWith(false);
+      expect(setSlotDropHintActive).toHaveBeenLastCalledWith(true);
     });
   });
 
@@ -162,6 +193,8 @@ describe("useGamePlayTutorial", () => {
 
     expect(getByTestId("resolved")).toHaveTextContent("5");
     expect(getByTestId("show")).toHaveTextContent("true");
-    expect(getByTestId("message")).toHaveTextContent(/shift gravity/);
+    expect(getByTestId("message")).toHaveTextContent(
+      "Instead of dropping a piece, you may swipe the board up, down, left or right to make the pieces drop in that direction. Shift gravity to win the game!",
+    );
   });
 });

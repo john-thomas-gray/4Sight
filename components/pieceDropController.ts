@@ -1,4 +1,5 @@
 import {
+  BOARD_SIZE,
   resolveSlotDrop,
   isSlot,
   keyToCoord,
@@ -39,10 +40,14 @@ function resolveDropTarget(
   slotIds: Record<string, unknown>,
   spaceIds: Record<string, unknown>,
   wellIds: Record<string, unknown>,
+  inaccessibleSlotEntryDirection?: Direction | null,
 ): DropTarget {
   const coord = keyToCoord(cellId);
 
   if (cellId in slotIds && isSlot(coord)) {
+    if (getSlotEntryDirection(coord) === inaccessibleSlotEntryDirection) {
+      return { kind: "miss" };
+    }
     const landing = resolveSlotDrop(board, coord);
     if (!landing) {
       const block = getFirstOccupiedInSlotPath(board, coord);
@@ -67,7 +72,11 @@ function resolveDropTarget(
   }
 
   if (cellId in spaceIds) {
-    const slot = findSlotForSpace(board, coord);
+    const slot = findSlotForSpaceAvoidingInaccessibleDirection(
+      board,
+      coord,
+      inaccessibleSlotEntryDirection,
+    );
     if (!slot) {
       return { kind: "miss" };
     }
@@ -117,8 +126,16 @@ export function resolveDropOutcome(
   wellIds: Record<string, unknown>,
   wellPieceLocations: Readonly<Record<string, string>>,
   originWellId: string,
+  inaccessibleSlotEntryDirection?: Direction | null,
 ): DropOutcome {
-  const target = resolveDropTarget(cellId, board, slotIds, spaceIds, wellIds);
+  const target = resolveDropTarget(
+    cellId,
+    board,
+    slotIds,
+    spaceIds,
+    wellIds,
+    inaccessibleSlotEntryDirection,
+  );
 
   if (target.kind === "blockedSlot") {
     return {
@@ -139,4 +156,48 @@ export function resolveDropOutcome(
   }
 
   return { kind: "returnToWell", originWellId };
+}
+
+function findSlotForSpaceAvoidingInaccessibleDirection(
+  board: Readonly<Record<string, string>>,
+  target: Coord,
+  inaccessibleSlotEntryDirection?: Direction | null,
+): Coord | null {
+  if (!inaccessibleSlotEntryDirection) {
+    return findSlotForSpace(board, target);
+  }
+
+  const targetKey = coordToKey(target);
+  if (board[targetKey] !== undefined) return null;
+
+  const frame = BOARD_SIZE + 1;
+  const candidates: { slot: Coord; distance: number }[] = [
+    { slot: { row: 0, col: target.col }, distance: target.row },
+    { slot: { row: frame, col: target.col }, distance: frame - target.row },
+    { slot: { row: target.row, col: 0 }, distance: target.col },
+    { slot: { row: target.row, col: frame }, distance: frame - target.col },
+  ];
+
+  let best: Coord | null = null;
+  let bestDistance = Infinity;
+
+  for (const { slot, distance } of candidates) {
+    if (!isSlot(slot)) continue;
+    if (getSlotEntryDirection(slot) === inaccessibleSlotEntryDirection) {
+      continue;
+    }
+
+    const landing = resolveSlotDrop(board, slot);
+    if (
+      landing &&
+      landing.row === target.row &&
+      landing.col === target.col &&
+      distance < bestDistance
+    ) {
+      best = slot;
+      bestDistance = distance;
+    }
+  }
+
+  return best;
 }

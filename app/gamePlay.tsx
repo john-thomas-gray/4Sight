@@ -54,6 +54,7 @@ const TEAM_ONE_WELL_ENTRANCE_START_X = 420;
 const WELL_ENTRANCE_DELAY_MS = 520;
 const WELL_ENTRANCE_DURATION_MS = 520;
 const PIECE_SPROUT_DELAY_MS = WELL_ENTRANCE_DELAY_MS + WELL_ENTRANCE_DURATION_MS - 60;
+const TUTORIAL_STEP_ONE_BANNER_READY_DELAY_MS = PIECE_SPROUT_DELAY_MS + 380;
 
 const GamePlay = () => {
   const router = useRouter();
@@ -81,6 +82,10 @@ const GamePlay = () => {
     setMoveInProgressDelayed,
     setSlotDropHintActive,
     setTutorialWellPieceIdlePulseActive,
+    setGravityPullEnabled,
+    setTutorialPiecePickupLocked,
+    tutorialBannerAttentionSignal,
+    setTutorialInaccessibleSlotEntryDirection,
   } = useUi();
   const { theme } = useSettings();
   const { scenario: scenarioParam, tutorialStep: tutorialStepParam } =
@@ -99,6 +104,13 @@ const GamePlay = () => {
   const [showWinOverlay, setShowWinOverlay] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(
     () => !initialSkipLoadingOverlayFromTutorialUrl,
+  );
+  const [tutorialStepOneBannerReady, setTutorialStepOneBannerReady] = useState(
+    () =>
+      !(
+        scenarioParam === "tutorialStep1" &&
+        (tutorialStepParam ?? "1") === "1"
+      ),
   );
   /** After first dismiss, do not flash loading when layout churns. */
   const loadingScreenDismissedOnceRef = useRef(
@@ -206,6 +218,66 @@ const GamePlay = () => {
     setSlotDropHintActive,
     setTutorialWellPieceIdlePulseActive,
   });
+  const isTutorialStepOneIntro =
+    scenarioParam === "tutorialStep1" && resolvedTutorialStepParam === "1";
+  const isTutorialActive = !!scenarioParam?.startsWith("tutorial");
+  const tutorialStepNumber = Number(resolvedTutorialStepParam);
+  const tutorialBannerVisible =
+    showTutorialBanner &&
+    (!isTutorialStepOneIntro || tutorialStepOneBannerReady);
+
+  useEffect(() => {
+    if (!isTutorialStepOneIntro) {
+      setTutorialStepOneBannerReady(true);
+      return;
+    }
+
+    setTutorialStepOneBannerReady(false);
+    if (showLoadingScreen || !allPlayfieldCellsReady) return;
+
+    const timer = setTimeout(() => {
+      setTutorialStepOneBannerReady(true);
+    }, TUTORIAL_STEP_ONE_BANNER_READY_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isTutorialStepOneIntro, showLoadingScreen, allPlayfieldCellsReady]);
+
+  useEffect(() => {
+    const gravityUnlocked =
+      !isTutorialActive ||
+      (Number.isFinite(tutorialStepNumber) && tutorialStepNumber >= 5);
+    setGravityPullEnabled(gravityUnlocked);
+    setTutorialPiecePickupLocked(
+      isTutorialActive &&
+        (resolvedTutorialStepParam === "5" ||
+          resolvedTutorialStepParam === "6"),
+    );
+
+    return () => {
+      setGravityPullEnabled(true);
+      setTutorialPiecePickupLocked(false);
+    };
+  }, [
+    isTutorialActive,
+    tutorialStepNumber,
+    resolvedTutorialStepParam,
+    setGravityPullEnabled,
+    setTutorialPiecePickupLocked,
+  ]);
+
+  useEffect(() => {
+    const blockedEntryDirection =
+      isTutorialActive && resolvedTutorialStepParam === "2"
+        ? tutorialWhiteDropEntryDirectionRef.current
+        : null;
+    setTutorialInaccessibleSlotEntryDirection(blockedEntryDirection);
+
+    return () => setTutorialInaccessibleSlotEntryDirection(null);
+  }, [
+    isTutorialActive,
+    resolvedTutorialStepParam,
+    setTutorialInaccessibleSlotEntryDirection,
+    tutorialWhiteDropEntryDirectionRef,
+  ]);
 
   useShake({
     enabled:
@@ -592,10 +664,13 @@ const GamePlay = () => {
     showLoadingScreen,
   ]);
 
-  const piecesToRender = useMemo(
-    () => Object.entries(gameState.pieces),
-    [gameState.pieces],
-  );
+  const piecesToRender = useMemo(() => {
+    const pieceIdsInWells = new Set(Object.values(wellPieceLocations));
+    return Object.entries(gameState.pieces).filter(([pid]) => {
+      const status = pieceStatusMap[pid] ?? PieceStatus.inWell;
+      return status !== PieceStatus.inWell || pieceIdsInWells.has(pid);
+    });
+  }, [gameState.pieces, pieceStatusMap, wellPieceLocations]);
 
   useEffect(() => {
     if (
@@ -777,11 +852,12 @@ const GamePlay = () => {
       </PlayfieldFrameProvider>
 
       <TutorialStepBanner
-        visible={showTutorialBanner}
+        visible={tutorialBannerVisible}
         message={tutorialBannerMessage}
         textColor={textColor}
         slotBorderColor={colors.SLOT_BORDER_COLOR}
         wellBgColor={colors.WELL_BG_COLOR_TWO}
+        attentionSignal={tutorialBannerAttentionSignal}
       />
 
       <WinOverlay
