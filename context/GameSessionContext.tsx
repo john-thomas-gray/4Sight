@@ -24,7 +24,6 @@ import { clearSession, serializableToGameState } from "@/storage";
 import {
   PieceAnimation,
   RESET_TO_WELL_BEAT_MS,
-  RESET_TO_WELL_HOVER_DY,
   RESET_TO_WELL_LOWER_MS,
   RESET_TO_WELL_RISE_DY,
   RESET_TO_WELL_RISE_MS,
@@ -287,7 +286,6 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
       const startX = anim.translateX.value;
       const startY = anim.translateY.value;
       const riseY = startY - RESET_TO_WELL_RISE_DY;
-      const hoverY = targetY - RESET_TO_WELL_HOVER_DY;
       const zipEase = Easing.inOut(Easing.cubic);
 
       anim.scaleX.value = 1.5;
@@ -316,11 +314,11 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
           easing: Easing.out(Easing.cubic),
         }),
         withTiming(riseY, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(hoverY, {
+        withTiming(targetY, {
           duration: RESET_TO_WELL_ZIP_MS,
           easing: zipEase,
         }),
-        withTiming(hoverY, { duration: RESET_TO_WELL_BEAT_MS }),
+        withTiming(targetY, { duration: RESET_TO_WELL_BEAT_MS }),
         withTiming(
           targetY,
           {
@@ -334,6 +332,20 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
             anim.zIndex.value = 500;
           },
         ),
+      );
+      anim.scaleX.value = withSequence(
+        withTiming(1.5, { duration: RESET_TO_WELL_RISE_MS }),
+        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
+        withTiming(1.5, { duration: RESET_TO_WELL_ZIP_MS }),
+        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
+        withTiming(1.1, { duration: RESET_TO_WELL_LOWER_MS }),
+      );
+      anim.scaleY.value = withSequence(
+        withTiming(1.5, { duration: RESET_TO_WELL_RISE_MS }),
+        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
+        withTiming(1.5, { duration: RESET_TO_WELL_ZIP_MS }),
+        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
+        withTiming(1.1, { duration: RESET_TO_WELL_LOWER_MS }),
       );
     }
 

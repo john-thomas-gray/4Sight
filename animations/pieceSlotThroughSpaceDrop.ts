@@ -8,6 +8,9 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
+export const SLOT_CENTER_MS = 120;
+export const SLOT_LOWER_IN_SLOT_MS = 110;
+
 export type PieceSlotThroughSpaceDropOptions = {
   /**
    * When true, snaps scale and z-index to the "held" presentation before the
@@ -18,8 +21,8 @@ export type PieceSlotThroughSpaceDropOptions = {
 };
 
 /**
- * Choreography: slot center → brief pause → landing space, with axis-dependent
- * easing. Also eases scale/z toward the on-board presentation.
+ * Choreography: slot center → lower in place → landing space, with
+ * axis-dependent easing. Scale only changes after the piece is centered.
  */
 export function animatePieceSlotThroughSpaceDrop(
   anim: PieceAnimation,
@@ -45,9 +48,9 @@ export function animatePieceSlotThroughSpaceDrop(
   }
 
   anim.translateX.value = withSequence(
-    withTiming(slotX, { duration: 120 }),
+    withTiming(slotX, { duration: SLOT_CENTER_MS }),
     withDelay(
-      90,
+      SLOT_LOWER_IN_SLOT_MS,
       withTiming(landingX, {
         duration: isVerticalDrop ? 320 : 700,
         easing: isVerticalDrop ? Easing.linear : Easing.bounce,
@@ -55,20 +58,26 @@ export function animatePieceSlotThroughSpaceDrop(
     ),
   );
   anim.translateY.value = withSequence(
-    withTiming(slotY, { duration: 120 }),
+    withTiming(slotY, { duration: SLOT_CENTER_MS }),
     withDelay(
-      90,
+      SLOT_LOWER_IN_SLOT_MS,
       withTiming(landingY, {
         duration: isVerticalDrop ? 700 : 320,
         easing: isVerticalDrop ? Easing.bounce : Easing.linear,
       }),
     ),
   );
-  anim.scaleX.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
-    duration: 110,
-  });
-  anim.scaleY.value = withTiming(GameElements.PIECE_BOARD_SCALE, {
-    duration: 110,
-  });
+  anim.scaleX.value = withDelay(
+    SLOT_CENTER_MS,
+    withTiming(GameElements.PIECE_BOARD_SCALE, {
+      duration: SLOT_LOWER_IN_SLOT_MS,
+    }),
+  );
+  anim.scaleY.value = withDelay(
+    SLOT_CENTER_MS,
+    withTiming(GameElements.PIECE_BOARD_SCALE, {
+      duration: SLOT_LOWER_IN_SLOT_MS,
+    }),
+  );
   anim.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
 }

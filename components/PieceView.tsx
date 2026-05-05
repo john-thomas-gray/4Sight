@@ -3,8 +3,18 @@ import {
   animateDroppedPieceBlockedInSlot,
   BLOCKED_DROP_RETURN_START_MS,
 } from "@/animations/blockedSlotDrop";
-import { animatePieceReturnToWellResting } from "@/animations/pieceReturnToWell";
-import { animatePieceSlotThroughSpaceDrop } from "@/animations/pieceSlotThroughSpaceDrop";
+import {
+  animatePieceReturnToWellResting,
+  PIECE_RETURN_TO_WELL_CENTER_MS,
+  PIECE_RETURN_TO_WELL_LIFT_SETTLE_MS,
+  PIECE_RETURN_TO_WELL_LOWER_MS,
+  PIECE_RETURN_TO_WELL_TOTAL_MS,
+} from "@/animations/pieceReturnToWell";
+import {
+  animatePieceSlotThroughSpaceDrop,
+  SLOT_CENTER_MS,
+  SLOT_LOWER_IN_SLOT_MS,
+} from "@/animations/pieceSlotThroughSpaceDrop";
 import { GameElements } from "@/constants";
 import {
   TURN_CHANGE_COMMIT_DELAY_MS,
@@ -17,7 +27,6 @@ import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
 import { TUTORIAL_STEP_ONE_FOCUS_PIECE_ID } from "@/tutorial/gamePlayTutorialSteps";
 import { getSlotEntryDirection, Team } from "@/engine";
-import { RETURN_TO_WELL } from "@/types/animation";
 import { CellType, EachCellType } from "@/types/board";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { ViewStyle } from "react-native";
@@ -25,21 +34,112 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
   Easing,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
 } from "react-native-reanimated";
+import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 import Glow from "./Glow";
-import { resolveDropOutcome, resolveDropTarget } from "./pieceDropController";
+import { resolveDropOutcome } from "./pieceDropController";
 
 type PieceViewProps = {
   id: string;
   team: Team;
+  entranceOpacity?: SharedValue<number>;
+  entranceTranslateX?: SharedValue<number>;
+  entranceTranslateY?: SharedValue<number>;
 };
 
-const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
+const SNAP_SHADOW_DESCEND_MS = 300;
+
+function resolveShadowAnchorStyle(
+  scale: number,
+  lift: number,
+  pieceCenterX: number,
+  pieceCenterY: number,
+  sunX: number,
+  sunY: number,
+  nearestSunDistance: number,
+  farthestSunDistance: number,
+  jiggleX: number,
+  jiggleY: number,
+) {
+  "worklet";
+
+  const sproutVisibility = Math.max(0, Math.min(1, scale));
+  const sunToPieceX = pieceCenterX - sunX;
+  const sunToPieceY = pieceCenterY - sunY;
+  const sunDistance = Math.max(
+    1,
+    Math.sqrt(sunToPieceX * sunToPieceX + sunToPieceY * sunToPieceY),
+  );
+  const unitX = sunToPieceX / sunDistance;
+  const unitY = sunToPieceY / sunDistance;
+  const sunDistanceRange = Math.max(1, farthestSunDistance - nearestSunDistance);
+  const distanceFromSun = Math.max(
+    0,
+    Math.min(1, (sunDistance - nearestSunDistance) / sunDistanceRange),
+  );
+  const liftedOffset = lift * (12 + distanceFromSun * 46);
+
+  return {
+    opacity: (0.18 + lift * 0.2) * sproutVisibility,
+    transform: [
+      { translateX: unitX * liftedOffset + jiggleX * 0.15 },
+      { translateY: unitY * liftedOffset + jiggleY * 0.15 },
+    ],
+  };
+}
+
+function resolveShadowShapeStyle(
+  scale: number,
+  lift: number,
+  pieceCenterX: number,
+  pieceCenterY: number,
+  sunX: number,
+  sunY: number,
+  nearestSunDistance: number,
+  farthestSunDistance: number,
+) {
+  "worklet";
+
+  const sproutVisibility = Math.max(0, Math.min(1, scale));
+  const sunToPieceX = pieceCenterX - sunX;
+  const sunToPieceY = pieceCenterY - sunY;
+  const sunDistance = Math.max(
+    1,
+    Math.sqrt(sunToPieceX * sunToPieceX + sunToPieceY * sunToPieceY),
+  );
+  const unitX = sunToPieceX / sunDistance;
+  const unitY = sunToPieceY / sunDistance;
+  const sunDistanceRange = Math.max(1, farthestSunDistance - nearestSunDistance);
+  const distanceFromSun = Math.max(
+    0,
+    Math.min(1, (sunDistance - nearestSunDistance) / sunDistanceRange),
+  );
+  const baseScale = Math.max(0.22, (0.65 + lift * 2.15) * sproutVisibility);
+  const castStretch = 0.2 + distanceFromSun * 1.12;
+
+  return {
+    transform: [
+      { rotate: `${Math.atan2(unitY, unitX)}rad` },
+      { scaleX: baseScale * (1 + lift * castStretch) },
+      { scaleY: baseScale * (1 + lift * 0.06) },
+    ],
+  };
+}
+
+const PieceView: React.FC<PieceViewProps> = ({
+  id,
+  team,
+  entranceOpacity,
+  entranceTranslateX,
+  entranceTranslateY,
+}) => {
   const {
     gameState,
     pieceAnims,
@@ -52,7 +152,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
   } = useGameSession();
   const layout = useLayout();
   const playfield = usePlayfieldFrameOptional();
-  const { theme, piecePlacementPreviews } = useSettings();
+  const { theme } = useSettings();
   const {
     moveInProgress,
     setMoveInProgress,
@@ -67,6 +167,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
   const heldJiggleRotation = useSharedValue(0);
   const heldJiggleX = useSharedValue(0);
   const heldJiggleY = useSharedValue(0);
+  const pieceLift = useSharedValue(0);
   const status = pieceStatusMap[id] ?? PieceStatus.inWell;
   const dragYOffset = team === Team.One ? -50 : 50;
 
@@ -121,6 +222,8 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     id: string;
     layout: typeof currentWellLayout;
   } | null>(null);
+  const releaseHandledRef = useRef(false);
+  const shadowGradientId = useMemo(() => `piece-shadow-${id}`, [id]);
 
   const allCells = useMemo((): EachCellType[] => {
     const slots = Object.entries(layout.slots).map(([cid, l]) => ({
@@ -141,6 +244,47 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     }));
     return [...slots, ...spaces, ...wells];
   }, [layout.slots, layout.spaces, layout.wells, team]);
+
+  const shadowSun = useMemo(() => {
+    const spaces = Object.values(layout.spaces);
+    if (spaces.length === 0) {
+      return {
+        x: GameElements.BASE_CELL_SIZE * 9,
+        y: GameElements.BASE_CELL_SIZE * 4.5,
+        nearestDistance: GameElements.BASE_CELL_SIZE * 2,
+        farthestDistance: GameElements.BASE_CELL_SIZE * 10,
+      };
+    }
+
+    const minX = Math.min(...spaces.map((space) => space.pageX));
+    const minY = Math.min(...spaces.map((space) => space.pageY));
+    const maxX = Math.max(
+      ...spaces.map((space) => space.pageX + space.width),
+    );
+    const maxY = Math.max(
+      ...spaces.map((space) => space.pageY + space.height),
+    );
+    const boardWidth = maxX - minX;
+    const boardCenterY = minY + (maxY - minY) / 2;
+    const sunX = maxX + boardWidth * 0.55;
+    const sunY = boardCenterY;
+    const nearestDistance = Math.max(1, sunX - maxX);
+    const farthestVerticalDistance = Math.max(
+      Math.abs(sunY - minY),
+      Math.abs(maxY - sunY),
+    );
+    const farthestDistance = Math.sqrt(
+      (sunX - minX) * (sunX - minX) +
+        farthestVerticalDistance * farthestVerticalDistance,
+    );
+
+    return {
+      x: sunX,
+      y: sunY,
+      nearestDistance,
+      farthestDistance,
+    };
+  }, [layout.spaces]);
 
   const snapToLayout = useCallback(
     (
@@ -164,6 +308,11 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     heldJiggleRotation.value = 0;
     heldJiggleX.value = 0;
     heldJiggleY.value = 0;
+    cancelAnimation(pieceLift);
+    pieceLift.value = withTiming(1, {
+      duration: 140,
+      easing: Easing.out(Easing.quad),
+    });
     heldJiggleRotation.value = withRepeat(
       withSequence(
         withTiming(-7, {
@@ -200,7 +349,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       -1,
       false,
     );
-  }, [heldJiggleRotation, heldJiggleX, heldJiggleY]);
+  }, [heldJiggleRotation, heldJiggleX, heldJiggleY, pieceLift]);
 
   const stopHeldJiggle = useCallback(() => {
     cancelAnimation(heldJiggleRotation);
@@ -220,6 +369,58 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     });
   }, [heldJiggleRotation, heldJiggleX, heldJiggleY]);
 
+  const reversePieceLift = useCallback(
+    (duration: number, delayMs = 0) => {
+      cancelAnimation(pieceLift);
+      const descend = withTiming(0, {
+        duration,
+        easing: Easing.inOut(Easing.quad),
+      });
+      pieceLift.value = delayMs > 0 ? withDelay(delayMs, descend) : descend;
+    },
+    [pieceLift],
+  );
+
+  const returnPieceLiftToWell = useCallback(
+    (holdMs: number) => {
+      cancelAnimation(pieceLift);
+      const descend = withTiming(0, {
+        duration: PIECE_RETURN_TO_WELL_LOWER_MS,
+        easing: Easing.inOut(Easing.quad),
+      });
+
+      if (holdMs <= 0) {
+        pieceLift.value = descend;
+        return;
+      }
+
+      const liftSettleMs = Math.min(
+        PIECE_RETURN_TO_WELL_LIFT_SETTLE_MS,
+        holdMs,
+      );
+      const holdAtLiftMs = holdMs - liftSettleMs;
+
+      pieceLift.value =
+        holdAtLiftMs > 0
+          ? withSequence(
+              withTiming(1, {
+                duration: liftSettleMs,
+                easing: Easing.out(Easing.quad),
+              }),
+              withTiming(1, { duration: holdAtLiftMs }),
+              descend,
+            )
+          : withSequence(
+              withTiming(1, {
+                duration: liftSettleMs,
+                easing: Easing.out(Easing.quad),
+              }),
+              descend,
+            );
+    },
+    [pieceLift],
+  );
+
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
@@ -233,6 +434,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
         )
         .hitSlop({ left: 24, right: 24, top: 24, bottom: 24 })
         .onStart(() => {
+          releaseHandledRef.current = false;
           playfield?.playfieldRef.current?.measureInWindow((x, y) => {
             if (playfield) {
               playfield.windowOriginRef.current = { x, y };
@@ -265,57 +467,10 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             event.absoluteX - ox - GameElements.PIECE_RADIUS;
           animate.translateY.value =
             event.absoluteY - oy - GameElements.PIECE_RADIUS + dragYOffset;
-
-          // Match hover sensing to rendered piece position (same Y offset as drag).
-          const pieceCenterX = event.absoluteX - ox;
-          const pieceCenterY = event.absoluteY - oy + dragYOffset;
-
-          let hitCellId: string | null = null;
-          for (const cell of allCells) {
-            if (!cell.layout) continue;
-            const { pageX, pageY, width, height } = cell.layout;
-            const inBounds =
-              pieceCenterX >= pageX &&
-              pieceCenterX <= pageX + width &&
-              pieceCenterY >= pageY &&
-              pieceCenterY <= pageY + height;
-            if (inBounds) {
-              hitCellId = cell.id;
-              break;
-            }
-          }
-
-          if (!piecePlacementPreviews) {
-            setHoverPreview((prev) => (prev ? null : prev));
-            return;
-          }
-
-          if (!hitCellId) {
-            setHoverPreview((prev) => (prev ? null : prev));
-            return;
-          }
-
-          const target = resolveDropTarget(
-            hitCellId,
-            gameState.board,
-            layout.slots,
-            layout.spaces,
-            layout.wells[team],
-          );
-
-          if (target.kind !== "slot") {
-            setHoverPreview((prev) => (prev ? null : prev));
-            return;
-          }
-
-          const next = { spaceId: target.landingKey, team };
-          setHoverPreview((prev) =>
-            prev && prev.spaceId === next.spaceId && prev.team === next.team
-              ? prev
-              : next,
-          );
+          setHoverPreview((prev) => (prev ? null : prev));
         })
         .onEnd(() => {
+          releaseHandledRef.current = true;
           stopHeldJiggle();
           setHoverPreview(null);
           const origin = originWellRef.current;
@@ -375,6 +530,9 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                 blockSpaceLayout,
                 outcome.entryDirection,
               );
+              returnPieceLiftToWell(
+                BLOCKED_DROP_RETURN_START_MS + PIECE_RETURN_TO_WELL_CENTER_MS,
+              );
 
               setTimeout(() => {
                 const targetX =
@@ -401,11 +559,13 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               };
               setTimeout(
                 commitReturnToWellBlocked,
-                BLOCKED_DROP_RETURN_START_MS + RETURN_TO_WELL,
+                BLOCKED_DROP_RETURN_START_MS + PIECE_RETURN_TO_WELL_TOTAL_MS,
               );
               setMoveInProgressDelayed(
                 false,
-                BLOCKED_DROP_RETURN_START_MS + RETURN_TO_WELL + 40,
+                BLOCKED_DROP_RETURN_START_MS +
+                  PIECE_RETURN_TO_WELL_TOTAL_MS +
+                  40,
               );
               return;
             }
@@ -422,6 +582,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                   slotLayout,
                   spaceLayout,
                 );
+                reversePieceLift(SLOT_LOWER_IN_SLOT_MS, SLOT_CENTER_MS);
               } else {
                 snapToLayout(
                   spaceLayout.pageX,
@@ -430,6 +591,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                   spaceLayout.height,
                   GameElements.PIECE_BOARD_SCALE,
                 );
+                reversePieceLift(SNAP_SHADOW_DESCEND_MS);
               }
               const commitPlacement = () => {
                 animate.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
@@ -470,6 +632,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
                 wellLayout.height,
                 GameElements.PIECE_WELL_SCALE,
               );
+              reversePieceLift(SNAP_SHADOW_DESCEND_MS);
               animate.zIndex.value = GameElements.PIECE_WELL_ZINDEX;
               setWellPieceLocations((prev) => ({
                 ...prev,
@@ -495,6 +658,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               origin.layout.height / 2 -
               GameElements.PIECE_RADIUS;
             animatePieceReturnToWellResting(animate, targetX, targetY);
+            returnPieceLiftToWell(PIECE_RETURN_TO_WELL_CENTER_MS);
           }
           const commitReturnToWell = () => {
             if (origin?.id) {
@@ -507,17 +671,22 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
               ...prev,
               [id]: PieceStatus.inWell,
             }));
+            originWellRef.current = null;
           };
           if (origin?.layout) {
-            setTimeout(commitReturnToWell, RETURN_TO_WELL);
-            setMoveInProgressDelayed(false, RETURN_TO_WELL + 40);
+            setTimeout(commitReturnToWell, PIECE_RETURN_TO_WELL_TOTAL_MS);
+            setMoveInProgressDelayed(false, PIECE_RETURN_TO_WELL_TOTAL_MS + 40);
           } else {
+            reversePieceLift(SNAP_SHADOW_DESCEND_MS);
             commitReturnToWell();
             setMoveInProgressDelayed(false, 300);
           }
         })
         .onFinalize(() => {
-          stopHeldJiggle();
+          if (!releaseHandledRef.current) {
+            stopHeldJiggle();
+            reversePieceLift(PIECE_RETURN_TO_WELL_LOWER_MS);
+          }
         }),
     [
       status,
@@ -537,6 +706,8 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       id,
       pieceAnims,
       snapToLayout,
+      reversePieceLift,
+      returnPieceLiftToWell,
       startHeldJiggle,
       stopHeldJiggle,
       dropPiece,
@@ -546,27 +717,89 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       setMoveInProgressDelayed,
       setHoverPreview,
       dragYOffset,
-      piecePlacementPreviews,
       playfield,
       tutorialWhiteDropEntryDirectionRef,
     ],
   );
 
-  const animatedStyles = useAnimatedStyle(() => {
+  const piecePositionStyle = useAnimatedStyle(
+    () => ({
+      opacity: entranceOpacity?.value ?? 1,
+      transform: [
+        {
+          translateX:
+            animate.translateX.value + (entranceTranslateX?.value ?? 0),
+        },
+        {
+          translateY:
+            animate.translateY.value + (entranceTranslateY?.value ?? 0),
+        },
+      ],
+      zIndex: animate.zIndex.value,
+    }),
+    [animate, entranceOpacity, entranceTranslateX, entranceTranslateY],
+  );
+
+  const pieceShadowAnchorStyle = useAnimatedStyle(() => {
+    const pulse = applyTutorialWellIdlePulse
+      ? tutorialWellPiecePulseScale.value
+      : 1;
+    return resolveShadowAnchorStyle(
+      Math.max(animate.scaleX.value, animate.scaleY.value) * pulse,
+      Math.max(0, Math.min(1, pieceLift.value)),
+      animate.translateX.value + GameElements.PIECE_RADIUS,
+      animate.translateY.value + GameElements.PIECE_RADIUS,
+      shadowSun.x,
+      shadowSun.y,
+      shadowSun.nearestDistance,
+      shadowSun.farthestDistance,
+      heldJiggleX.value,
+      heldJiggleY.value,
+    );
+  }, [
+    applyTutorialWellIdlePulse,
+    animate,
+    heldJiggleX,
+    heldJiggleY,
+    pieceLift,
+    shadowSun,
+    tutorialWellPiecePulseScale,
+  ]);
+
+  const pieceShadowShapeStyle = useAnimatedStyle(() => {
+    const pulse = applyTutorialWellIdlePulse
+      ? tutorialWellPiecePulseScale.value
+      : 1;
+    return resolveShadowShapeStyle(
+      Math.max(animate.scaleX.value, animate.scaleY.value) * pulse,
+      Math.max(0, Math.min(1, pieceLift.value)),
+      animate.translateX.value + GameElements.PIECE_RADIUS,
+      animate.translateY.value + GameElements.PIECE_RADIUS,
+      shadowSun.x,
+      shadowSun.y,
+      shadowSun.nearestDistance,
+      shadowSun.farthestDistance,
+    );
+  }, [
+    applyTutorialWellIdlePulse,
+    animate,
+    pieceLift,
+    shadowSun,
+    tutorialWellPiecePulseScale,
+  ]);
+
+  const pieceFaceStyle = useAnimatedStyle(() => {
     const pulse = applyTutorialWellIdlePulse
       ? tutorialWellPiecePulseScale.value
       : 1;
     return {
       transform: [
-        { translateX: animate.translateX.value },
-        { translateY: animate.translateY.value },
         { translateX: heldJiggleX.value },
         { translateY: heldJiggleY.value },
         { rotate: `${heldJiggleRotation.value}deg` },
         { scaleX: animate.scaleX.value * pulse },
         { scaleY: animate.scaleY.value * pulse },
       ],
-      zIndex: animate.zIndex.value,
       backgroundColor: animate.color.value,
     };
   }, [
@@ -578,7 +811,33 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     tutorialWellPiecePulseScale,
   ]);
 
-  const baseStyle: ViewStyle = {
+  const positionStyle: ViewStyle = {
+    height: GameElements.PIECE_SIZE,
+    width: GameElements.PIECE_SIZE,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    overflow: "visible",
+  };
+
+  const shadowStyle: ViewStyle = {
+    position: "absolute",
+    left: GameElements.PIECE_SIZE * 0.1875,
+    top: GameElements.PIECE_SIZE * 0.1875,
+    width: GameElements.PIECE_SIZE * 0.625,
+    height: GameElements.PIECE_SIZE * 0.625,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "visible",
+  };
+
+  const shadowShapeStyle: ViewStyle = {
+    width: GameElements.PIECE_SIZE * 0.625,
+    height: GameElements.PIECE_SIZE * 0.625,
+    overflow: "visible",
+  };
+
+  const faceStyle: ViewStyle = {
     height: GameElements.PIECE_SIZE,
     width: GameElements.PIECE_SIZE,
     borderRadius: GameElements.PIECE_RADIUS,
@@ -586,39 +845,71 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     borderColor: "#9CA3AF",
     alignItems: "center",
     justifyContent: "center",
-    position: "absolute",
-    top: 0,
-    left: 0,
+    zIndex: 1,
   };
 
   return (
     <GestureDetector gesture={movePiece}>
       <Animated.View
-        pointerEvents={status === PieceStatus.onBoard ? "none" : "auto"}
+        pointerEvents={
+          status === PieceStatus.onBoard || hiddenOffWell ? "none" : "auto"
+        }
         style={[
-          baseStyle,
-          animatedStyles,
+          positionStyle,
+          piecePositionStyle,
           status === PieceStatus.inWell
             ? { zIndex: GameElements.PIECE_WELL_ZINDEX }
             : null,
           hiddenByPreview || hiddenOffWell ? { opacity: 0 } : null,
-          hiddenOffWell ? { pointerEvents: "none" } : null,
         ]}
       >
-        <Glow pieceId={id} />
         <Animated.View
-          style={{
-            position: "absolute",
-            top: GameElements.PIECE_SIZE * 0.2,
-            right: GameElements.PIECE_SIZE * 0.1,
-            width: GameElements.PIECE_SIZE * 0.4,
-            height: GameElements.PIECE_SIZE * 0.2,
-            borderRadius: GameElements.PIECE_RADIUS,
-            backgroundColor: "rgba(200, 200, 200, 0.6)",
-            transform: [{ rotate: "40deg" }],
-            zIndex: 1,
-          }}
-        />
+          pointerEvents="none"
+          style={[shadowStyle, pieceShadowAnchorStyle]}
+        >
+          <Animated.View style={[shadowShapeStyle, pieceShadowShapeStyle]}>
+            <Svg height="100%" width="100%" viewBox="0 0 64 64">
+              <Defs>
+                <RadialGradient
+                  id={shadowGradientId}
+                  cx="38%"
+                  cy="50%"
+                  r="72%"
+                >
+                  <Stop offset="0" stopColor="black" stopOpacity="0.72" />
+                  <Stop offset="0.48" stopColor="black" stopOpacity="0.28" />
+                  <Stop offset="0.78" stopColor="black" stopOpacity="0.08" />
+                  <Stop offset="1" stopColor="black" stopOpacity="0" />
+                </RadialGradient>
+              </Defs>
+              <Circle
+                cx="32"
+                cy="32"
+                r="31"
+                fill={`url(#${shadowGradientId})`}
+              />
+            </Svg>
+          </Animated.View>
+        </Animated.View>
+        <Animated.View
+          pointerEvents="none"
+          style={[faceStyle, pieceFaceStyle]}
+        >
+          <Glow pieceId={id} />
+          <Animated.View
+            style={{
+              position: "absolute",
+              top: GameElements.PIECE_SIZE * 0.2,
+              right: GameElements.PIECE_SIZE * 0.1,
+              width: GameElements.PIECE_SIZE * 0.4,
+              height: GameElements.PIECE_SIZE * 0.2,
+              borderRadius: GameElements.PIECE_RADIUS,
+              backgroundColor: "rgba(200, 200, 200, 0.6)",
+              transform: [{ rotate: "40deg" }],
+              zIndex: 1,
+            }}
+          />
+        </Animated.View>
       </Animated.View>
     </GestureDetector>
   );

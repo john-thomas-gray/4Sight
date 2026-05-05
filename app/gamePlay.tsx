@@ -54,7 +54,6 @@ const TEAM_ONE_WELL_ENTRANCE_START_X = 420;
 const WELL_ENTRANCE_DELAY_MS = 520;
 const WELL_ENTRANCE_DURATION_MS = 520;
 const PIECE_SPROUT_DELAY_MS = WELL_ENTRANCE_DELAY_MS + WELL_ENTRANCE_DURATION_MS - 60;
-const PIECE_SPROUT_STAGGER_MS = 14;
 
 const GamePlay = () => {
   const router = useRouter();
@@ -516,7 +515,6 @@ const GamePlay = () => {
 
     let ranTutorialWellFillBounce = false;
     let ranInitialWellSprout = false;
-    let sproutIndex = 0;
 
     Object.entries(wellPieceLocations).forEach(([wellId, pieceId]) => {
       if (pieceStatusMap[pieceId] === PieceStatus.onBoard) {
@@ -538,17 +536,14 @@ const GamePlay = () => {
         pieceStatusMap[pieceId] === PieceStatus.inWell
       ) {
         ranInitialWellSprout = true;
-        const sproutDelay =
-          PIECE_SPROUT_DELAY_MS + sproutIndex * PIECE_SPROUT_STAGGER_MS;
-        sproutIndex += 1;
         anim.scaleX.value = wellScale * 0.04;
         anim.scaleY.value = wellScale * 0.04;
         anim.scaleX.value = withDelay(
-          sproutDelay,
+          PIECE_SPROUT_DELAY_MS,
           withSpring(wellScale, sproutSpringConfig),
         );
         anim.scaleY.value = withDelay(
-          sproutDelay,
+          PIECE_SPROUT_DELAY_MS,
           withSpring(wellScale, sproutSpringConfig),
         );
       } else if (
@@ -676,9 +671,33 @@ const GamePlay = () => {
           </Animated.View>
         </View>
 
-        {piecesToRender.map(([pid, piece]) => (
-          <PieceView key={pid} id={pid} team={piece.team} />
-        ))}
+        {piecesToRender.map(([pid, piece]) => {
+          const status = pieceStatusMap[pid];
+          const isBoardPiece =
+            status === PieceStatus.onBoard || status === PieceStatus.winner;
+          const entranceOpacity = isBoardPiece
+            ? boardEntranceOpacity
+            : wellEntranceOpacity;
+          const entranceTranslateX = isBoardPiece
+            ? undefined
+            : piece.team === Team.One
+              ? teamOneWellEntranceX
+              : teamTwoWellEntranceX;
+          const entranceTranslateY = isBoardPiece
+            ? boardEntranceY
+            : undefined;
+
+          return (
+            <PieceView
+              key={pid}
+              id={pid}
+              team={piece.team}
+              entranceOpacity={entranceOpacity}
+              entranceTranslateX={entranceTranslateX}
+              entranceTranslateY={entranceTranslateY}
+            />
+          );
+        })}
 
         <Animated.View
           pointerEvents="none"
