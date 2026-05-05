@@ -35,7 +35,27 @@ import React, {
   useState,
 } from "react";
 import { Platform, View } from "react-native";
-import { withSpring } from "react-native-reanimated";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+
+const WELL_CELLS_PER_TEAM = 24;
+const PLAYABLE_SPACE_COUNT = 49;
+const SLOT_COUNT = 28;
+const CORNER_COUNT = 4;
+const BOARD_ENTRANCE_START_Y = -420;
+const TEAM_TWO_WELL_ENTRANCE_START_X = -420;
+const TEAM_ONE_WELL_ENTRANCE_START_X = 420;
+const WELL_ENTRANCE_DELAY_MS = 520;
+const WELL_ENTRANCE_DURATION_MS = 520;
+const PIECE_SPROUT_DELAY_MS = WELL_ENTRANCE_DELAY_MS + WELL_ENTRANCE_DURATION_MS - 60;
+const PIECE_SPROUT_STAGGER_MS = 14;
+
 const GamePlay = () => {
   const router = useRouter();
   const layout = useLayout();
@@ -87,15 +107,47 @@ const GamePlay = () => {
   );
   const colors = theme.colorTheme;
   const textColor = colors.ODD_SPACE_COLOR;
+  const boardEntranceY = useSharedValue(0);
+  const boardEntranceOpacity = useSharedValue(1);
+  const teamTwoWellEntranceX = useSharedValue(0);
+  const teamOneWellEntranceX = useSharedValue(0);
+  const wellEntranceOpacity = useSharedValue(1);
 
   const pullRef = useRef<((direction: Direction) => void) | null>(null);
   /** Tutorial step 1 uses a sparse well map; step 2 fills the grid — bounce once. */
   const wellsWereSparseInTutorialRef = useRef(false);
   const didTutorialStepTwoWellFillBounceRef = useRef(false);
+  const didRunPageEntranceRef = useRef(false);
+  const didRunInitialWellSproutRef = useRef(false);
   const tutorialBlackStackDemoPlayedRef = useRef(false);
   const tutorialSecondBlackStackDemoPlayedRef = useRef(false);
   const tutorialFirstBlackSlotEntryRef = useRef<Direction | null>(null);
   const prevResolvedTutorialStepRef = useRef<string | undefined>(undefined);
+
+  const allPlayfieldCellsReady = useMemo(
+    () =>
+      Object.keys(layout.spaces).length >= PLAYABLE_SPACE_COUNT &&
+      Object.keys(layout.slots).length >= SLOT_COUNT &&
+      Object.keys(layout.corners).length >= CORNER_COUNT &&
+      Object.keys(layout.wells[Team.One]).length >= WELL_CELLS_PER_TEAM &&
+      Object.keys(layout.wells[Team.Two]).length >= WELL_CELLS_PER_TEAM,
+    [layout.spaces, layout.slots, layout.corners, layout.wells],
+  );
+
+  const boardEntranceStyle = useAnimatedStyle(() => ({
+    opacity: boardEntranceOpacity.value,
+    transform: [{ translateY: boardEntranceY.value }],
+  }));
+
+  const teamTwoWellEntranceStyle = useAnimatedStyle(() => ({
+    opacity: wellEntranceOpacity.value,
+    transform: [{ translateX: teamTwoWellEntranceX.value }],
+  }));
+
+  const teamOneWellEntranceStyle = useAnimatedStyle(() => ({
+    opacity: wellEntranceOpacity.value,
+    transform: [{ translateX: teamOneWellEntranceX.value }],
+  }));
 
   const installTutorialNearWinBoard = useCallback(() => {
     const scenario = getScenario("tutorialNearWin");
@@ -365,7 +417,7 @@ const GamePlay = () => {
   ]);
 
   useEffect(() => {
-    if (!layout.layoutReady) {
+    if (!allPlayfieldCellsReady) {
       if (
         !skipLoadingOverlayForTutorialHandoff &&
         !loadingScreenDismissedOnceRef.current
@@ -379,7 +431,52 @@ const GamePlay = () => {
       loadingScreenDismissedOnceRef.current = true;
     }, loadingScreenDismissDelayMs);
     return () => clearTimeout(timer);
-  }, [layout.layoutReady, skipLoadingOverlayForTutorialHandoff]);
+  }, [allPlayfieldCellsReady, skipLoadingOverlayForTutorialHandoff]);
+
+  useEffect(() => {
+    if (!allPlayfieldCellsReady || showLoadingScreen) return;
+    if (didRunPageEntranceRef.current) return;
+    didRunPageEntranceRef.current = true;
+
+    boardEntranceY.value = BOARD_ENTRANCE_START_Y;
+    boardEntranceOpacity.value = 0;
+    teamTwoWellEntranceX.value = TEAM_TWO_WELL_ENTRANCE_START_X;
+    teamOneWellEntranceX.value = TEAM_ONE_WELL_ENTRANCE_START_X;
+    wellEntranceOpacity.value = 0;
+
+    boardEntranceOpacity.value = withTiming(1, { duration: 130 });
+    boardEntranceY.value = withSpring(0, {
+      damping: 15,
+      stiffness: 130,
+      mass: 0.9,
+    });
+    wellEntranceOpacity.value = withDelay(
+      WELL_ENTRANCE_DELAY_MS,
+      withTiming(1, { duration: 150 }),
+    );
+    teamTwoWellEntranceX.value = withDelay(
+      WELL_ENTRANCE_DELAY_MS,
+      withTiming(0, {
+        duration: WELL_ENTRANCE_DURATION_MS,
+        easing: Easing.out(Easing.cubic),
+      }),
+    );
+    teamOneWellEntranceX.value = withDelay(
+      WELL_ENTRANCE_DELAY_MS,
+      withTiming(0, {
+        duration: WELL_ENTRANCE_DURATION_MS,
+        easing: Easing.out(Easing.cubic),
+      }),
+    );
+  }, [
+    allPlayfieldCellsReady,
+    showLoadingScreen,
+    boardEntranceOpacity,
+    boardEntranceY,
+    teamOneWellEntranceX,
+    teamTwoWellEntranceX,
+    wellEntranceOpacity,
+  ]);
 
   // Reposition pieces whenever layout updates (wells or spaces register).
   // Runs every time a new cell registers, so pieces land at the right
@@ -406,7 +503,20 @@ const GamePlay = () => {
       (wellsWereSparseInTutorialRef.current ||
         scenarioParam === "tutorialStep2");
 
+    const shouldInitialWellSprout =
+      allPlayfieldCellsReady &&
+      !showLoadingScreen &&
+      !didRunInitialWellSproutRef.current;
+
+    const sproutSpringConfig = {
+      damping: 8,
+      stiffness: 260,
+      mass: 0.55,
+    } as const;
+
     let ranTutorialWellFillBounce = false;
+    let ranInitialWellSprout = false;
+    let sproutIndex = 0;
 
     Object.entries(wellPieceLocations).forEach(([wellId, pieceId]) => {
       if (pieceStatusMap[pieceId] === PieceStatus.onBoard) {
@@ -424,6 +534,24 @@ const GamePlay = () => {
       anim.translateY.value = targetY;
 
       if (
+        shouldInitialWellSprout &&
+        pieceStatusMap[pieceId] === PieceStatus.inWell
+      ) {
+        ranInitialWellSprout = true;
+        const sproutDelay =
+          PIECE_SPROUT_DELAY_MS + sproutIndex * PIECE_SPROUT_STAGGER_MS;
+        sproutIndex += 1;
+        anim.scaleX.value = wellScale * 0.04;
+        anim.scaleY.value = wellScale * 0.04;
+        anim.scaleX.value = withDelay(
+          sproutDelay,
+          withSpring(wellScale, sproutSpringConfig),
+        );
+        anim.scaleY.value = withDelay(
+          sproutDelay,
+          withSpring(wellScale, sproutSpringConfig),
+        );
+      } else if (
         shouldTutorialWellFillBounce &&
         pieceStatusMap[pieceId] === PieceStatus.inWell
       ) {
@@ -438,6 +566,9 @@ const GamePlay = () => {
     if (shouldTutorialWellFillBounce && ranTutorialWellFillBounce) {
       didTutorialStepTwoWellFillBounceRef.current = true;
       wellsWereSparseInTutorialRef.current = false;
+    }
+    if (shouldInitialWellSprout && ranInitialWellSprout) {
+      didRunInitialWellSproutRef.current = true;
     }
 
     Object.entries(gameState.board).forEach(([spaceId, pieceId]) => {
@@ -462,6 +593,8 @@ const GamePlay = () => {
     pieceStatusMap,
     scenarioParam,
     resolvedTutorialStepParam,
+    allPlayfieldCellsReady,
+    showLoadingScreen,
   ]);
 
   const piecesToRender = useMemo(
@@ -530,20 +663,40 @@ const GamePlay = () => {
       />
       <PlayfieldFrameProvider>
         <View className="flex-col items-center justify-center">
-          <TeamWellGrid team={Team.Two} />
-          <GravityGestureLayer className="mt-7 mb-7" pullRef={pullRef}>
-            <BoardGridView />
-          </GravityGestureLayer>
-          <TeamWellGrid team={Team.One} />
+          <Animated.View style={teamTwoWellEntranceStyle}>
+            <TeamWellGrid team={Team.Two} />
+          </Animated.View>
+          <Animated.View style={boardEntranceStyle}>
+            <GravityGestureLayer className="mt-7 mb-7" pullRef={pullRef}>
+              <BoardGridView />
+            </GravityGestureLayer>
+          </Animated.View>
+          <Animated.View style={teamOneWellEntranceStyle}>
+            <TeamWellGrid team={Team.One} />
+          </Animated.View>
         </View>
 
         {piecesToRender.map(([pid, piece]) => (
           <PieceView key={pid} id={pid} team={piece.team} />
         ))}
 
-        {Object.keys(layout.slots).map((slotId) => (
-          <SlotRim key={`slot-rim-${slotId}`} id={slotId} />
-        ))}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            },
+            boardEntranceStyle,
+          ]}
+        >
+          {Object.keys(layout.slots).map((slotId) => (
+            <SlotRim key={`slot-rim-${slotId}`} id={slotId} />
+          ))}
+        </Animated.View>
 
         {hoverPreview && layout.spaces[hoverPreview.spaceId] ? (
           <View

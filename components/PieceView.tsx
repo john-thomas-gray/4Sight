@@ -22,7 +22,15 @@ import { CellType, EachCellType } from "@/types/board";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import Glow from "./Glow";
 import { resolveDropOutcome, resolveDropTarget } from "./pieceDropController";
 
@@ -56,6 +64,9 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
   } = useUi();
 
   const animate = pieceAnims[id];
+  const heldJiggleRotation = useSharedValue(0);
+  const heldJiggleX = useSharedValue(0);
+  const heldJiggleY = useSharedValue(0);
   const status = pieceStatusMap[id] ?? PieceStatus.inWell;
   const dragYOffset = team === Team.One ? -50 : 50;
 
@@ -149,6 +160,66 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
     [animate],
   );
 
+  const startHeldJiggle = useCallback(() => {
+    heldJiggleRotation.value = 0;
+    heldJiggleX.value = 0;
+    heldJiggleY.value = 0;
+    heldJiggleRotation.value = withRepeat(
+      withSequence(
+        withTiming(-7, {
+          duration: 55,
+          easing: Easing.inOut(Easing.quad),
+        }),
+        withTiming(7, {
+          duration: 95,
+          easing: Easing.inOut(Easing.quad),
+        }),
+        withTiming(0, {
+          duration: 55,
+          easing: Easing.inOut(Easing.quad),
+        }),
+      ),
+      -1,
+      false,
+    );
+    heldJiggleX.value = withRepeat(
+      withSequence(
+        withTiming(-2, { duration: 55, easing: Easing.inOut(Easing.quad) }),
+        withTiming(2, { duration: 95, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 55, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+      false,
+    );
+    heldJiggleY.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 55, easing: Easing.inOut(Easing.quad) }),
+        withTiming(-1.2, { duration: 95, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 55, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+      false,
+    );
+  }, [heldJiggleRotation, heldJiggleX, heldJiggleY]);
+
+  const stopHeldJiggle = useCallback(() => {
+    cancelAnimation(heldJiggleRotation);
+    cancelAnimation(heldJiggleX);
+    cancelAnimation(heldJiggleY);
+    heldJiggleRotation.value = withTiming(0, {
+      duration: 80,
+      easing: Easing.out(Easing.quad),
+    });
+    heldJiggleX.value = withTiming(0, {
+      duration: 80,
+      easing: Easing.out(Easing.quad),
+    });
+    heldJiggleY.value = withTiming(0, {
+      duration: 80,
+      easing: Easing.out(Easing.quad),
+    });
+  }, [heldJiggleRotation, heldJiggleX, heldJiggleY]);
+
   const movePiece = useMemo(
     () =>
       Gesture.Pan()
@@ -170,6 +241,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           animate.scaleX.value = GameElements.PIECE_HELD_SCALE;
           animate.scaleY.value = GameElements.PIECE_HELD_SCALE;
           animate.zIndex.value = GameElements.PIECE_HELD_ZINDEX;
+          startHeldJiggle();
 
           if (currentWellEntry) {
             originWellRef.current = {
@@ -244,6 +316,7 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
           );
         })
         .onEnd(() => {
+          stopHeldJiggle();
           setHoverPreview(null);
           const origin = originWellRef.current;
           const pieceCenter = {
@@ -442,6 +515,9 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
             commitReturnToWell();
             setMoveInProgressDelayed(false, 300);
           }
+        })
+        .onFinalize(() => {
+          stopHeldJiggle();
         }),
     [
       status,
@@ -461,6 +537,8 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       id,
       pieceAnims,
       snapToLayout,
+      startHeldJiggle,
+      stopHeldJiggle,
       dropPiece,
       setPieceStatusMap,
       setWellPieceLocations,
@@ -482,13 +560,23 @@ const PieceView: React.FC<PieceViewProps> = ({ id, team }) => {
       transform: [
         { translateX: animate.translateX.value },
         { translateY: animate.translateY.value },
+        { translateX: heldJiggleX.value },
+        { translateY: heldJiggleY.value },
+        { rotate: `${heldJiggleRotation.value}deg` },
         { scaleX: animate.scaleX.value * pulse },
         { scaleY: animate.scaleY.value * pulse },
       ],
       zIndex: animate.zIndex.value,
       backgroundColor: animate.color.value,
     };
-  }, [applyTutorialWellIdlePulse, animate, tutorialWellPiecePulseScale]);
+  }, [
+    applyTutorialWellIdlePulse,
+    animate,
+    heldJiggleRotation,
+    heldJiggleX,
+    heldJiggleY,
+    tutorialWellPiecePulseScale,
+  ]);
 
   const baseStyle: ViewStyle = {
     height: GameElements.PIECE_SIZE,
