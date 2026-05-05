@@ -4,7 +4,7 @@ Menu loaded ->
     GamePlay
     Assets loaded ->
       GameState.Ready
-        currentTeam = Team.TeamOne
+        currentTeam = Team.One
         turnCount = 0
         playersTurn = 1
         Place a piece ->

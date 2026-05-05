@@ -12,7 +12,7 @@ import { View } from "react-native";
 /** Stable ref used when measuring outside a playfield (e.g. tests). */
 export const EMPTY_PLAYFIELD_REF: RefObject<View | null> = { current: null };
 
-export type PlayfieldFrameContextValue = {
+type PlayfieldFrameContextValue = {
   playfieldRef: React.RefObject<View | null>;
   windowOriginRef: React.MutableRefObject<{ x: number; y: number }>;
 };
@@ -56,14 +56,6 @@ export function PlayfieldFrameProvider({
       </View>
     </PlayfieldFrameContext.Provider>
   );
-}
-
-export function usePlayfieldFrame(): PlayfieldFrameContextValue {
-  const ctx = useContext(PlayfieldFrameContext);
-  if (!ctx) {
-    throw new Error("usePlayfieldFrame must be used within PlayfieldFrameProvider");
-  }
-  return ctx;
 }
 
 export function usePlayfieldFrameOptional(): PlayfieldFrameContextValue | null {

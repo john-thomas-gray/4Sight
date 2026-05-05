@@ -24,7 +24,7 @@ export type Piece = {
   readonly team: Team;
 };
 
-export type GameStatus = "playing" | "finished";
+type GameStatus = "playing" | "finished";
 
 export type GameState = {
   readonly board: Readonly<Record<string, string>>; // "row-col" -> pieceId

@@ -9,7 +9,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-export const loopDuration = 4000;
+const loopDuration = 4000;
 const D = loopDuration;
 
 /**
@@ -29,7 +29,7 @@ type LoadingTextAnimation = {
   fontSize: SharedValue<number>;
 };
 
-export const useLoadingMoveTextAnimation = ({
+const useLoadingMoveTextAnimation = ({
   translateX,
 }: LoadingTextAnimation) => {
   React.useEffect(() => {
@@ -50,7 +50,7 @@ export const useLoadingMoveTextAnimation = ({
   }, [translateX]);
 };
 
-export const useLoadingFontSizeAnimation = ({
+const useLoadingFontSizeAnimation = ({
   fontSize,
 }: {
   fontSize: SharedValue<number>;

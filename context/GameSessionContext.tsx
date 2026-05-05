@@ -49,7 +49,7 @@ import {
 import { useLayout } from "./LayoutContext";
 import { useGameSessionSideEffects } from "./useGameSessionSideEffects";
 
-export { PieceStatus, type PieceStatusMap };
+export { PieceStatus };
 
 type GameSessionContextType = {
   gameState: GameState;

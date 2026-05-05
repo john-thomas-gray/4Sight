@@ -8,7 +8,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-export type AnimateWinnerPieceOptions = {
+type AnimateWinnerPieceOptions = {
   /** Motion/scale only; omit gold color sweep (caller reveals gold at apex separately). */
   skipColor?: boolean;
 };

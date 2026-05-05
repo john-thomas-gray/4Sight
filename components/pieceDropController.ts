@@ -9,7 +9,7 @@ import {
 } from "@/engine";
 import type { Coord, Direction } from "@/engine";
 
-export type DropTarget =
+type DropTarget =
   | { kind: "slot"; slotCoord: Coord; landingCoord: Coord; landingKey: string }
   | {
       kind: "blockedSlot";
@@ -21,7 +21,7 @@ export type DropTarget =
   | { kind: "well"; wellId: string }
   | { kind: "miss" };
 
-export type DropOutcome =
+type DropOutcome =
   | { kind: "placed"; slotCoord: Coord; landingKey: string }
   | {
       kind: "blockedSlot";
@@ -33,7 +33,7 @@ export type DropOutcome =
   | { kind: "well"; wellId: string }
   | { kind: "returnToWell"; originWellId: string };
 
-export function resolveDropTarget(
+function resolveDropTarget(
   cellId: string,
   board: Readonly<Record<string, string>>,
   slotIds: Record<string, unknown>,

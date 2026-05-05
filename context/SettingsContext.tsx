@@ -8,6 +8,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -34,6 +35,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   const [shiftPreviews, setShiftPreviewsState] = useState(true);
   const [piecePlacementPreviews, setPiecePlacementPreviewsState] = useState(true);
   const [highlightWinningMoves, setHighlightWinningMovesState] = useState(true);
+  const settingsRef = useRef({
+    themeId: "classic",
+    shiftPreviews: true,
+    piecePlacementPreviews: true,
+    highlightWinningMoves: true,
+  });
 
   const theme = useMemo(() => getThemeById(themeId), [themeId]);
 
@@ -41,6 +48,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     (async () => {
       const state = await loadAppState();
+      settingsRef.current = { ...state.settings };
       setThemeIdState(state.settings.themeId);
       setShiftPreviewsState(state.settings.shiftPreviews);
       setPiecePlacementPreviewsState(state.settings.piecePlacementPreviews);
@@ -48,27 +56,36 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
     })();
   }, []);
 
+  const persistSettings = useCallback(
+    (patch: Partial<typeof settingsRef.current>) => {
+      const next = { ...settingsRef.current, ...patch };
+      settingsRef.current = next;
+      saveSettings(next);
+    },
+    [],
+  );
+
   const setThemeById = useCallback((id: string) => {
     const exists = THEME_REGISTRY.some((t) => t.id === id);
     if (!exists) return;
     setThemeIdState(id);
-    saveSettings({ themeId: id });
-  }, []);
+    persistSettings({ themeId: id });
+  }, [persistSettings]);
 
   const setShiftPreviews = useCallback((value: boolean) => {
     setShiftPreviewsState(value);
-    saveSettings({ shiftPreviews: value });
-  }, []);
+    persistSettings({ shiftPreviews: value });
+  }, [persistSettings]);
 
   const setPiecePlacementPreviews = useCallback((value: boolean) => {
     setPiecePlacementPreviewsState(value);
-    saveSettings({ piecePlacementPreviews: value });
-  }, []);
+    persistSettings({ piecePlacementPreviews: value });
+  }, [persistSettings]);
 
   const setHighlightWinningMoves = useCallback((value: boolean) => {
     setHighlightWinningMovesState(value);
-    saveSettings({ highlightWinningMoves: value });
-  }, []);
+    persistSettings({ highlightWinningMoves: value });
+  }, [persistSettings]);
 
   const value = useMemo<SettingsContextType>(
     () => ({

@@ -17,7 +17,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 type LayoutSlice = Pick<LayoutContextType, "slots" | "spaces">;
 
-export type ScriptedPlaceArgs = {
+type ScriptedPlaceArgs = {
   board: Readonly<Record<string, string>>;
   slotCoord: Coord;
   pieceId: string;

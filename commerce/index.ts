@@ -4,7 +4,6 @@ export type {
   CommerceAdapter,
   ThemeAvailability,
   ThemeProduct,
-  EntitlementState,
   PurchaseResult,
   RestoreResult,
 } from "./types";

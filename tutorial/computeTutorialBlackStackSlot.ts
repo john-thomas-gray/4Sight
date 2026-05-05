@@ -2,6 +2,7 @@ import {
   BOARD_SIZE,
   Direction,
   PIECES_PER_TEAM,
+  type Coord,
   getSlotEntryDirection,
   isSlot,
   keyToCoord,

@@ -37,7 +37,7 @@ export type TutorialShowBannerContext = {
 };
 
 /** Minimal router surface tutorial completion needs. */
-export type TutorialGamePlayRouter = {
+type TutorialGamePlayRouter = {
   replace: (href: string) => void;
 };
 

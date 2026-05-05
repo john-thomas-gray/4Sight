@@ -11,7 +11,7 @@ import {
 export const SLOT_CENTER_MS = 120;
 export const SLOT_LOWER_IN_SLOT_MS = 110;
 
-export type PieceSlotThroughSpaceDropOptions = {
+type PieceSlotThroughSpaceDropOptions = {
   /**
    * When true, snaps scale and z-index to the "held" presentation before the
    * slot→space move (e.g. scripted scenario playback). Interactive drags are

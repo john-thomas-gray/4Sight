@@ -1,4 +1,4 @@
-import { images } from "@/assets/images";
+import backArrow from "@/assets/images/backArrow.png";
 import { useDebouncedPress } from "@/hooks/useDebouncedPress";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -42,7 +42,7 @@ const BackButton = ({
       style={style}
     >
       <Image
-        source={images.backArrow}
+        source={backArrow}
         className="h-6 w-6"
         style={imageStyle}
         accessible

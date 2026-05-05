@@ -8,7 +8,7 @@ type AnyFunction = (...args: any[]) => void;
  */
 export function useDebouncedPress<T extends AnyFunction>(
   callback: T,
-  delayMs: number = 500
+  delayMs: number = 500,
 ): T {
   const callbackRef = React.useRef<T>(callback);
   const isCoolingDownRef = React.useRef(false);
@@ -38,8 +38,6 @@ export function useDebouncedPress<T extends AnyFunction>(
         }, delayMs);
       }
     }) as T,
-    [delayMs]
+    [delayMs],
   );
 }
-
-export default useDebouncedPress;

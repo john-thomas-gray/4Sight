@@ -4,7 +4,7 @@ import { CLASSIC } from "./classic";
 import { SCHOOLHOUSE } from "./schoolhouse";
 import { SEASIDE } from "./seaside";
 
-export type ThemeEntry = {
+type ThemeEntry = {
   id: string;
   label: string;
   theme: ThemeType;

@@ -132,18 +132,6 @@ export async function clearSession(): Promise<void> {
   }
 }
 
-export async function saveTutorialCompleted(
-  completed: boolean,
-): Promise<void> {
-  try {
-    const current = await loadAppState();
-    current.tutorialCompleted = completed;
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  } catch {
-    // Silently fail
-  }
-}
-
 export async function hasSavedSession(): Promise<boolean> {
   try {
     const state = await loadAppState();

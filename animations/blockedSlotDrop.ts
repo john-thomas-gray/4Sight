@@ -4,9 +4,9 @@ import type { PieceAnimation } from "@/types/animation";
 import type { CellLayout } from "@/types/board";
 import { Easing, withDelay, withSequence, withTiming } from "react-native-reanimated";
 
-export const SLIDE_TO_BLOCKED_SLOT_MS = 120;
-/** Bump segment timings aligned with legacy `_v0` choreography (without glide to well). */
-export const BLOCKED_BUMP_PHASE_MS = 1300;
+const SLIDE_TO_BLOCKED_SLOT_MS = 120;
+/** Bump segment timings for the blocked-slot choreography. */
+const BLOCKED_BUMP_PHASE_MS = 1300;
 
 /** When to start the standard return-to-well move after drop end. */
 export const BLOCKED_DROP_RETURN_START_MS =

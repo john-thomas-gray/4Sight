@@ -19,16 +19,6 @@ export enum CellType {
   Slot = "slot",
   Well = "well",
   Corner = "corner",
-  Error = "error",
-}
-
-export { EngineTeam as Team };
-
-export enum Direction {
-  Up = "up",
-  Down = "down",
-  Left = "left",
-  Right = "right",
 }
 
 export type EachCellType =

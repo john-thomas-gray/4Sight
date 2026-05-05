@@ -1,5 +1,3 @@
-import { PIECES_PER_TEAM } from "@/engine";
-
 /**
  * Builds the initial mapping of well cell IDs to piece IDs.
  * Team One: wells at rows 9-16, cols 9-11 → pieces 0-23
@@ -22,6 +20,3 @@ export function buildInitialWellPieceLocations(): Record<string, string> {
   }
   return map;
 }
-
-export const TEAM_ONE_WELL_COUNT = PIECES_PER_TEAM;
-export const TEAM_TWO_WELL_COUNT = PIECES_PER_TEAM;

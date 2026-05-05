@@ -8,7 +8,7 @@ export const CURRENT_SCHEMA_VERSION = 1;
  * Only domain data + minimal UI flags — no animation values,
  * no layout coordinates, no transient interaction state.
  */
-export type PersistedGameState = {
+type PersistedGameState = {
   board: Record<string, string>;
   pieces: Record<string, { id: string; team: string }>;
   currentTeam: string;

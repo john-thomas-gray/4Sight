@@ -6,7 +6,7 @@ import { WINNER_V0, WINNER_V1 } from "@/types/animation";
 import { coordToKey } from "./board";
 import { BOARD_SIZE, Coord, Piece, Team, WIN_LENGTH, WinLine } from "./types";
 
-export type WinResult = {
+type WinResult = {
   winner: Team | null;
   /** Both teams have at least one winning line on this board. */
   tie: boolean;

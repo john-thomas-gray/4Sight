@@ -6,11 +6,6 @@ export type ThemeProduct = {
   displayPrice: string;
 };
 
-export type EntitlementState = {
-  ownedThemeIds: Set<string>;
-  isLoaded: boolean;
-};
-
 export type PurchaseResult =
   | { status: "success"; themeId: string }
   | { status: "cancelled" }

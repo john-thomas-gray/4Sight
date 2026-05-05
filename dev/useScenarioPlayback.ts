@@ -5,6 +5,7 @@ import { runScriptedPlaceFromWell } from "@/dev/scriptedPlaceFromWell";
 import {
   Direction,
   findSlotForSpace,
+  type Coord,
   type EngineResult,
   type GameState,
 } from "@/engine";

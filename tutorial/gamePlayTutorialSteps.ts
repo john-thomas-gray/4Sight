@@ -15,10 +15,6 @@ const FOCUS_PIECE_TUTORIAL_STEP1 = TUTORIAL_STEP_ONE_FOCUS_PIECE_ID;
 export const TUTORIAL_STEP_ONE_GAMEPLAY_PATH =
   "/gamePlay?scenario=tutorialStep1&tutorialStep=1";
 
-/** Step 2 — keep in sync with `dev/scenarios` `tutorialStep2`. */
-export const TUTORIAL_STEP_TWO_GAMEPLAY_PATH =
-  "/gamePlay?scenario=tutorialStep2&tutorialStep=2";
-
 /** In-place tutorial uses `tutorialStep1` URL with `tutorialUiStep` 1–8. */
 function matchesTutorialHandoff(
   scenario: string | undefined,
@@ -48,7 +44,7 @@ export function countPiecesOnBoard(
   return n;
 }
 
-export const GAME_PLAY_TUTORIAL_STEPS: readonly GamePlayTutorialStep[] = [
+const GAME_PLAY_TUTORIAL_STEPS: readonly GamePlayTutorialStep[] = [
   {
     id: "tutorialStep1",
     scenarioId: "tutorialStep1",
