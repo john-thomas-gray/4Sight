@@ -52,7 +52,7 @@ function blockingPieceBounceOffsets(
 function elevateTowardBoardSlot(anim: PieceAnimation): void {
   anim.scaleX.value = withTiming(GameElements.PIECE_BOARD_SCALE, { duration: 110 });
   anim.scaleY.value = withTiming(GameElements.PIECE_BOARD_SCALE, { duration: 110 });
-  anim.zIndex.value = withTiming(900, { duration: 180 });
+  anim.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
 }
 
 /**
