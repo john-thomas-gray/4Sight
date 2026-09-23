@@ -203,7 +203,7 @@ const TutorialStepBanner = ({
           <Animated.View
             pointerEvents="none"
             style={[
-              StyleSheet.absoluteFillObject,
+              StyleSheet.absoluteFill,
               {
                 borderRadius: 12,
                 borderWidth: 2,
@@ -224,7 +224,7 @@ const TutorialStepBanner = ({
             <View
               pointerEvents="none"
               style={[
-                StyleSheet.absoluteFillObject,
+                StyleSheet.absoluteFill,
                 { backgroundColor: wellBgColor, opacity: 0.95 },
               ]}
             />
