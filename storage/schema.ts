@@ -19,6 +19,8 @@ type PersistedGameState = {
 };
 
 export type PersistedSessionState = {
+  /** Older saves omit this field and remain local two-player games. */
+  mode?: "onePlayer" | "twoPlayer";
   game: PersistedGameState;
   pieceStatusMap: PieceStatusMap;
   wellPieceLocations: Record<string, string>;

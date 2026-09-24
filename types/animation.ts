@@ -18,6 +18,9 @@ export const RESET_TO_WELL_TOTAL_MS =
   RESET_TO_WELL_LOWER_MS;
 export const WINNER_V1 = 700;
 export const WINNER_V0 = 700;
+export const WINNER_GLOW_BLOOM_MS = 220;
+export const WINNER_ENERGY_LOOP_MS = 1800;
+export const RESET_WINNER_ENERGY_SUCK_MS = 180;
 
 export type PieceAnimation = {
   translateX: SharedValue<number>;
@@ -26,5 +29,7 @@ export type PieceAnimation = {
   scaleY: SharedValue<number>;
   color: SharedValue<string>;
   winnerColor: SharedValue<string>;
+  winnerGlow: SharedValue<number>;
+  winnerEnergy: SharedValue<number>;
   zIndex: SharedValue<number>;
 };

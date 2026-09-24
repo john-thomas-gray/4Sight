@@ -1,11 +1,11 @@
 import { GameElements } from "@/constants";
-import { useLayout } from "@/context/LayoutContext";
+import { useLayoutSelector } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
-import { useUi } from "@/context/UiContext";
+import { useUiSelector } from "@/context/UiContext";
 import React, { memo } from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedProps } from "react-native-reanimated";
-import Svg, { Circle, Mask, Rect } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient, Mask, Rect, Stop } from "react-native-svg";
 
 const MASK_INNER_R = 16;
 const MASK_CX = 20;
@@ -29,13 +29,12 @@ const getRotationForSlot = (id: string) => {
 };
 
 const SlotRim: React.FC<Props> = ({ id }) => {
-  const layout = useLayout();
+  const slotLayout = useLayoutSelector(layout => layout.slots[id]);
   const { theme } = useSettings();
-  const { slotRimOpeningScale } = useUi();
+  const slotRimOpeningScale = useUiSelector(ui => ui.slotRimOpeningScale);
   const animatedHoleProps = useAnimatedProps(() => ({
     r: MASK_INNER_R * slotRimOpeningScale.value,
   }));
-  const slotLayout = layout.slots[id];
   if (!slotLayout) return null;
 
   const rotation = getRotationForSlot(id);
@@ -54,6 +53,19 @@ const SlotRim: React.FC<Props> = ({ id }) => {
       }}
     >
       <Svg height="40" width="40">
+        <Defs>
+          <LinearGradient
+            id={`slotrim-finish-${id}`}
+            x1="0%"
+            y1="0%"
+            x2="0%"
+            y2="100%"
+          >
+            <Stop offset="0%" stopColor="#ffffff" stopOpacity={0.12} />
+            <Stop offset="45%" stopColor="#ffffff" stopOpacity={0} />
+            <Stop offset="100%" stopColor="#000000" stopOpacity={0.12} />
+          </LinearGradient>
+        </Defs>
         <Mask id={`slotrim-mask-${id}`}>
           <Rect x="0" y="0" width="40" height="40" fill="white" />
           <AnimatedCircle
@@ -69,6 +81,12 @@ const SlotRim: React.FC<Props> = ({ id }) => {
           width="40"
           height="40"
           fill={theme.colorTheme.SLOT_FOREGROUND_COLOR}
+          mask={`url(#slotrim-mask-${id})`}
+        />
+        <Rect
+          width="40"
+          height="40"
+          fill={`url(#slotrim-finish-${id})`}
           mask={`url(#slotrim-mask-${id})`}
         />
         <Rect

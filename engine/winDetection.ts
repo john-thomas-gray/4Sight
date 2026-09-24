@@ -3,7 +3,7 @@ import {
   WIN_OVERLAY_DELAY_MS,
 } from "@/constants/logic";
 import { WINNER_V0, WINNER_V1 } from "@/types/animation";
-import { coordToKey } from "./board";
+import { coordToKey, findSlotForSpace } from "./board";
 import { BOARD_SIZE, Coord, Piece, Team, WIN_LENGTH, WinLine } from "./types";
 
 type WinResult = {
@@ -100,7 +100,7 @@ export function detectNearWins(
       else if (twoCount === WIN_LENGTH - 1 && oneCount === 0)
         nearTeam = Team.Two;
 
-      if (nearTeam && isReachableFromSlot(board, emptyItem.coord)) {
+      if (nearTeam && findSlotForSpace(board, emptyItem.coord) !== null) {
         const dedupKey = `${nearTeam}-${emptyItem.key}`;
         if (!seen.has(dedupKey)) {
           seen.add(dedupKey);
@@ -111,42 +111,6 @@ export function detectNearWins(
   }
 
   return results;
-}
-
-/**
- * Checks if a board coordinate can be reached by dropping a piece
- * from at least one slot (the piece would land at this coord after
- * sliding through empty cells).
- */
-function isReachableFromSlot(
-  board: Readonly<Record<string, string>>,
-  target: Coord,
-): boolean {
-  const directions: Array<{ dRow: number; dCol: number }> = [
-    { dRow: -1, dCol: 0 },
-    { dRow: 1, dCol: 0 },
-    { dRow: 0, dCol: -1 },
-    { dRow: 0, dCol: 1 },
-  ];
-
-  for (const { dRow, dCol } of directions) {
-    let r = target.row + dRow;
-    let c = target.col + dCol;
-    let pathClear = true;
-
-    while (r >= 1 && r <= BOARD_SIZE && c >= 1 && c <= BOARD_SIZE) {
-      if (board[`${r}-${c}`] !== undefined) {
-        pathClear = false;
-        break;
-      }
-      r += dRow;
-      c += dCol;
-    }
-
-    if (pathClear) return true;
-  }
-
-  return false;
 }
 
 function scanLineForWins(
@@ -199,9 +163,9 @@ function scanLineForWins(
 }
 
 /**
- * Groups winning piece ids into animation tiers: anchor first, then pairs
- * outward along the line (lower index before higher). Same-distance neighbors
- * share a tier so their animations start together.
+ * Groups winning piece ids into animation tiers: anchor first, then one
+ * neighboring piece per tier, walking outward along the line. Same-distance
+ * neighbors use lower index before higher so the wave reads as a sequence.
  *
  * @param anchorPieceId — piece that completed the win (e.g. last drop); if null or not on the line, uses the line center index.
  */
@@ -217,17 +181,15 @@ export function winLineCascadeTiers(
 
   const tiers: string[][] = [];
   for (let d = 0; d < ids.length; d++) {
-    const tier: string[] = [];
     if (d === 0) {
-      tier.push(ids[idx]);
+      tiers.push([ids[idx]]);
     } else {
       const left = idx - d;
       const right = idx + d;
-      if (left >= 0) tier.push(ids[left]);
-      if (right < ids.length) tier.push(ids[right]);
+      if (left >= 0) tiers.push([ids[left]]);
+      if (right < ids.length) tiers.push([ids[right]]);
     }
-    if (tier.length === 0) break;
-    tiers.push(tier);
+    if (idx - d < 0 && idx + d >= ids.length) break;
   }
   return tiers;
 }

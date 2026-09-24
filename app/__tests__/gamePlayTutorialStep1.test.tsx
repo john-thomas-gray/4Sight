@@ -180,9 +180,8 @@ describe("GamePlay tutorial step 1", () => {
     });
     expect(queryByTestId("tutorial-modal")).toBeNull();
 
-    act(() => {
-      jest.runOnlyPendingTimers();
-    });
+    await act(async () => { jest.advanceTimersByTime(20); });
+    await act(async () => { jest.runOnlyPendingTimers(); });
     act(() => {
       jest.advanceTimersByTime(2000);
     });

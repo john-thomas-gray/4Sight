@@ -1,6 +1,6 @@
 import { Team } from "@/engine";
 import { CellType } from "@/types/board";
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { LayoutProvider, useLayout } from "../LayoutContext";
@@ -48,7 +48,7 @@ function LayoutProbe() {
 }
 
 describe("LayoutProvider", () => {
-  it("tracks registered board, corner, and well layouts", () => {
+  it("tracks registered board, corner, and well layouts", async () => {
     const { getByTestId } = render(
       <LayoutProvider>
         <LayoutProbe />
@@ -58,7 +58,7 @@ describe("LayoutProvider", () => {
     expect(getByTestId("ready")).toHaveTextContent("false");
     fireEvent.press(getByTestId("register"));
 
-    expect(getByTestId("slots")).toHaveTextContent("1");
+    await waitFor(() => expect(getByTestId("slots")).toHaveTextContent("1"));
     expect(getByTestId("spaces")).toHaveTextContent("1");
     expect(getByTestId("corners")).toHaveTextContent("1");
     expect(getByTestId("team-one-wells")).toHaveTextContent("1");

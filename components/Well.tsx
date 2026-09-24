@@ -1,10 +1,11 @@
 import { WELL_STYLE } from "@/constants/gameElements";
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import {
   EMPTY_PLAYFIELD_REF,
   measureLayoutRelativeToPlayfield,
   usePlayfieldFrameOptional,
 } from "@/context/PlayfieldFrameContext";
-import { useLayout } from "@/context/LayoutContext";
+import { useLayoutSelector } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
 import { CellProps, CellType } from "@/types/board";
@@ -13,7 +14,7 @@ import { View } from "react-native";
 
 const Well = ({ id, team }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { registerCell } = useLayout();
+  const registerCell = useLayoutSelector(layout => layout.registerCell);
   const { theme } = useSettings();
   const playfield = usePlayfieldFrameOptional();
   const playfieldRef = playfield?.playfieldRef ?? EMPTY_PLAYFIELD_REF;
@@ -43,7 +44,7 @@ const Well = ({ id, team }: CellProps) => {
     <View
       ref={viewRef}
       onLayout={reportLayout}
-      style={{ ...WELL_STYLE, backgroundColor: bgColor }}
+      style={[WELL_STYLE, surfaceStyles.inset, { backgroundColor: bgColor }]}
     />
   );
 };

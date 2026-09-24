@@ -1,3 +1,4 @@
+import type { MoveCoordinator } from "@/session/moveCoordinator";
 import { animateWinnerPiece } from "@/animations/animateWinner";
 import { TIE_WIN_SECOND_CASCADE_BEAT_MS } from "@/constants/logic";
 import type { GameState } from "@/engine";
@@ -16,6 +17,8 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { useEffect, useRef } from "react";
 
 type Args = {
+  mode: "onePlayer" | "twoPlayer";
+  moves: MoveCoordinator;
   gameState: GameState;
   pieceStatusMap: PieceStatusMap;
   wellPieceLocations: Record<string, string>;
@@ -24,9 +27,7 @@ type Args = {
   pieceAnimsRef: MutableRefObject<Record<string, PieceAnimation>>;
   winnerCascadeKeyRef: MutableRefObject<string | null>;
   winningDropPieceIdsRef: MutableRefObject<Set<string>>;
-  resetCommitTimeoutRef: MutableRefObject<ReturnType<
-    typeof setTimeout
-  > | null>;
+
 };
 
 /**
@@ -34,6 +35,8 @@ type Args = {
  * provider file stays state + imperative API, not long effect graphs.
  */
 export function useGameSessionSideEffects({
+  mode,
+  moves,
   gameState,
   pieceStatusMap,
   wellPieceLocations,
@@ -42,19 +45,12 @@ export function useGameSessionSideEffects({
   pieceAnimsRef,
   winnerCascadeKeyRef,
   winningDropPieceIdsRef,
-  resetCommitTimeoutRef,
 }: Args): void {
   useEffect(() => {
     if (gameState.status !== "finished" || !gameState.winner) return;
     setNextStartingTeam(gameState.winner);
   }, [gameState.status, gameState.winner, setNextStartingTeam]);
 
-  useEffect(() => {
-    return () => {
-      if (resetCommitTimeoutRef.current)
-        clearTimeout(resetCommitTimeoutRef.current);
-    };
-  }, [resetCommitTimeoutRef]);
 
   useEffect(() => {
     if (gameState.status !== "finished") {
@@ -114,15 +110,15 @@ export function useGameSessionSideEffects({
       const otherPhaseStart =
         maxPullerStart + cascadeEntryMs + TIE_WIN_SECOND_CASCADE_BEAT_MS;
 
-      const tieRevealTimeouts: ReturnType<typeof setTimeout>[] = [];
+      const cancelReveals: (() => void)[] = [];
 
       for (const [pieceId, delayMs] of delaysPuller) {
         const anim = pieceAnimsRef.current[pieceId];
         if (anim) {
           animateWinnerPiece(anim, delayMs, { skipColor: true });
         }
-        tieRevealTimeouts.push(
-          setTimeout(() => {
+        cancelReveals.push(
+          moves.schedule(() => {
             setPieceStatusMap((prev) => ({
               ...prev,
               [pieceId]: PieceStatus.winner,
@@ -136,8 +132,8 @@ export function useGameSessionSideEffects({
         if (anim) {
           animateWinnerPiece(anim, t, { skipColor: true });
         }
-        tieRevealTimeouts.push(
-          setTimeout(() => {
+        cancelReveals.push(
+          moves.schedule(() => {
             setPieceStatusMap((prev) => ({
               ...prev,
               [pieceId]: PieceStatus.winner,
@@ -147,7 +143,7 @@ export function useGameSessionSideEffects({
       }
 
       return () => {
-        for (const tid of tieRevealTimeouts) clearTimeout(tid);
+        for (const cancel of cancelReveals) cancel();
         winnerCascadeKeyRef.current = null;
       };
     }
@@ -195,6 +191,7 @@ export function useGameSessionSideEffects({
       return next;
     });
   }, [
+    moves,
     gameState.status,
     gameState.winner,
     gameState.tie,
@@ -208,16 +205,18 @@ export function useGameSessionSideEffects({
     winningDropPieceIdsRef,
   ]);
 
-  const turnCountRef = useRef(gameState.turnCount);
+  const lastSavedRef = useRef<{ game: GameState; wells: Record<string, string>; mode: string } | null>(null);
   useEffect(() => {
-    if (gameState.turnCount === turnCountRef.current) return;
-    turnCountRef.current = gameState.turnCount;
+    if (gameState.turnCount === 0 || Object.values(pieceStatusMap).includes(PieceStatus.isHeld)) return;
+    if (lastSavedRef.current?.game === gameState && lastSavedRef.current.wells === wellPieceLocations && lastSavedRef.current.mode === mode) return;
+    lastSavedRef.current = { game: gameState, wells: wellPieceLocations, mode };
 
     const session: PersistedSessionState = {
+      mode,
       game: gameStateToSerializable(gameState),
       pieceStatusMap,
       wellPieceLocations,
     };
     saveSession(session);
-  }, [gameState, pieceStatusMap, wellPieceLocations]);
+  }, [gameState, pieceStatusMap, wellPieceLocations, mode]);
 }

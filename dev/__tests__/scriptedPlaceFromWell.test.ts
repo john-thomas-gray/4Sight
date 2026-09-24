@@ -1,3 +1,4 @@
+import { createMoveCoordinator } from "@/session/moveCoordinator";
 import { TURN_CHANGE_COMMIT_DELAY_MS } from "@/constants/logic";
 import { Direction, type EngineResult, type GameState, Team } from "@/engine";
 import type { PieceAnimation } from "@/types/animation";
@@ -12,6 +13,8 @@ function anim(): PieceAnimation {
     scaleY: { value: 1.1 } as never,
     color: { value: "#fff" } as never,
     winnerColor: { value: "#ffd" } as never,
+    winnerGlow: { value: 0 } as never,
+    winnerEnergy: { value: 0 } as never,
     zIndex: { value: 500 } as never,
   };
 }
@@ -33,10 +36,12 @@ describe("runScriptedPlaceFromWell", () => {
     };
     let moveInProgress = false;
     const dropPiece = jest.fn(
-      (): EngineResult => ({
+      (): EngineResult => {
+        statuses["0"] = PieceStatus.onBoard;
+        return ({
         state: {} as GameState,
-        events: [],
-      }),
+        events: [{ type: "piece_placed", pieceId: "0", coord: { row: 7, col: 4 } }],
+      }); },
     );
 
     const didQueue = runScriptedPlaceFromWell({
@@ -48,17 +53,13 @@ describe("runScriptedPlaceFromWell", () => {
         spaces: { "7-4": { pageX: 0, pageY: 280, width: 40, height: 40 } },
       },
       pieceAnims: { "0": anim() },
-      setWellPieceLocations: (update) => {
-        wells = typeof update === "function" ? update(wells) : update;
-      },
-      setPieceStatusMap: (update) => {
-        statuses = typeof update === "function" ? update(statuses) : update;
-      },
+      moves: createMoveCoordinator(),
+      beginPieceDrag: () => { delete wells["12-10"]; statuses["0"] = PieceStatus.isHeld; return true; },
+      returnPieceToWell: jest.fn(),
       setMoveInProgress: (value) => {
         moveInProgress =
           typeof value === "function" ? value(moveInProgress) : value;
       },
-      setMoveInProgressDelayed: jest.fn(),
       dropPiece,
     });
 
@@ -83,10 +84,10 @@ describe("runScriptedPlaceFromWell", () => {
         spaces: {},
       },
       pieceAnims: { "0": anim() },
-      setWellPieceLocations: jest.fn(),
-      setPieceStatusMap: jest.fn(),
+      moves: createMoveCoordinator(),
+      beginPieceDrag: jest.fn(),
+      returnPieceToWell: jest.fn(),
       setMoveInProgress: jest.fn(),
-      setMoveInProgressDelayed: jest.fn(),
       dropPiece: jest.fn(),
     });
 

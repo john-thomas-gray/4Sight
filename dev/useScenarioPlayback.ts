@@ -1,3 +1,4 @@
+import type { MoveCoordinator } from "@/session/moveCoordinator";
 import type { LayoutContextType } from "@/context/LayoutContext";
 import type { Scenario, ScenarioMove } from "@/dev/scenarios";
 import { getScenario, getScenarioDelay } from "@/dev/scenarios";
@@ -10,22 +11,21 @@ import {
   type GameState,
 } from "@/engine";
 import type { PieceAnimation } from "@/types/animation";
-import type { PieceStatusMap } from "@/types/pieceStatus";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { useCallback, useEffect, useRef } from "react";
 
 type Args = {
+  moves: MoveCoordinator;
+  beginPieceDrag: (pieceId: string) => boolean;
+  returnPieceToWell: (pieceId: string) => void;
   scenarioParam: string | undefined;
   showLoadingScreen: boolean;
   gameState: Pick<GameState, "board" | "status" | "turnCount">;
   loadScenario: (scenario: Scenario) => ScenarioMove[];
   layout: Pick<LayoutContextType, "slots" | "spaces">;
   pieceAnims: Record<string, PieceAnimation>;
-  setWellPieceLocations: Dispatch<SetStateAction<Record<string, string>>>;
-  setPieceStatusMap: Dispatch<SetStateAction<PieceStatusMap>>;
   dropPiece: (slotCoord: Coord, pieceId: string) => EngineResult;
   setMoveInProgress: Dispatch<SetStateAction<boolean>>;
-  setMoveInProgressDelayed: (value: boolean, delayMs: number) => void;
   pullRef: MutableRefObject<((direction: Direction) => void) | null>;
 };
 
@@ -34,17 +34,17 @@ type Args = {
  * queued moves (drops + gravity) on a timer.
  */
 export function useScenarioPlayback({
+  moves,
+  beginPieceDrag,
+  returnPieceToWell,
   scenarioParam,
   showLoadingScreen,
   gameState,
   loadScenario,
   layout,
   pieceAnims,
-  setWellPieceLocations,
-  setPieceStatusMap,
   dropPiece,
   setMoveInProgress,
-  setMoveInProgressDelayed,
   pullRef,
 }: Args): void {
   const moveQueueRef = useRef<ScenarioMove[] | null>(null);
@@ -75,29 +75,24 @@ export function useScenarioPlayback({
     if (!slotCoord) return;
 
     runScriptedPlaceFromWell({
+      moves, beginPieceDrag, returnPieceToWell,
       board: gameState.board,
       slotCoord,
       pieceId,
       layout,
       pieceAnims,
-      setWellPieceLocations,
-      setPieceStatusMap,
-      setMoveInProgress,
-      setMoveInProgressDelayed,
-      dropPiece,
+              setMoveInProgress,
+          dropPiece,
     });
   }, [
+    moves, beginPieceDrag, returnPieceToWell,
     gameState.board,
     gameState.status,
     pieceAnims,
-    layout.slots,
-    layout.spaces,
+    layout,
     dropPiece,
-    setPieceStatusMap,
-    setWellPieceLocations,
-    setMoveInProgress,
-    setMoveInProgressDelayed,
-    pullRef,
+        setMoveInProgress,
+      pullRef,
   ]);
 
   useEffect(() => {
@@ -109,9 +104,9 @@ export function useScenarioPlayback({
     const scenario = scenarioParam ? getScenario(scenarioParam) : null;
     const delayMs = scenario ? getScenarioDelay(scenario) : 1200;
 
-    const timer = setTimeout(playNextMove, delayMs);
-    return () => clearTimeout(timer);
+    return moves.schedule(playNextMove, delayMs);
   }, [
+    moves,
     showLoadingScreen,
     gameState.turnCount,
     gameState.status,

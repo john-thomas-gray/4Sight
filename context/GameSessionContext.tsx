@@ -1,162 +1,370 @@
+import { animateSessionReset } from "@/animations/sessionReset";
+import { GameElements } from "@/constants";
 import { buildInitialWellPieceLocations } from "@/constants/wells";
-import {
-  buildTutorialStepTwoWellPieceLocations,
-  pieceStatusMapForBoardAndWells,
-} from "@/tutorial/tutorialWellLayout";
-import { useSettings } from "@/context/SettingsContext";
+import { buildTutorialStepTwoWellPieceLocations, pieceStatusMapForBoardAndWells } from "@/tutorial/tutorialWellLayout";
+import { useSettings } from "./SettingsContext";
 import type { Scenario, ScenarioMove } from "@/dev/scenarios";
-import type { Coord, EngineResult, GameState, NearWin } from "@/engine";
-import {
-  computeTieWinOverlayDelayMs,
-  coordToKey,
-  createGame,
-  detectNearWins,
-  Direction,
-  placePiece as enginePlacePiece,
-  resetGame as engineResetGame,
-  shiftGravity as engineShiftGravity,
-  findSlotForSpace,
-  PIECES_PER_TEAM,
-  Team,
-} from "@/engine";
-import type { PersistedSessionState } from "@/storage";
-import { clearSession, serializableToGameState } from "@/storage";
-import {
-  PieceAnimation,
-  RESET_TO_WELL_BEAT_MS,
-  RESET_TO_WELL_LOWER_MS,
-  RESET_TO_WELL_RISE_DY,
-  RESET_TO_WELL_RISE_MS,
-  RESET_TO_WELL_TOTAL_MS,
-  RESET_TO_WELL_ZIP_MS,
-} from "@/types/animation";
+import { computeTieWinOverlayDelayMs, coordToKey, createGame, detectNearWins, Direction, placePiece as enginePlacePiece, shiftGravity as engineShiftGravity, findSlotForSpace, PIECES_PER_TEAM, Team, type Coord, type EngineResult, type GameState, type NearWin } from "@/engine";
+import { clearSession, serializableToGameState, validateSession, type PersistedSessionState } from "@/storage";
+import { type PieceAnimation, RESET_TO_WELL_TOTAL_MS } from "@/types/animation";
 import { PieceStatus, type PieceStatusMap } from "@/types/pieceStatus";
-import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  Easing,
-  makeMutable,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { cancelAnimation, makeMutable } from "react-native-reanimated";
+import { createMoveCoordinator, type MoveCoordinator } from "@/session/moveCoordinator";
 import { useLayout } from "./LayoutContext";
+import { useUiSelector } from "./UiContext";
+import { createSelectorContext } from "./selectorContext";
 import { useGameSessionSideEffects } from "./useGameSessionSideEffects";
-
 export { PieceStatus };
-
-type GameSessionContextType = {
+type SessionState = {
+  mode: "onePlayer" | "twoPlayer";
   gameState: GameState;
   pieceStatusMap: PieceStatusMap;
-  setPieceStatusMap: React.Dispatch<React.SetStateAction<PieceStatusMap>>;
   wellPieceLocations: Record<string, string>;
-  setWellPieceLocations: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
+};
+type GameSessionContextType = SessionState & {
+  positionRevision: number;
   nearWins: NearWin[];
   nextTurnWins: Record<string, boolean>;
   pieceAnims: Record<string, PieceAnimation>;
+  pieceWellLocations: Record<string, string>;
+  getSessionSnapshot: () => SessionState;
+  beginPieceDrag: (pieceId: string) => boolean;
+  returnPieceToWell: (pieceId: string, wellId?: string) => void;
+  cancelPendingMoves: () => void;
+  moves: MoveCoordinator;
   dropPiece: (slotCoord: Coord, pieceId: string) => EngineResult;
   shiftGravity: (direction: Direction) => EngineResult;
-  newGame: () => Promise<void>;
+  newGame: (mode?: SessionState["mode"]) => Promise<void>;
   resetCurrentGame: () => Promise<void>;
   continueGame: (session: PersistedSessionState) => void;
   loadScenario: (scenario: Scenario) => ScenarioMove[];
-  /**
-   * Tutorial: fill wells from the current board (step 1 → 2) without reloading scenario/route.
-   */
   applyTutorialStepTwoWells: () => void;
-  /**
-   * Tutorial: entry direction of the slot white used when placing the focus
-   * piece (step 1); used to script black's follow-up from another side.
-   */
   tutorialWhiteDropEntryDirectionRef: React.MutableRefObject<Direction | null>;
-  /** Milliseconds until tie modal should show (both cascades done); null when not a tie. */
   tieWinOverlayDelayMs: number | null;
 };
-
-const GameSessionContext = createContext<GameSessionContextType | undefined>(
-  undefined,
-);
-
-function buildInitialPieceStatusMap(): PieceStatusMap {
-  const map: PieceStatusMap = {};
-  for (let i = 0; i < PIECES_PER_TEAM * 2; i++) {
-    map[String(i)] = PieceStatus.inWell;
-  }
-  return map;
+const GameSessionContext = createSelectorContext<GameSessionContextType>("useGameSession");
+export const useGameSessionSelector = GameSessionContext.useSelector;
+export const useGameSession = () => useGameSessionSelector(value => value);
+const defaultWells = buildInitialWellPieceLocations();
+function initialSession(currentTeam = Team.One, mode: SessionState["mode"] = "twoPlayer"): SessionState {
+  const gameState = {
+    ...createGame(),
+    currentTeam
+  };
+  const wellPieceLocations = buildInitialWellPieceLocations();
+  return {
+    mode,
+    gameState,
+    wellPieceLocations,
+    pieceStatusMap: pieceStatusMapForBoardAndWells(gameState.board, wellPieceLocations)
+  };
 }
-
 function buildPieceAnims(): Record<string, PieceAnimation> {
-  const anims: Record<string, PieceAnimation> = {};
-  for (let i = 0; i < PIECES_PER_TEAM * 2; i++) {
-    const id = String(i);
-    anims[id] = {
-      translateX: makeMutable(0),
-      translateY: makeMutable(0),
-      scaleX: makeMutable(1.1),
-      scaleY: makeMutable(1.1),
-      color: makeMutable(i < PIECES_PER_TEAM ? "#ffffff" : "#000000"),
-      winnerColor: makeMutable(i < PIECES_PER_TEAM ? "#fdffd0ff" : "#967d00ff"),
-      zIndex: makeMutable(500),
-    };
-  }
-  return anims;
+  return Object.fromEntries(Array.from({
+    length: PIECES_PER_TEAM * 2
+  }, (_, i) => [String(i), {
+    translateX: makeMutable(0),
+    translateY: makeMutable(0),
+    scaleX: makeMutable(1.1),
+    scaleY: makeMutable(1.1),
+    color: makeMutable(i < PIECES_PER_TEAM ? "#ffffff" : "#000000"),
+    winnerColor: makeMutable(i < PIECES_PER_TEAM ? "#fdffd0ff" : "#967d00ff"),
+    winnerGlow: makeMutable(0),
+    winnerEnergy: makeMutable(0),
+    zIndex: makeMutable(500)
+  }]));
 }
-
-export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
-  children,
+export const GameSessionProvider: React.FC<{
+  children: React.ReactNode;
+}> = ({
+  children
 }) => {
   const layout = useLayout();
-  const { theme } = useSettings();
-  const [gameState, setGameState] = useState<GameState>(createGame);
+  const {
+    theme
+  } = useSettings();
+  const {
+    resetInteractions,
+    setMoveInProgress
+  } = useUiSelector(ui => ({
+    resetInteractions: ui.resetInteractions,
+    setMoveInProgress: ui.setMoveInProgress
+  }));
+  const [session, setSession] = useState(initialSession);
+  const sessionRef = useRef(session);
   const [nextStartingTeam, setNextStartingTeam] = useState<Team>(Team.One);
-  const [pieceStatusMap, setPieceStatusMap] = useState<PieceStatusMap>(
-    buildInitialPieceStatusMap,
-  );
-  const [wellPieceLocations, setWellPieceLocations] = useState<
-    Record<string, string>
-  >(buildInitialWellPieceLocations);
-  const gameStateRef = useRef(gameState);
-  gameStateRef.current = gameState;
-  const pieceAnimsRef =
-    useRef<Record<string, PieceAnimation>>(buildPieceAnims());
-  const resetCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const [positionRevision, setPositionRevision] = useState(0);
+  const [winningDropAnchors, setWinningDropAnchors] = useState<string[]>([]);
+  const [pieceAnims] = useState(buildPieceAnims);
+  const pieceAnimsRef = useRef(pieceAnims);
+  const [moves] = useState(createMoveCoordinator);
+  const originsRef = useRef(new Map<string, string>());
   const winnerCascadeKeyRef = useRef<string | null>(null);
-  const winningDropPieceIdsRef = useRef<Set<string>>(new Set());
+  const winningDropPieceIdsRef = useRef(new Set<string>());
   const tutorialWhiteDropEntryDirectionRef = useRef<Direction | null>(null);
+  const presentationRef = useRef({
+    layout,
+    theme,
+    nextStartingTeam
+  });
+  useLayoutEffect(() => {
+    presentationRef.current = {
+      layout,
+      theme,
+      nextStartingTeam
+    };
+  }, [layout, theme, nextStartingTeam]);
 
-  const nearWins = useMemo(
-    () => detectNearWins(gameState.board, gameState.pieces),
-    [gameState.board, gameState.pieces],
-  );
+  // Animation values survive screen changes. Reconcile them from the session,
+  // including pieces returned to wells, before publishing a replacement game.
+  const restorePiecePositions = useCallback((next: SessionState) => {
+    const { layout: currentLayout, theme: currentTheme } = presentationRef.current;
+    const boardLocations = Object.fromEntries(Object.entries(next.gameState.board).map(([cell, id]) => [id, cell]));
+    const wellLocations = Object.fromEntries(Object.entries(next.wellPieceLocations).map(([cell, id]) => [id, cell]));
+    for (const [id, anim] of Object.entries(pieceAnims)) {
+      for (const value of [anim.translateX, anim.translateY, anim.scaleX, anim.scaleY, anim.zIndex, anim.winnerGlow, anim.winnerEnergy]) cancelAnimation(value);
+      cancelAnimation(anim.color);
+      cancelAnimation(anim.winnerColor);
+      const piece = next.gameState.pieces[id];
+      const onBoard = boardLocations[id] !== undefined;
+      const cell = onBoard ? currentLayout.spaces[boardLocations[id]] :
+        piece ? currentLayout.wells[piece.team]?.[wellLocations[id]] : undefined;
+      if (cell) {
+        anim.translateX.set(cell.pageX + cell.width / 2 - GameElements.PIECE_RADIUS);
+        anim.translateY.set(cell.pageY + cell.height / 2 - GameElements.PIECE_RADIUS);
+      }
+      // With no measured destination, hide the old position until layout places it.
+      const scale = cell ? onBoard ? GameElements.PIECE_BOARD_SCALE : GameElements.PIECE_WELL_SCALE : 0;
+      anim.scaleX.set(scale);
+      anim.scaleY.set(scale);
+      anim.zIndex.set(onBoard ? GameElements.PIECE_BOARD_ZINDEX : GameElements.PIECE_WELL_ZINDEX);
+      const colors = currentTheme.colorTheme;
+      anim.winnerColor.set(piece?.team === Team.One ? colors.TEAM_ONE_WINNER_COLOR : colors.TEAM_TWO_WINNER_COLOR);
+      anim.color.set(next.pieceStatusMap[id] === PieceStatus.winner ? anim.winnerColor.get() :
+        piece?.team === Team.One ? colors.TEAM_ONE_COLOR : colors.TEAM_TWO_COLOR);
+      anim.winnerGlow.set(next.pieceStatusMap[id] === PieceStatus.winner ? 1 : 0);
+      anim.winnerEnergy.set(0);
+    }
+  }, [pieceAnims]);
 
-  const tieWinOverlayDelayMs = useMemo(() => {
-    if (gameState.status !== "finished" || !gameState.tie) return null;
-    return computeTieWinOverlayDelayMs(
-      gameState.board,
-      gameState.pieces,
-      gameState.currentTeam,
-      [...winningDropPieceIdsRef.current],
-    );
-  }, [
-    gameState.status,
-    gameState.tie,
-    gameState.board,
-    gameState.pieces,
-    gameState.currentTeam,
-    gameState.turnCount,
-  ]);
-
+  // Commands read the current transaction, including earlier commands in the same event.
+  const updateSession = useCallback((update: (previous: SessionState) => SessionState) => {
+    const next = update(sessionRef.current);
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+  const getSessionSnapshot = useCallback(() => sessionRef.current, []);
+  const setPieceStatusMap = useCallback<React.Dispatch<React.SetStateAction<PieceStatusMap>>>(update => {
+    updateSession(prev => ({
+      ...prev,
+      pieceStatusMap: typeof update === "function" ? update(prev.pieceStatusMap) : update
+    }));
+  }, [updateSession]);
+  const beginPieceDrag = useCallback((pieceId: string) => {
+    const current = sessionRef.current;
+    const piece = current.gameState.pieces[pieceId];
+    if (originsRef.current.size > 0 || current.gameState.status !== "playing" || piece?.team !== current.gameState.currentTeam) return false;
+    const entry = Object.entries(current.wellPieceLocations).find(([, id]) => id === pieceId);
+    if (!entry || Object.values(current.gameState.board).includes(pieceId)) return false;
+    if (!moves.begin("piece")) return false;
+    originsRef.current.set(pieceId, entry[0]);
+    updateSession(prev => {
+      const wells = {
+        ...prev.wellPieceLocations
+      };
+      delete wells[entry[0]];
+      return {
+        ...prev,
+        wellPieceLocations: wells,
+        pieceStatusMap: {
+          ...prev.pieceStatusMap,
+          [pieceId]: PieceStatus.isHeld
+        }
+      };
+    });
+    return true;
+  }, [updateSession, moves]);
+  const returnPieceToWell = useCallback((pieceId: string, requestedWellId?: string) => {
+    const current = sessionRef.current;
+    const origin = originsRef.current.get(pieceId);
+    if (!origin || Object.values(current.gameState.board).includes(pieceId)) return;
+    const requestedDefaultPiece = requestedWellId ? defaultWells[requestedWellId] : undefined;
+    const validTeam = requestedDefaultPiece !== undefined &&
+      (Number(requestedDefaultPiece) < PIECES_PER_TEAM) === (current.gameState.pieces[pieceId].team === Team.One);
+    const wellId = requestedWellId && validTeam && current.wellPieceLocations[requestedWellId] === undefined ? requestedWellId : origin;
+    originsRef.current.delete(pieceId);
+    moves.finish();
+    updateSession(prev => ({
+      ...prev,
+      wellPieceLocations: {
+        ...prev.wellPieceLocations,
+        [wellId]: pieceId
+      },
+      pieceStatusMap: {
+        ...prev.pieceStatusMap,
+        [pieceId]: PieceStatus.inWell
+      }
+    }));
+  }, [updateSession, moves]);
+  const cancelPendingMoves = useCallback(() => {
+    const heldOrigins = [...originsRef.current];
+    moves.cancelAll();
+    for (const [id] of heldOrigins) {
+      returnPieceToWell(id);
+    }
+    restorePiecePositions(sessionRef.current);
+    resetInteractions();
+  }, [moves, restorePiecePositions, returnPieceToWell, resetInteractions]);
+  useEffect(() => () => {
+    moves.cancelAll();
+  }, [moves]);
+  const recordWinningMove = useCallback((result: EngineResult) => {
+    const win = result.events.find(e => e.type === "game_won" || e.type === "game_tied");
+    if (!win || !("lines" in win)) return;
+    const winningIds = new Set(win.lines.flatMap(line => [...line.pieceIds]));
+    for (const event of result.events) {
+      if (event.type === "piece_placed") winningDropPieceIdsRef.current.add(event.pieceId);
+      if (event.type === "gravity_shifted") for (const move of event.moves) {
+        if (winningIds.has(move.pieceId)) winningDropPieceIdsRef.current.add(move.pieceId);
+      }
+    }
+    setWinningDropAnchors([...winningDropPieceIdsRef.current]);
+  }, []);
+  const dropPiece = useCallback((slot: Coord, id: string): EngineResult => {
+    const phase = moves.getPhase();
+    if (phase === "gravity" || phase === "reset" || phase === "piece" && !originsRef.current.has(id)) {
+      return {
+        state: sessionRef.current.gameState,
+        events: []
+      };
+    }
+    const result = enginePlacePiece(sessionRef.current.gameState, slot, id);
+    if (!result.events.some(e => e.type === "piece_placed")) return result;
+    recordWinningMove(result);
+    originsRef.current.delete(id);
+    updateSession(prev => ({
+      ...prev,
+      gameState: result.state,
+      wellPieceLocations: Object.fromEntries(Object.entries(prev.wellPieceLocations).filter(([, pieceId]) => pieceId !== id)),
+      pieceStatusMap: {
+        ...prev.pieceStatusMap,
+        [id]: PieceStatus.onBoard
+      }
+    }));
+    return result;
+  }, [recordWinningMove, updateSession, moves]);
+  const shiftGravity = useCallback((direction: Direction): EngineResult => {
+    if (moves.getPhase() === "piece" || moves.getPhase() === "reset") return {
+      state: sessionRef.current.gameState,
+      events: []
+    };
+    const result = engineShiftGravity(sessionRef.current.gameState, direction);
+    if (result.state !== sessionRef.current.gameState) {
+      recordWinningMove(result);
+      updateSession(prev => ({
+        ...prev,
+        gameState: result.state
+      }));
+    }
+    return result;
+  }, [recordWinningMove, updateSession, moves]);
+  const clearSessionHistory = useCallback(() => {
+    setPositionRevision(value => value + 1);
+    setWinningDropAnchors([]);
+    winningDropPieceIdsRef.current.clear();
+    winnerCascadeKeyRef.current = null;
+    tutorialWhiteDropEntryDirectionRef.current = null;
+  }, []);
+  const replaceSession = useCallback((next: SessionState) => {
+    clearSessionHistory();
+    restorePiecePositions(next);
+    updateSession(() => next);
+  }, [clearSessionHistory, restorePiecePositions, updateSession]);
+  const newGame = useCallback(async (mode?: SessionState["mode"]) => {
+    cancelPendingMoves();
+    replaceSession(initialSession(presentationRef.current.nextStartingTeam, mode ?? sessionRef.current.mode));
+    await clearSession();
+  }, [cancelPendingMoves, replaceSession]);
+  const resetCurrentGame = useCallback(async () => {
+    cancelPendingMoves();
+    moves.begin("reset");
+    setMoveInProgress(true);
+    const {
+      layout: currentLayout,
+      theme: currentTheme
+    } = presentationRef.current;
+    animateSessionReset(sessionRef.current.gameState, currentLayout, currentTheme, pieceAnims, buildInitialWellPieceLocations());
+    if (!(await moves.wait(RESET_TO_WELL_TOTAL_MS))) return;
+    await newGame();
+  }, [cancelPendingMoves, setMoveInProgress, pieceAnims, moves, newGame]);
+  const continueGame = useCallback((saved: PersistedSessionState) => {
+    const validated = validateSession(saved);
+    if (!validated) return;
+    cancelPendingMoves();
+    replaceSession({
+      mode: validated.mode ?? "twoPlayer",
+      gameState: serializableToGameState(validated.game),
+      pieceStatusMap: validated.pieceStatusMap,
+      wellPieceLocations: validated.wellPieceLocations
+    });
+  }, [cancelPendingMoves, replaceSession]);
+  const applyTutorialStepTwoWells = useCallback(() => {
+    updateSession(prev => {
+      const wells = buildTutorialStepTwoWellPieceLocations(prev.gameState.board);
+      return {
+        ...prev,
+        wellPieceLocations: wells,
+        pieceStatusMap: pieceStatusMapForBoardAndWells(prev.gameState.board, wells)
+      };
+    });
+  }, [updateSession]);
+  const loadScenario = useCallback((scenario: Scenario): ScenarioMove[] => {
+    cancelPendingMoves();
+    if (scenario.continuation) {
+      applyTutorialStepTwoWells();
+      updateSession(prev => ({
+        ...prev,
+        gameState: {
+          ...prev.gameState,
+          currentTeam: scenario.currentTeam
+        }
+      }));
+    } else {
+      const boardIds = new Set(Object.values(scenario.board));
+      const wells = Object.fromEntries(Object.entries(scenario.wellPieceLocations ?? buildInitialWellPieceLocations()).filter(([, id]) => !boardIds.has(id)));
+      replaceSession({
+        mode: "twoPlayer",
+        gameState: {
+          ...createGame(),
+          board: {
+            ...scenario.board
+          },
+          currentTeam: scenario.currentTeam
+        },
+        wellPieceLocations: wells,
+        pieceStatusMap: pieceStatusMapForBoardAndWells(scenario.board, wells)
+      });
+    }
+    return [...scenario.moves];
+  }, [cancelPendingMoves, replaceSession, applyTutorialStepTwoWells, updateSession]);
+  const {
+    gameState,
+    pieceStatusMap,
+    wellPieceLocations
+  } = session;
+  const nearWins = useMemo(() => detectNearWins(gameState.board, gameState.pieces), [gameState.board, gameState.pieces]);
+  const nextTurnWins = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    if (gameState.status === "playing") for (const win of nearWins) {
+      if (findSlotForSpace(gameState.board, win.emptyCoord)) map[coordToKey(win.emptyCoord)] = true;
+    }
+    return map;
+  }, [nearWins, gameState.status, gameState.board]);
+  const pieceWellLocations = useMemo(() => Object.fromEntries(Object.entries(wellPieceLocations).map(([well, id]) => [id, well])), [wellPieceLocations]);
+  const tieWinOverlayDelayMs = useMemo(() => gameState.status === "finished" && gameState.tie ? computeTieWinOverlayDelayMs(gameState.board, gameState.pieces, gameState.currentTeam, winningDropAnchors) : null, [gameState, winningDropAnchors]);
   useGameSessionSideEffects({
+    mode: session.mode,
     gameState,
     pieceStatusMap,
     wellPieceLocations,
@@ -165,326 +373,29 @@ export const GameSessionProvider: React.FC<{ children: ReactNode }> = ({
     pieceAnimsRef,
     winnerCascadeKeyRef,
     winningDropPieceIdsRef,
-    resetCommitTimeoutRef,
+    moves
   });
-
-  const nextTurnWins = useMemo(() => {
-    const map: Record<string, boolean> = {};
-    if (gameState.status !== "playing") return map;
-    for (const nw of nearWins) {
-      const reachableSlot = findSlotForSpace(gameState.board, nw.emptyCoord);
-      if (reachableSlot) {
-        map[coordToKey(nw.emptyCoord)] = true;
-      }
-    }
-    return map;
-  }, [nearWins, gameState.status, gameState.board]);
-
-  const dropPiece = useCallback(
-    (slotCoord: Coord, pieceId: string): EngineResult => {
-      const result = enginePlacePiece(gameState, slotCoord, pieceId);
-      const endedGame = result.events.some(
-        (e) => e.type === "game_won" || e.type === "game_tied",
-      );
-      if (endedGame) {
-        const winningDropEvent = result.events.find(
-          (
-            e,
-          ): e is Extract<
-            (typeof result.events)[number],
-            { type: "piece_placed" }
-          > => e.type === "piece_placed",
-        );
-        if (winningDropEvent) {
-          winningDropPieceIdsRef.current.add(winningDropEvent.pieceId);
-        }
-      }
-      if (result.events.length > 0) {
-        setGameState(result.state);
-      }
-      return result;
-    },
-    [gameState],
-  );
-
-  const shiftGravity = useCallback(
-    (direction: Direction): EngineResult => {
-      const result = engineShiftGravity(gameState, direction);
-      if (result.state !== gameState) {
-        if (result.state.status === "finished") {
-          const grav = result.events.find(
-            (
-              e,
-            ): e is Extract<
-              (typeof result.events)[number],
-              { type: "gravity_shifted" }
-            > => e.type === "gravity_shifted",
-          );
-          const winEv = result.events.find(
-            (
-              e,
-            ): e is Extract<
-              (typeof result.events)[number],
-              { type: "game_won" | "game_tied" }
-            > => e.type === "game_won" || e.type === "game_tied",
-          );
-          if (grav && winEv) {
-            const onWinningLine = new Set<string>();
-            for (const line of winEv.lines) {
-              for (const pid of line.pieceIds) onWinningLine.add(pid);
-            }
-            for (const m of grav.moves) {
-              if (onWinningLine.has(m.pieceId)) {
-                winningDropPieceIdsRef.current.add(m.pieceId);
-              }
-            }
-          }
-        }
-        setGameState(result.state);
-      }
-      return result;
-    },
-    [gameState],
-  );
-
-  const newGame = useCallback(async () => {
-    tutorialWhiteDropEntryDirectionRef.current = null;
-    const base = createGame();
-    setGameState({ ...base, currentTeam: nextStartingTeam });
-    setPieceStatusMap(buildInitialPieceStatusMap());
-    setWellPieceLocations(buildInitialWellPieceLocations());
-    await clearSession();
-  }, [nextStartingTeam]);
-
-  const resetCurrentGame = useCallback(async () => {
-    const initialWellMap = buildInitialWellPieceLocations();
-    const pieceToWellId = Object.entries(initialWellMap).reduce<
-      Record<string, string>
-    >((acc, [wellId, pieceId]) => {
-      acc[pieceId] = wellId;
-      return acc;
-    }, {});
-
-    const boardPieceIds = Object.values(gameState.board);
-    for (const pieceId of boardPieceIds) {
-      const targetWellId = pieceToWellId[pieceId];
-      const piece = gameState.pieces[pieceId];
-      const targetWellLayout =
-        piece && targetWellId ? layout.wells[piece.team]?.[targetWellId] : null;
-      const anim = pieceAnimsRef.current[pieceId];
-      if (!anim || !targetWellLayout) continue;
-      const keepWinnerColor =
-        !gameState.tie && winningDropPieceIdsRef.current.has(pieceId);
-      const teamDefaultColor =
-        piece.team === Team.One
-          ? theme.colorTheme.TEAM_ONE_COLOR
-          : theme.colorTheme.TEAM_TWO_COLOR;
-
-      const targetX = targetWellLayout.pageX + targetWellLayout.width / 2 - 16;
-      const targetY = targetWellLayout.pageY + targetWellLayout.height / 2 - 16;
-
-      const startX = anim.translateX.value;
-      const startY = anim.translateY.value;
-      const riseY = startY - RESET_TO_WELL_RISE_DY;
-      const zipEase = Easing.inOut(Easing.cubic);
-
-      anim.scaleX.value = 1.5;
-      anim.scaleY.value = 1.5;
-      anim.zIndex.value = 5000;
-      anim.color.value = withTiming(
-        keepWinnerColor ? anim.winnerColor.value : teamDefaultColor,
-        {
-          duration: 240,
-          easing: Easing.inOut(Easing.quad),
-        },
-      );
-      anim.translateX.value = withSequence(
-        withTiming(startX, { duration: RESET_TO_WELL_RISE_MS }),
-        withTiming(startX, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(targetX, {
-          duration: RESET_TO_WELL_ZIP_MS,
-          easing: zipEase,
-        }),
-        withTiming(targetX, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(targetX, { duration: RESET_TO_WELL_LOWER_MS }),
-      );
-      anim.translateY.value = withSequence(
-        withTiming(riseY, {
-          duration: RESET_TO_WELL_RISE_MS,
-          easing: Easing.out(Easing.cubic),
-        }),
-        withTiming(riseY, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(targetY, {
-          duration: RESET_TO_WELL_ZIP_MS,
-          easing: zipEase,
-        }),
-        withTiming(targetY, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(
-          targetY,
-          {
-            duration: RESET_TO_WELL_LOWER_MS,
-            easing: Easing.out(Easing.quad),
-          },
-          (finished) => {
-            if (!finished) return;
-            anim.scaleX.value = 1.1;
-            anim.scaleY.value = 1.1;
-            anim.zIndex.value = 500;
-          },
-        ),
-      );
-      anim.scaleX.value = withSequence(
-        withTiming(1.5, { duration: RESET_TO_WELL_RISE_MS }),
-        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(1.5, { duration: RESET_TO_WELL_ZIP_MS }),
-        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(1.1, { duration: RESET_TO_WELL_LOWER_MS }),
-      );
-      anim.scaleY.value = withSequence(
-        withTiming(1.5, { duration: RESET_TO_WELL_RISE_MS }),
-        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(1.5, { duration: RESET_TO_WELL_ZIP_MS }),
-        withTiming(1.5, { duration: RESET_TO_WELL_BEAT_MS }),
-        withTiming(1.1, { duration: RESET_TO_WELL_LOWER_MS }),
-      );
-    }
-
-    if (resetCommitTimeoutRef.current)
-      clearTimeout(resetCommitTimeoutRef.current);
-    await new Promise<void>((resolve) => {
-      resetCommitTimeoutRef.current = setTimeout(
-        () => {
-          resetCommitTimeoutRef.current = null;
-          resolve();
-        },
-        Math.max(500, RESET_TO_WELL_TOTAL_MS),
-      );
-    });
-
-    const base = engineResetGame();
-    setGameState({ ...base, currentTeam: nextStartingTeam });
-    setPieceStatusMap(buildInitialPieceStatusMap());
-    setWellPieceLocations(initialWellMap);
-    await clearSession();
-  }, [
-    gameState.board,
-    gameState.pieces,
-    gameState.tie,
-    layout.wells,
-    nextStartingTeam,
-    theme.colorTheme.TEAM_ONE_COLOR,
-    theme.colorTheme.TEAM_TWO_COLOR,
-  ]);
-
-  const continueGame = useCallback((session: PersistedSessionState) => {
-    setGameState(serializableToGameState(session.game));
-    setPieceStatusMap(session.pieceStatusMap as PieceStatusMap);
-    setWellPieceLocations(session.wellPieceLocations);
-  }, []);
-
-  const applyTutorialStepTwoWells = useCallback(() => {
-    const board = gameStateRef.current.board;
-    const wells = buildTutorialStepTwoWellPieceLocations(board);
-    setWellPieceLocations(wells);
-    setPieceStatusMap(pieceStatusMapForBoardAndWells(board, wells));
-  }, []);
-
-  const loadScenario = useCallback((scenario: Scenario): ScenarioMove[] => {
-    if (scenario.continuation) {
-      applyTutorialStepTwoWells();
-      setGameState((prev) => ({
-        ...prev,
-        currentTeam: scenario.currentTeam,
-      }));
-      return [...scenario.moves];
-    }
-
-    const base = createGame();
-    setGameState({
-      ...base,
-      board: scenario.board,
-      currentTeam: scenario.currentTeam,
-    });
-
-    const boardPieceIds = new Set(Object.values(scenario.board));
-
-    const statusMap: PieceStatusMap = {};
-    for (let i = 0; i < PIECES_PER_TEAM * 2; i++) {
-      const id = String(i);
-      statusMap[id] = boardPieceIds.has(id)
-        ? PieceStatus.onBoard
-        : PieceStatus.inWell;
-    }
-    setPieceStatusMap(statusMap);
-
-    let wells: Record<string, string>;
-    if (scenario.wellPieceLocations) {
-      wells = { ...scenario.wellPieceLocations };
-      for (const pieceId of boardPieceIds) {
-        for (const [wellId, pid] of Object.entries(wells)) {
-          if (pid === pieceId) delete wells[wellId];
-        }
-      }
-    } else {
-      wells = buildInitialWellPieceLocations();
-      for (const [wellId, pieceId] of Object.entries(wells)) {
-        if (boardPieceIds.has(pieceId)) {
-          delete wells[wellId];
-        }
-      }
-    }
-    setWellPieceLocations(wells);
-
-    return [...scenario.moves];
-  }, [applyTutorialStepTwoWells]);
-
-  const value = useMemo<GameSessionContextType>(
-    () => ({
-      gameState,
-      pieceStatusMap,
-      setPieceStatusMap,
-      wellPieceLocations,
-      setWellPieceLocations,
-      nearWins,
-      nextTurnWins,
-      pieceAnims: pieceAnimsRef.current,
-      dropPiece,
-      shiftGravity,
-      newGame,
-      resetCurrentGame,
-      continueGame,
-      loadScenario,
-      applyTutorialStepTwoWells,
-      tutorialWhiteDropEntryDirectionRef,
-      tieWinOverlayDelayMs,
-    }),
-    [
-      gameState,
-      pieceStatusMap,
-      wellPieceLocations,
-      nearWins,
-      nextTurnWins,
-      dropPiece,
-      shiftGravity,
-      newGame,
-      resetCurrentGame,
-      continueGame,
-      loadScenario,
-      applyTutorialStepTwoWells,
-      tieWinOverlayDelayMs,
-    ],
-  );
-
-  return (
-    <GameSessionContext.Provider value={value}>
-      {children}
-    </GameSessionContext.Provider>
-  );
-};
-
-export const useGameSession = () => {
-  const ctx = useContext(GameSessionContext);
-  if (!ctx)
-    throw new Error("useGameSession must be used within GameSessionProvider");
-  return ctx;
+  const value = useMemo<GameSessionContextType>(() => ({
+    ...session,
+    positionRevision,
+    nearWins,
+    nextTurnWins,
+    pieceAnims,
+    pieceWellLocations,
+    getSessionSnapshot,
+    beginPieceDrag,
+    returnPieceToWell,
+    cancelPendingMoves,
+    moves,
+    dropPiece,
+    shiftGravity,
+    newGame,
+    resetCurrentGame,
+    continueGame,
+    loadScenario,
+    applyTutorialStepTwoWells,
+    tutorialWhiteDropEntryDirectionRef,
+    tieWinOverlayDelayMs
+  }), [session, positionRevision, nearWins, nextTurnWins, pieceAnims, pieceWellLocations, getSessionSnapshot, beginPieceDrag, returnPieceToWell, cancelPendingMoves, moves, dropPiece, shiftGravity, newGame, resetCurrentGame, continueGame, loadScenario, applyTutorialStepTwoWells, tieWinOverlayDelayMs]);
+  return <GameSessionContext.Provider value={value}>{children}</GameSessionContext.Provider>;
 };

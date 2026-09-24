@@ -1,3 +1,4 @@
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import { useSettings } from "@/context/SettingsContext";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text } from "react-native";
@@ -7,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import SurfaceGradient from "./SurfaceGradient";
 
 type WinOverlayProps = {
   visible: boolean;
@@ -105,7 +107,10 @@ const WinOverlay: React.FC<WinOverlayProps> = ({
       pointerEvents="none"
       style={[styles.overlay, animatedStyle, { backgroundColor }]}
     >
-      <Text style={[styles.text, { color: textColor }]}>{displayText}</Text>
+      <SurfaceGradient />
+      <Text style={[styles.text, surfaceStyles.title, { color: textColor }]}>
+        {displayText}
+      </Text>
     </Animated.View>
   );
 };

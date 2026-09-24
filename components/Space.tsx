@@ -1,6 +1,6 @@
 import { GameElements } from "@/constants";
-import { useGameSession } from "@/context/GameSessionContext";
-import { useLayout } from "@/context/LayoutContext";
+import { useGameSessionSelector } from "@/context/GameSessionContext";
+import { useLayoutSelector } from "@/context/LayoutContext";
 import {
   EMPTY_PLAYFIELD_REF,
   measureLayoutRelativeToPlayfield,
@@ -12,8 +12,8 @@ import { useCallback, useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Space = ({ id }: CellProps) => {
-  const { registerCell } = useLayout();
-  const { nextTurnWins } = useGameSession();
+  const registerCell = useLayoutSelector(layout => layout.registerCell);
+  const isWinningMove = useGameSessionSelector(session => !!session.nextTurnWins[id]);
   const { theme, highlightWinningMoves } = useSettings();
   const viewRef = useRef<View>(null);
   const playfield = usePlayfieldFrameOptional();
@@ -43,7 +43,7 @@ const Space = ({ id }: CellProps) => {
     ? theme.colorTheme.EVEN_SPACE_COLOR
     : theme.colorTheme.ODD_SPACE_COLOR;
   const shouldHighlight =
-    highlightWinningMoves && !!(nextTurnWins && nextTurnWins[id]);
+    highlightWinningMoves && isWinningMove;
 
   const style: ViewStyle = {
     ...GameElements.SPACE_STYLE,

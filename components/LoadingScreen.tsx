@@ -1,4 +1,5 @@
 import { useLoadingTextAnimations } from "@/animations/loadingAnimations";
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
 import React from "react";
@@ -9,6 +10,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import PieceLoading from "./PieceLoading";
+import SurfaceGradient from "./SurfaceGradient";
 
 type LoadingScreenProps = { visible: boolean };
 
@@ -27,6 +29,7 @@ const LoadingContent = () => {
     <>
       <Animated.Text
         style={[
+          surfaceStyles.title,
           animatedStyle,
           {
             marginTop: 12,
@@ -117,6 +120,7 @@ const LoadingScreen = ({ visible }: LoadingScreenProps) => {
         },
       ]}
     >
+      <SurfaceGradient />
       {visible ? <LoadingContent /> : null}
     </Animated.View>
   );

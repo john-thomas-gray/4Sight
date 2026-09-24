@@ -194,7 +194,7 @@ describe("useGamePlayTutorial", () => {
     expect(getByTestId("resolved")).toHaveTextContent("5");
     expect(getByTestId("show")).toHaveTextContent("true");
     expect(getByTestId("message")).toHaveTextContent(
-      "Instead of dropping a piece, you may swipe the board up, down, left or right to make the pieces drop in that direction. Shift gravity to win the game!",
+      "Swiping the board makes pieces drop in that direction. Shift gravity to win the game!",
     );
   });
 });

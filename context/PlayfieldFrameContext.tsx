@@ -8,11 +8,13 @@ import React, {
 } from "react";
 import type { RefObject } from "react";
 import { View } from "react-native";
+import { useSharedValue, type SharedValue } from "react-native-reanimated";
 
 /** Stable ref used when measuring outside a playfield (e.g. tests). */
 export const EMPTY_PLAYFIELD_REF: RefObject<View | null> = { current: null };
 
 type PlayfieldFrameContextValue = {
+  windowOrigin: SharedValue<{ x: number; y: number }>;
   playfieldRef: React.RefObject<View | null>;
   windowOriginRef: React.MutableRefObject<{ x: number; y: number }>;
 };
@@ -32,16 +34,18 @@ export function PlayfieldFrameProvider({
 }) {
   const playfieldRef = useRef<View>(null);
   const windowOriginRef = useRef({ x: 0, y: 0 });
+  const windowOrigin = useSharedValue({ x: 0, y: 0 });
 
   const syncWindowOrigin = useCallback(() => {
     playfieldRef.current?.measureInWindow((x, y) => {
       windowOriginRef.current = { x, y };
+      windowOrigin.value = { x, y };
     });
-  }, []);
+  }, [windowOrigin]);
 
   const value = useMemo(
-    () => ({ playfieldRef, windowOriginRef }),
-    [],
+    () => ({ playfieldRef, windowOriginRef, windowOrigin }),
+    [windowOrigin],
   );
 
   return (

@@ -10,10 +10,13 @@ export function keyToCoord(key: string): Coord {
 }
 
 export function isPlayable(c: Coord): boolean {
-  return c.row >= 1 && c.row <= BOARD_SIZE && c.col >= 1 && c.col <= BOARD_SIZE;
+  return Number.isInteger(c.row) && Number.isInteger(c.col) &&
+    c.row >= 1 && c.row <= BOARD_SIZE && c.col >= 1 && c.col <= BOARD_SIZE;
 }
 
 export function isSlot(c: Coord): boolean {
+  if (!Number.isInteger(c.row) || !Number.isInteger(c.col) ||
+      c.row < 0 || c.row > BOARD_SIZE + 1 || c.col < 0 || c.col > BOARD_SIZE + 1) return false;
   const onEdge =
     c.row === 0 || c.row === BOARD_SIZE + 1 ||
     c.col === 0 || c.col === BOARD_SIZE + 1;

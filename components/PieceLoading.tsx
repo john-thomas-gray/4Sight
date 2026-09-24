@@ -1,5 +1,6 @@
 import { usePieceLoadingAnimation } from "@/animations/loadingAnimations";
 import { GameElements } from "@/constants";
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
 import React, { memo } from "react";
@@ -9,6 +10,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import SurfaceGradient from "./SurfaceGradient";
 
 type PieceLoadingProps = {
   team: Team;
@@ -102,7 +104,11 @@ const PieceLoading = ({
   );
 
   return (
-    <Animated.View style={[style, animatedStyle]}>
+    <Animated.View style={[style, surfaceStyles.raised, animatedStyle]}>
+      <SurfaceGradient
+        variant="raised"
+        borderRadius={GameElements.PIECE_RADIUS / 1.4 - 2}
+      />
       <Animated.View
         style={{
           position: "absolute",

@@ -1,3 +1,5 @@
+import SurfaceGradient from "@/components/SurfaceGradient";
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import { useGameSession } from "@/context/GameSessionContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
@@ -5,7 +7,7 @@ import { clearSession, loadAppState } from "@/storage";
 import { TUTORIAL_STEP_ONE_GAMEPLAY_PATH } from "@/tutorial/gamePlayTutorialSteps";
 import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
-import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
+import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function Index() {
@@ -46,16 +48,22 @@ function MainMenu() {
 
   const showTutorialEntry = __DEV__ || showTutorialCta;
 
-  const handlePlay = React.useCallback(async () => {
+  const handleOnePlayer = React.useCallback(async () => {
     setIsGlobalLoading(true);
-    await newGame();
+    await newGame("onePlayer");
+    router.replace("/gamePlay");
+  }, [router, newGame, setIsGlobalLoading]);
+
+  const handleTwoPlayer = React.useCallback(async () => {
+    setIsGlobalLoading(true);
+    await newGame("twoPlayer");
     await clearSession();
     router.replace("/gamePlay");
   }, [router, newGame, setIsGlobalLoading]);
 
   const handleTutorial = React.useCallback(async () => {
     setIsGlobalLoading(true);
-    await newGame();
+    await newGame("twoPlayer");
     await clearSession();
     router.replace(TUTORIAL_STEP_ONE_GAMEPLAY_PATH);
   }, [router, newGame, setIsGlobalLoading]);
@@ -68,7 +76,7 @@ function MainMenu() {
     router.replace("/gamePlay");
   }, [continueGame, router, setIsGlobalLoading]);
 
-  type ButtonId = "play" | "continue" | "tutorial" | "settings";
+  type ButtonId = "onePlayer" | "twoPlayer" | "continue" | "tutorial" | "settings";
   const [buttonWidths, setButtonWidths] = React.useState<
     Partial<Record<ButtonId, number>>
   >({});
@@ -95,14 +103,9 @@ function MainMenu() {
   }, [hasSaved]);
 
   const maxButtonWidth = React.useMemo(() => {
-    const withContinue: ButtonId[] = hasSaved
-      ? ["play", "continue", "settings"]
-      : ["play", "settings"];
-    const activeKeys: ButtonId[] = showTutorialEntry
-      ? hasSaved
-        ? ["play", "continue", "tutorial", "settings"]
-        : ["play", "tutorial", "settings"]
-      : withContinue;
+    const activeKeys: ButtonId[] = ["onePlayer", "twoPlayer", "settings"];
+    if (hasSaved) activeKeys.push("continue");
+    if (showTutorialEntry) activeKeys.push("tutorial");
     let max = 0;
     for (const key of activeKeys) {
       const value = buttonWidths[key];
@@ -123,32 +126,60 @@ function MainMenu() {
       className="flex-1 items-center justify-evenly"
       style={{ backgroundColor: theme.colorTheme.FELT_TOP }}
     >
+      <SurfaceGradient />
       <View className="flex-row items-end items-center">
         <Text
           className="font-bold text-[128px] mb-4"
-          style={{ color: textColor }}
+          style={[surfaceStyles.title, { color: textColor }]}
         >
           4
         </Text>
-        <Text className="font-bold text-8xl ml-2" style={{ color: textColor }}>
+        <Text
+          className="font-bold text-8xl ml-2"
+          style={[surfaceStyles.title, { color: textColor }]}
+        >
           Sight
         </Text>
       </View>
       <View className="flex-col items-center space-y-4">
         <Pressable
-          onPress={handlePlay}
-          onLayout={handleButtonLayout("play")}
+          onPress={handleOnePlayer}
+          accessibilityRole="button"
+          accessibilityLabel="One Player"
+          accessibilityHint="Play against the computer using the lower pieces"
+          onLayout={handleButtonLayout("onePlayer")}
           className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
           style={[
+            surfaceStyles.raised,
             buttonStyle,
             maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
           ]}
         >
+          <SurfaceGradient variant="raised" borderRadius={7} />
           <Text
             className="text-3xl"
-            style={{ textAlign: "center", color: textColor }}
+            style={[styles.buttonText, { color: textColor }]}
           >
-            New Game
+            One Player
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={handleTwoPlayer}
+          onLayout={handleButtonLayout("twoPlayer")}
+          className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
+          style={[
+            surfaceStyles.raised,
+            buttonStyle,
+            maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
+          ]}
+        >
+          <SurfaceGradient variant="raised" borderRadius={7} />
+          <Text
+            className="text-3xl"
+            style={[styles.buttonText, { color: textColor }]}
+          >
+            Two Player
           </Text>
         </Pressable>
         {hasSaved && (
@@ -157,13 +188,15 @@ function MainMenu() {
             onLayout={handleButtonLayout("continue")}
             className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
             style={[
+              surfaceStyles.raised,
               buttonStyle,
               maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
             ]}
           >
+            <SurfaceGradient variant="raised" borderRadius={7} />
             <Text
               className="text-3xl"
-              style={{ textAlign: "center", color: textColor }}
+              style={[styles.buttonText, { color: textColor }]}
             >
               Continue
             </Text>
@@ -175,13 +208,15 @@ function MainMenu() {
             onLayout={handleButtonLayout("tutorial")}
             className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
             style={[
+              surfaceStyles.raised,
               buttonStyle,
               maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
             ]}
           >
+            <SurfaceGradient variant="raised" borderRadius={7} />
             <Text
               className="text-3xl"
-              style={{ textAlign: "center", color: textColor }}
+              style={[styles.buttonText, { color: textColor }]}
             >
               {__DEV__ ? "Tutorial (dev)" : "Tutorial"}
             </Text>
@@ -192,13 +227,15 @@ function MainMenu() {
           onLayout={handleButtonLayout("settings")}
           className="items-center justify-center rounded-lg px-4 py-1 border mb-2"
           style={[
+            surfaceStyles.raised,
             buttonStyle,
             maxButtonWidth > 0 ? { minWidth: maxButtonWidth } : null,
           ]}
         >
+          <SurfaceGradient variant="raised" borderRadius={7} />
           <Text
             className="text-3xl"
-            style={{ textAlign: "center", color: textColor }}
+            style={[styles.buttonText, { color: textColor }]}
           >
             Settings
           </Text>
@@ -207,3 +244,10 @@ function MainMenu() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  buttonText: {
+    textAlign: "center",
+    ...surfaceStyles.label,
+  },
+});

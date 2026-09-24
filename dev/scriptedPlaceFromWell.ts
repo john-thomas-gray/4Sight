@@ -12,21 +12,21 @@ import {
   type EngineResult,
 } from "@/engine";
 import type { PieceAnimation } from "@/types/animation";
-import { PieceStatus, type PieceStatusMap } from "@/types/pieceStatus";
 import type { Dispatch, SetStateAction } from "react";
+import type { MoveCoordinator } from "@/session/moveCoordinator";
 
 type LayoutSlice = Pick<LayoutContextType, "slots" | "spaces">;
 
 type ScriptedPlaceArgs = {
+  moves: MoveCoordinator;
+  beginPieceDrag: (pieceId: string) => boolean;
+  returnPieceToWell: (pieceId: string) => void;
   board: Readonly<Record<string, string>>;
   slotCoord: Coord;
   pieceId: string;
   layout: LayoutSlice;
   pieceAnims: Record<string, PieceAnimation>;
-  setWellPieceLocations: Dispatch<SetStateAction<Record<string, string>>>;
-  setPieceStatusMap: Dispatch<SetStateAction<PieceStatusMap>>;
   setMoveInProgress: Dispatch<SetStateAction<boolean>>;
-  setMoveInProgressDelayed: (value: boolean, delayMs: number) => void;
   dropPiece: (slotCoord: Coord, pieceId: string) => EngineResult;
 };
 
@@ -36,15 +36,15 @@ type ScriptedPlaceArgs = {
  * Returns false if layout or resolution is not ready.
  */
 export function runScriptedPlaceFromWell({
+  moves,
+  beginPieceDrag,
+  returnPieceToWell,
   board,
   slotCoord,
   pieceId,
   layout,
   pieceAnims,
-  setWellPieceLocations,
-  setPieceStatusMap,
   setMoveInProgress,
-  setMoveInProgressDelayed,
   dropPiece,
 }: ScriptedPlaceArgs): boolean {
   const landing = resolveSlotDrop(board, slotCoord);
@@ -59,34 +59,19 @@ export function runScriptedPlaceFromWell({
   const spaceLayout = layout.spaces[landingKey];
   if (!slotLayout || !spaceLayout) return false;
 
-  setWellPieceLocations((prev) => {
-    const next = { ...prev };
-    for (const [wellId, pid] of Object.entries(next)) {
-      if (pid === pieceId) {
-        delete next[wellId];
-        break;
-      }
-    }
-    return next;
-  });
-  setPieceStatusMap((prev) => ({ ...prev, [pieceId]: PieceStatus.isHeld }));
+  if (!beginPieceDrag(pieceId)) return false;
   setMoveInProgress(true);
 
   animatePieceSlotThroughSpaceDrop(anim, slotLayout, spaceLayout, {
     ensureHeldPresentation: true,
   });
 
-  setTimeout(() => {
+  moves.schedule(() => {
     anim.zIndex.value = GameElements.PIECE_BOARD_ZINDEX;
-    dropPiece(slotCoord, pieceId);
-    setPieceStatusMap((prev) => ({
-      ...prev,
-      [pieceId]: PieceStatus.onBoard,
-    }));
+    const result = dropPiece(slotCoord, pieceId);
+    if (!result.events.some(event => event.type === "piece_placed")) returnPieceToWell(pieceId);
   }, TURN_CHANGE_COMMIT_DELAY_MS);
-  setMoveInProgressDelayed(
-    false,
-    TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS,
-  );
+  moves.schedule(() => { moves.finish(); setMoveInProgress(false); }, TURN_CHANGE_COMMIT_DELAY_MS + TURN_CHANGE_SETTLE_BUFFER_MS);
+
   return true;
 }

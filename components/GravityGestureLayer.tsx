@@ -9,7 +9,7 @@ import { usePlayfieldFrameOptional } from "@/context/PlayfieldFrameContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useUi } from "@/context/UiContext";
-import { applyGravity, Direction } from "@/engine";
+import { applyGravity, Direction, Team } from "@/engine";
 import React, { memo, useCallback, useEffect, useRef } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { Easing, withTiming } from "react-native-reanimated";
@@ -21,7 +21,7 @@ type GravityGestureLayerProps = {
 };
 
 const VELOCITY_THRESHOLD = 600;
-const PREVIEW_HOLD_MS = 250;
+export const PREVIEW_HOLD_MS = 200;
 const GRAVITY_DROP_AXIS_MS = 700;
 const GRAVITY_CROSS_AXIS_MS = 320;
 
@@ -39,13 +39,27 @@ function resolvePullDirectionFromTriangleZone(
   return Direction.Down;
 }
 
+function resolvePreviewGravityDirection(pullDirection: Direction): Direction {
+  switch (pullDirection) {
+    case Direction.Up:
+      return Direction.Down;
+    case Direction.Down:
+      return Direction.Up;
+    case Direction.Left:
+      return Direction.Right;
+    case Direction.Right:
+      return Direction.Left;
+  }
+}
+
 const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
   children,
   className,
   pullRef,
 }) => {
-  const { gameState, shiftGravity, pieceAnims, resetCurrentGame } =
+  const { mode, gameState, getSessionSnapshot, shiftGravity, pieceAnims, resetCurrentGame, moves, cancelPendingMoves } =
     useGameSession();
+  const computerTurn = mode === "onePlayer" && gameState.currentTeam === Team.Two && gameState.status === "playing";
   const { spaces } = useLayout();
   const playfield = usePlayfieldFrameOptional();
   const { shiftPreviews } = useSettings();
@@ -57,24 +71,39 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     setGravityPreviewBoard,
     gravityPullEnabled,
   } = useUi();
-  const gravityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const gravityCommitRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const pending = useRef(new Set<() => void>());
+  const mounted = useRef(false);
+  const schedule = useCallback((callback: () => void, delayMs: number) => {
+    const cancel = moves.schedule(() => { pending.current.delete(cancel); callback(); }, delayMs);
+    pending.current.add(cancel);
+  }, [moves]);
   useEffect(() => {
+    const scheduled = pending.current;
+    mounted.current = true;
     return () => {
-      if (gravityTimeoutRef.current) clearTimeout(gravityTimeoutRef.current);
-      if (gravityCommitRef.current) clearTimeout(gravityCommitRef.current);
+      mounted.current = false;
+      for (const cancel of scheduled) cancel();
+      scheduled.clear();
+      cancelPendingMoves();
     };
-  }, []);
+  }, [cancelPendingMoves]);
+
+  // Native gesture callbacks can arrive after a turn, reset or navigation.
+  // Reject the old board before starting either an animation or a preview.
+  const isCurrentPosition = useCallback(() => mounted.current &&
+    getSessionSnapshot().gameState === gameState, [getSessionSnapshot, gameState]);
 
   const executePull = useCallback(
     (direction: Direction) => {
+      if (!isCurrentPosition() || moves.getPhase() !== null) return;
       if (!gravityPullEnabled) return;
 
       if (gameState.status === "finished") {
         resetCurrentGame();
         return;
       }
+
+      if (!moves.begin("gravity")) return;
 
       setMoveInProgress(true);
       setGravityAnimating(true);
@@ -92,34 +121,31 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
               spaceLayout.pageX + spaceLayout.width / 2 - PIECE_RADIUS;
             const targetY =
               spaceLayout.pageY + spaceLayout.height / 2 - PIECE_RADIUS;
-            anim.translateX.value = withTiming(targetX, {
+            anim.translateX.set(withTiming(targetX, {
               duration: isVertical
                 ? GRAVITY_CROSS_AXIS_MS
                 : GRAVITY_DROP_AXIS_MS,
               easing: isVertical ? Easing.linear : Easing.bounce,
-            });
-            anim.translateY.value = withTiming(targetY, {
+            }));
+            anim.translateY.set(withTiming(targetY, {
               duration: isVertical
                 ? GRAVITY_DROP_AXIS_MS
                 : GRAVITY_CROSS_AXIS_MS,
               easing: isVertical ? Easing.bounce : Easing.linear,
-            });
+            }));
           }
         }
       }
 
-      if (gravityCommitRef.current) clearTimeout(gravityCommitRef.current);
-      gravityCommitRef.current = setTimeout(() => {
+      schedule(() => {
         shiftGravity(direction);
-        gravityCommitRef.current = null;
       }, TURN_CHANGE_COMMIT_DELAY_MS);
 
-      if (gravityTimeoutRef.current) clearTimeout(gravityTimeoutRef.current);
-      gravityTimeoutRef.current = setTimeout(
+      schedule(
         () => {
+          moves.finish();
           setMoveInProgress(false);
           setGravityAnimating(false);
-          gravityTimeoutRef.current = null;
         },
         Math.max(
           MOVE_IN_PROGRESS_DROP,
@@ -128,6 +154,9 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       );
     },
     [
+      schedule,
+      isCurrentPosition,
+      moves,
       gameState.status,
       gameState.board,
       shiftGravity,
@@ -142,10 +171,15 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   useEffect(() => {
     if (pullRef) pullRef.current = executePull;
+    return () => {
+      if (pullRef?.current === executePull) pullRef.current = null;
+    };
   }, [pullRef, executePull]);
 
   const handleFling = useCallback(
     (direction: Direction) => {
+      if (!isCurrentPosition() || moves.getPhase() !== null) return;
+      if (computerTurn) return;
       if (!gravityPullEnabled) return;
       if (moveInProgress) return;
       if (gameState.status === "playing") {
@@ -155,6 +189,9 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       }
     },
     [
+      computerTurn,
+      isCurrentPosition,
+      moves,
       gravityPullEnabled,
       moveInProgress,
       gameState.status,
@@ -165,6 +202,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   const previewForPullDirection = useCallback(
     (pullDirection: Direction) => {
+      if (!isCurrentPosition() || moves.getPhase() !== null) return;
       if (!gravityPullEnabled) {
         setIsPreviewingGravity(false);
         setGravityPreviewBoard(null);
@@ -181,16 +219,11 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
         return;
       }
 
-      const fallDirection =
-        pullDirection === Direction.Up
-          ? Direction.Down
-          : pullDirection === Direction.Down
-            ? Direction.Up
-            : pullDirection === Direction.Left
-              ? Direction.Right
-              : Direction.Left;
-      const { board, moves } = applyGravity(gameState.board, fallDirection);
-      if (moves.length === 0) {
+      const { board, moves: pieceMoves } = applyGravity(
+        gameState.board,
+        resolvePreviewGravityDirection(pullDirection),
+      );
+      if (pieceMoves.length === 0) {
         setIsPreviewingGravity(false);
         setGravityPreviewBoard(null);
         return;
@@ -201,6 +234,8 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     },
     [
       shiftPreviews,
+      isCurrentPosition,
+      moves,
       gameState.status,
       gameState.board,
       setIsPreviewingGravity,
@@ -220,9 +255,10 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
     }
   }, [shiftPreviews, gravityPullEnabled, clearPreview]);
 
+  /* eslint-disable react-hooks/refs -- Gesture Handler registers callbacks; it does not invoke them during render. */
   const holdPreview = Gesture.LongPress()
     .runOnJS(true)
-    .enabled(gravityPullEnabled)
+    .enabled(gravityPullEnabled && !computerTurn)
     .minDuration(PREVIEW_HOLD_MS)
     .onStart((event) => {
       if (!gravityPullEnabled) {
@@ -282,7 +318,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
 
   const panFling = Gesture.Pan()
     .runOnJS(true)
-    .enabled(gravityPullEnabled)
+    .enabled(gravityPullEnabled && !computerTurn)
     .onEnd((e) => {
       const absVX = Math.abs(e.velocityX);
       const absVY = Math.abs(e.velocityY);
@@ -296,6 +332,7 @@ const GravityGestureLayer: React.FC<GravityGestureLayerProps> = ({
       }
       handleFling(dir);
     });
+  /* eslint-enable react-hooks/refs */
 
   return (
     <GestureDetector gesture={Gesture.Simultaneous(holdPreview, panFling)}>

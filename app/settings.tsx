@@ -1,5 +1,7 @@
 import type { ThemeAvailability } from "@/commerce";
 import BackButton from "@/components/BackButton";
+import SurfaceGradient from "@/components/SurfaceGradient";
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import { THEME_REGISTRY } from "@/constants/themes/registry";
 import { useCommerce } from "@/context/CommerceContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -8,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  ScrollView,
   Switch,
   Text,
   View,
@@ -38,6 +41,7 @@ const Settings = () => {
   const textColor = colors.ODD_SPACE_COLOR;
   const subtextColor = colors.EVEN_SPACE_COLOR;
   const cardStyle = {
+    ...surfaceStyles.raised,
     borderColor: colors.SLOT_BORDER_COLOR,
     backgroundColor: colors.WELL_BG_COLOR_TWO,
     borderWidth: 1,
@@ -78,122 +82,129 @@ const Settings = () => {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.FELT_TOP }}>
-      <View className="px-6 pt-20 pb-4 py-12">
-        <View
-          style={{
-            position: "relative",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text className="text-4xl font-bold" style={{ color: textColor }}>
-            Settings
-          </Text>
-          <BackButton
-            variant="inline"
-            textStyle={{ color: textColor }}
-            imageStyle={{ tintColor: textColor }}
+      <SurfaceGradient />
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <View className="px-6 pt-20 pb-4 py-12">
+          <View
             style={{
-              position: "absolute",
-              left: 0,
-              borderColor: colors.SLOT_BORDER_COLOR,
-              borderWidth: 1,
+              position: "relative",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          />
-        </View>
-      </View>
-
-      <View className="px-6">
-        <Text
-          className="text-2xl font-semibold mb-3"
-          style={{ color: textColor }}
-        >
-          Themes
-        </Text>
-        <View className="flex-col gap-4">
-          {THEME_REGISTRY.map((entry) => {
-            const availability = getThemeAvailability(entry.id);
-            const isSelected = themeId === entry.id;
-            const product = getProductForTheme(entry.id);
-            const isPurchasing = purchasing === entry.id;
-
-            return (
-              <ThemeCard
-                key={entry.id}
-                label={entry.label}
-                availability={availability}
-                isSelected={isSelected}
-                isPurchasing={isPurchasing}
-                price={product?.displayPrice}
-                teamOneColor={entry.theme.colorTheme.TEAM_ONE_COLOR}
-                teamTwoColor={entry.theme.colorTheme.TEAM_TWO_COLOR}
-                feltColor={entry.theme.colorTheme.FELT_TOP}
-                textColor={textColor}
-                subtextColor={subtextColor}
-                cardStyle={cardStyle}
-                onPress={() => handleThemePress(entry.id)}
-              />
-            );
-          })}
-        </View>
-
-        <Pressable
-          className="mt-4 items-center"
-          onPress={handleRestore}
-          disabled={restoring}
-        >
-          {restoring ? (
-            <ActivityIndicator color={textColor} />
-          ) : (
+          >
             <Text
-              style={{ color: subtextColor, textDecorationLine: "underline" }}
+              className="text-4xl font-bold"
+              style={[surfaceStyles.title, { color: textColor }]}
             >
-              Restore Purchases
+              Settings
             </Text>
-          )}
-        </Pressable>
-      </View>
-
-      <View className="px-6 mt-8">
-        <Text
-          className="text-2xl font-semibold mb-3"
-          style={{ color: textColor }}
-        >
-          Gameplay
-        </Text>
-        <View className="flex-col gap-4">
-          <SettingsToggle
-            label="Gravity Shift Preview"
-            description="Shows where pieces will land after a gravity shift."
-            value={shiftPreviews}
-            onValueChange={setShiftPreviews}
-            colors={colors}
-            textColor={textColor}
-            subtextColor={subtextColor}
-            cardStyle={cardStyle}
-          />
-          <SettingsToggle
-            label="Piece Drop Preview"
-            description="Shows where a piece would land if dropped in the selected row or column."
-            value={piecePlacementPreviews}
-            onValueChange={setPiecePlacementPreviews}
-            colors={colors}
-            textColor={textColor}
-            subtextColor={subtextColor}
-            cardStyle={cardStyle}
-          />
-          <SettingsToggle
-            label="Winning Move Highlights"
-            description="Highlights spaces where a drop would complete a row of four same-colored pieces."
-            value={highlightWinningMoves}
-            onValueChange={setHighlightWinningMoves}
-            colors={colors}
-            textColor={textColor}
-            subtextColor={subtextColor}
-            cardStyle={cardStyle}
-          />
+            <BackButton
+              variant="inline"
+              textStyle={{ color: textColor }}
+              imageStyle={{ tintColor: textColor }}
+              style={{
+                position: "absolute",
+                left: 0,
+                borderColor: colors.SLOT_BORDER_COLOR,
+                backgroundColor: colors.WELL_BG_COLOR_TWO,
+                borderWidth: 1,
+              }}
+            />
+          </View>
         </View>
-      </View>
+
+        <View className="px-6">
+          <Text
+            className="text-2xl font-semibold mb-3"
+            style={[surfaceStyles.label, { color: textColor }]}
+          >
+            Themes
+          </Text>
+          <View className="flex-col gap-4">
+            {THEME_REGISTRY.map((entry) => {
+              const availability = getThemeAvailability(entry.id);
+              const isSelected = themeId === entry.id;
+              const product = getProductForTheme(entry.id);
+              const isPurchasing = purchasing === entry.id;
+
+              return (
+                <ThemeCard
+                  key={entry.id}
+                  label={entry.label}
+                  availability={availability}
+                  isSelected={isSelected}
+                  isPurchasing={isPurchasing}
+                  price={product?.displayPrice}
+                  teamOneColor={entry.theme.colorTheme.TEAM_ONE_COLOR}
+                  teamTwoColor={entry.theme.colorTheme.TEAM_TWO_COLOR}
+                  feltColor={entry.theme.colorTheme.FELT_TOP}
+                  textColor={textColor}
+                  subtextColor={subtextColor}
+                  cardStyle={cardStyle}
+                  onPress={() => handleThemePress(entry.id)}
+                />
+              );
+            })}
+          </View>
+
+          <Pressable
+            className="mt-4 items-center"
+            onPress={handleRestore}
+            disabled={restoring}
+          >
+            {restoring ? (
+              <ActivityIndicator color={textColor} />
+            ) : (
+              <Text
+                style={{ color: subtextColor, textDecorationLine: "underline" }}
+              >
+                Restore Purchases
+              </Text>
+            )}
+          </Pressable>
+        </View>
+
+        <View className="px-6 mt-8">
+          <Text
+            className="text-2xl font-semibold mb-3"
+            style={[surfaceStyles.label, { color: textColor }]}
+          >
+            Gameplay
+          </Text>
+          <View className="flex-col gap-4">
+            <SettingsToggle
+              label="Gravity Shift Preview"
+              description="Shows where pieces will land after a gravity shift."
+              value={shiftPreviews}
+              onValueChange={setShiftPreviews}
+              colors={colors}
+              textColor={textColor}
+              subtextColor={subtextColor}
+              cardStyle={cardStyle}
+            />
+            <SettingsToggle
+              label="Piece Drop Preview"
+              description="Shows where a piece would land if dropped in the selected row or column."
+              value={piecePlacementPreviews}
+              onValueChange={setPiecePlacementPreviews}
+              colors={colors}
+              textColor={textColor}
+              subtextColor={subtextColor}
+              cardStyle={cardStyle}
+            />
+            <SettingsToggle
+              label="Winning Move Highlights"
+              description="Highlights spaces where a drop would complete a row of four same-colored pieces."
+              value={highlightWinningMoves}
+              onValueChange={setHighlightWinningMoves}
+              colors={colors}
+              textColor={textColor}
+              subtextColor={subtextColor}
+              cardStyle={cardStyle}
+            />
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -241,8 +252,12 @@ const ThemeCard: React.FC<ThemeCardProps> = ({
       disabled={isPurchasing}
       style={[cardStyle, isSelected ? { borderWidth: 2 } : null]}
     >
+      <SurfaceGradient variant="raised" borderRadius={6} />
       <View className="flex-row items-center justify-between w-full">
-        <Text className="text-2xl" style={{ color: textColor }}>
+        <Text
+          className="text-2xl"
+          style={[surfaceStyles.label, { color: textColor }]}
+        >
           {label}
         </Text>
         {isPurchasing ? (
@@ -293,8 +308,15 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
   cardStyle,
 }) => (
   <View className="w-full rounded-lg p-4 border" style={cardStyle}>
+    <SurfaceGradient variant="raised" borderRadius={7} />
     <View className="flex-row items-center justify-between">
-      <Text className="text-xl" style={{ color: textColor }}>
+      <Text
+        className="text-xl"
+        style={[
+          surfaceStyles.label,
+          { color: textColor, flex: 1, paddingRight: 12 },
+        ]}
+      >
         {label}
       </Text>
       <Switch

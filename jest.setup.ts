@@ -1,5 +1,6 @@
 jest.mock("react-native-reanimated", () => {
   const ReactNative = jest.requireActual("react-native");
+  const React = jest.requireActual("react");
   const identity = (value: unknown) => value;
   const easing = {
     bounce: identity,
@@ -11,15 +12,24 @@ jest.mock("react-native-reanimated", () => {
     quad: identity,
   };
 
+  const makeMutable = (initial: unknown) => {
+    const shared = {
+      value: initial,
+      get: () => shared.value,
+      set: (next: unknown) => { shared.value = typeof next === "function" ? next(shared.value) : next; },
+    };
+    return shared;
+  };
   const reanimated = {
     Easing: easing,
     cancelAnimation: jest.fn(),
     createAnimatedComponent: (component: unknown) => component,
-    makeMutable: (value: unknown) => ({ value }),
+    makeMutable,
     runOnJS: (fn: unknown) => fn,
     useAnimatedStyle: (updater: () => unknown) => updater(),
     useDerivedValue: (updater: () => unknown) => ({ value: updater() }),
-    useSharedValue: (value: unknown) => ({ value }),
+    useSharedValue: (value: unknown) => React.useState(() => makeMutable(value))[0],
+    useAnimatedProps: (updater: () => unknown) => updater(),
     withDelay: jest.fn((_delayMs: number, animation: unknown) => animation),
     withRepeat: (animation: unknown) => animation,
     withSequence: (...animations: unknown[]) =>

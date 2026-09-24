@@ -4,7 +4,7 @@ import {
   CORNER_STYLE,
 } from "@/constants/gameElements";
 import { useGameSession } from "@/context/GameSessionContext";
-import { useLayout } from "@/context/LayoutContext";
+import { useLayoutSelector } from "@/context/LayoutContext";
 import {
   EMPTY_PLAYFIELD_REF,
   measureLayoutRelativeToPlayfield,
@@ -17,7 +17,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { View, ViewStyle } from "react-native";
 
 const Corner = ({ id }: CellProps) => {
-  const { registerCell } = useLayout();
+  const registerCell = useLayoutSelector(layout => layout.registerCell);
   const { gameState } = useGameSession();
   const { theme } = useSettings();
   const viewRef = useRef<View>(null);

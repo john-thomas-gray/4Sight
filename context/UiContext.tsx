@@ -1,9 +1,8 @@
+import { createSelectorContext } from "./selectorContext";
 import { Direction, Team } from "@/engine";
 import React, {
-  createContext,
   ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -20,6 +19,7 @@ import {
 import type { SharedValue } from "react-native-reanimated";
 
 type UiContextType = {
+  resetInteractions: () => void;
   isGlobalLoading: boolean;
   setIsGlobalLoading: React.Dispatch<React.SetStateAction<boolean>>;
   moveInProgress: boolean;
@@ -57,7 +57,8 @@ type UiContextType = {
   >;
 };
 
-const UiContext = createContext<UiContextType | undefined>(undefined);
+const UiContext = createSelectorContext<UiContextType>("useUi");
+export const useUiSelector = UiContext.useSelector;
 
 export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
@@ -165,6 +166,16 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     [],
   );
 
+  const resetInteractions = useCallback(() => {
+    if (delayRef.current) clearTimeout(delayRef.current);
+    delayRef.current = null;
+    setMoveInProgress(false);
+    setGravityAnimating(false);
+    setIsPreviewingGravity(false);
+    setGravityPreviewBoard(null);
+    setHoverPreview(null);
+  }, []);
+
   const requestTutorialBannerAttention = useCallback(() => {
     setTutorialBannerAttentionSignal((signal) => signal + 1);
   }, []);
@@ -177,6 +188,7 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const value = useMemo<UiContextType>(
     () => ({
+      resetInteractions,
       isGlobalLoading,
       setIsGlobalLoading,
       moveInProgress,
@@ -206,6 +218,7 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       setTutorialInaccessibleSlotEntryDirection,
     }),
     [
+      resetInteractions,
       isGlobalLoading,
       moveInProgress,
       setMoveInProgressDelayed,
@@ -228,8 +241,4 @@ export const UiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <UiContext.Provider value={value}>{children}</UiContext.Provider>;
 };
 
-export const useUi = () => {
-  const ctx = useContext(UiContext);
-  if (!ctx) throw new Error("useUi must be used within UiProvider");
-  return ctx;
-};
+export const useUi = () => useUiSelector(value => value);

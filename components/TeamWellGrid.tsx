@@ -1,10 +1,12 @@
 import { GameElements } from "@/constants";
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import { useSettings } from "@/context/SettingsContext";
 import { Team } from "@/engine";
 import { CellType } from "@/types/board";
 import React, { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import Well from "./Well";
+import SurfaceGradient from "./SurfaceGradient";
 
 type TeamWellGridProps = {
   team: Team;
@@ -23,7 +25,7 @@ const TeamWellGrid = ({ team }: TeamWellGridProps) => {
   const columnOffset = team === Team.One ? 9 : 12;
 
   return (
-    <View style={[styles.container, { borderColor }]}>
+    <View style={[styles.container, surfaceStyles.board, { borderColor }]}>
       {Array.from({ length: COLS }).map((_, col) => (
         <View key={col} style={styles.row}>
           {Array.from({ length: ROWS }).map((_, row) => {
@@ -34,6 +36,7 @@ const TeamWellGrid = ({ team }: TeamWellGridProps) => {
           })}
         </View>
       ))}
+      <SurfaceGradient variant="board" borderRadius={4} />
     </View>
   );
 };

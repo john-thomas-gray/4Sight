@@ -1,3 +1,5 @@
+import SurfaceGradient from "@/components/SurfaceGradient";
+import { surfaceStyles } from "@/constants/surfaceStyles";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
@@ -178,17 +180,13 @@ const TutorialStepBanner = ({
       <Animated.View
         pointerEvents="none"
         style={[
+          surfaceStyles.floating,
           {
             marginHorizontal: 24,
             maxWidth: 360,
             width: 300,
             borderRadius: 12,
             backgroundColor: "transparent",
-            shadowColor: "#000",
-            shadowOffset: { width: 6, height: 6 },
-            shadowOpacity: 0.99,
-            shadowRadius: 16,
-            elevation: 9,
           },
           animatedCard,
         ]}
@@ -228,9 +226,11 @@ const TutorialStepBanner = ({
                 { backgroundColor: wellBgColor, opacity: 0.95 },
               ]}
             />
+            <SurfaceGradient variant="raised" borderRadius={11} />
             <View style={{ padding: 16 }} pointerEvents="none">
               <Animated.Text
                 style={[
+                  surfaceStyles.label,
                   {
                     color: textColor,
                     textAlign: "center",

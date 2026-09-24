@@ -1,7 +1,7 @@
 import slotArrowClear from "@/assets/images/slot-arrow-clear.png";
 import { GameElements } from "@/constants";
 import { useGameSession } from "@/context/GameSessionContext";
-import { useLayout } from "@/context/LayoutContext";
+import { useLayoutSelector } from "@/context/LayoutContext";
 import {
   EMPTY_PLAYFIELD_REF,
   measureLayoutRelativeToPlayfield,
@@ -22,7 +22,7 @@ import { Image, View } from "react-native";
 
 const Slot = ({ id }: CellProps) => {
   const viewRef = useRef<View>(null);
-  const { registerCell, slots } = useLayout();
+  const registerCell = useLayoutSelector(layout => layout.registerCell);
   const { gameState } = useGameSession();
   const { theme } = useSettings();
   const { tutorialInaccessibleSlotEntryDirection } = useUi();
@@ -33,19 +33,9 @@ const Slot = ({ id }: CellProps) => {
 
   const reportLayout = useCallback(() => {
     measureLayoutRelativeToPlayfield(viewRef, playfieldRef, (layout) => {
-      const prev = slots[id];
-      const next = layout;
-      const changed =
-        !prev ||
-        prev.pageX !== next.pageX ||
-        prev.pageY !== next.pageY ||
-        prev.width !== next.width ||
-        prev.height !== next.height;
-      if (changed) {
-        registerCell({ id, type: CellType.Slot, layout: next });
-      }
+      registerCell({ id, type: CellType.Slot, layout });
     });
-  }, [id, registerCell, slots, playfieldRef]);
+  }, [id, registerCell, playfieldRef]);
 
   useEffect(() => {
     const timer = setTimeout(reportLayout, 0);

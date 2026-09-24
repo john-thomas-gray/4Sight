@@ -32,6 +32,7 @@ export function placePiece(
   const piece = state.pieces[pieceId];
   if (!piece) return { state, events: [] };
   if (piece.team !== state.currentTeam) return { state, events: [] };
+  if (Object.values(state.board).includes(pieceId)) return { state, events: [] };
 
   const landing = resolveSlotDrop(state.board, slotCoord);
   if (!landing) return { state, events: [] };

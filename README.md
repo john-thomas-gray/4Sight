@@ -83,7 +83,9 @@ npm run lint
 - **`app/`**: screens/routes (file-based routing via `expo-router`)
 - **`components/`**: UI components (board, pieces, overlays, etc.)
 - **`context/`**: global state providers (game state, logic, layout, settings)
-- **`utils/`**: game logic + helpers (board updates, reachable slots, persistence, etc.)
+- **`engine/`**: game rules, board operations, gravity, and win detection
+- **`session/`**: move scheduling and cancellation
+- **`storage/`**: serialized persistence and saved-state validation
 - **`constants/`**: game constants, themes, animation timings
 - **`__tests__/`** and **`__mocks__/`**: Jest tests and mocks
 

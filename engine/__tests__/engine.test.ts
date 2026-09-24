@@ -235,7 +235,7 @@ describe("pieceStaggerDelaysForSyncedWinCascades", () => {
   const pieces = createPieces();
   const stagger = WINNER_CASCADE_STAGGER_MS;
 
-  it("runs two line cascades on the same global tier clock", () => {
+  it("runs one-piece line cascades on the same global tier clock", () => {
     const lineA: WinLine = { pieceIds: ["0", "1", "2", "3"], coords: [] };
     const lineB: WinLine = { pieceIds: ["10", "11", "12", "13"], coords: [] };
     const delays = pieceStaggerDelaysForSyncedWinCascades(
@@ -247,11 +247,11 @@ describe("pieceStaggerDelaysForSyncedWinCascades", () => {
     expect(delays.get("2")).toBe(0);
     expect(delays.get("12")).toBe(0);
     expect(delays.get("1")).toBe(stagger);
-    expect(delays.get("3")).toBe(stagger);
     expect(delays.get("11")).toBe(stagger);
-    expect(delays.get("13")).toBe(stagger);
-    expect(delays.get("0")).toBe(stagger * 2);
-    expect(delays.get("10")).toBe(stagger * 2);
+    expect(delays.get("3")).toBe(stagger * 2);
+    expect(delays.get("13")).toBe(stagger * 2);
+    expect(delays.get("0")).toBe(stagger * 3);
+    expect(delays.get("10")).toBe(stagger * 3);
   });
 
   it("uses earliest tier when a piece belongs to two lines", () => {
@@ -263,17 +263,18 @@ describe("pieceStaggerDelaysForSyncedWinCascades", () => {
       Team.One,
       ["2"],
     );
-    expect(delays.get("4")).toBe(stagger);
+    expect(delays.get("4")).toBe(stagger * 2);
   });
 });
 
 describe("winLineCascadeTiers", () => {
   const line = ["a", "b", "c", "d"] as const;
 
-  it("radiates from anchor with same-distance neighbors in one tier", () => {
+  it("radiates from anchor one piece per tier", () => {
     expect(winLineCascadeTiers(line, "c")).toEqual([
       ["c"],
-      ["b", "d"],
+      ["b"],
+      ["d"],
       ["a"],
     ]);
   });
@@ -281,7 +282,8 @@ describe("winLineCascadeTiers", () => {
   it("uses line center when anchor is null", () => {
     expect(winLineCascadeTiers(line, null)).toEqual([
       ["c"],
-      ["b", "d"],
+      ["b"],
+      ["d"],
       ["a"],
     ]);
   });

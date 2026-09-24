@@ -68,7 +68,7 @@ const GAME_PLAY_TUTORIAL_STEPS: readonly GamePlayTutorialStep[] = [
     scenarioId: "tutorialStep2",
     tutorialStepQuery: "2",
     bannerMessage:
-      "You may drop pieces from any side of the board. Pieces can be stacked in any direction.\nGive it a try!",
+      "Try dropping a piece from another side of the board. Pieces stack in any direction.",
     matchesScenario: (scenario, step) =>
       (scenario === "tutorialStep2" && step === "2") ||
       (scenario === "tutorialStep1" && step === "2"),
@@ -101,7 +101,7 @@ const GAME_PLAY_TUTORIAL_STEPS: readonly GamePlayTutorialStep[] = [
     scenarioId: "tutorialStep4",
     tutorialStepQuery: "4",
     bannerMessage:
-      "The object of the game is to get four pieces in a row, horizontally, vertically, or diagonally.\nPlace a piece to win the game!",
+      "To win, place four pieces in a row--horizontally, vertically, or diagonally.",
     matchesScenario: (scenario, step) =>
       matchesTutorialHandoff(scenario, step, "4"),
     showBanner: (_map, context?: TutorialShowBannerContext) =>
@@ -119,7 +119,7 @@ const GAME_PLAY_TUTORIAL_STEPS: readonly GamePlayTutorialStep[] = [
     scenarioId: "tutorialStep5",
     tutorialStepQuery: "5",
     bannerMessage:
-      "Instead of dropping a piece, you may swipe the board up, down, left or right to make the pieces drop in that direction. Shift gravity to win the game!",
+      "Swiping the board makes pieces drop in that direction. Shift gravity to win the game!",
     matchesScenario: (scenario, step) =>
       matchesTutorialHandoff(scenario, step, "5"),
     showBanner: (_map, context?: TutorialShowBannerContext) =>
@@ -147,7 +147,7 @@ const GAME_PLAY_TUTORIAL_STEPS: readonly GamePlayTutorialStep[] = [
     scenarioId: "tutorialStep6",
     tutorialStepQuery: "6",
     bannerMessage:
-      "Gravity can be used for defense as well as offense. Pull gravity to shift this hopeless position to an advantageous one.",
+      "Shifting gravity can get you out of a tight situation.",
     matchesScenario: (scenario, step) =>
       matchesTutorialHandoff(scenario, step, "6"),
     showBanner: (_map, context?: TutorialShowBannerContext) =>
