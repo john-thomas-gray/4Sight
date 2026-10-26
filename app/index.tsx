@@ -36,10 +36,6 @@ function MainMenu() {
     setShowTutorialCta(state.tutorialCompleted === false);
   }, []);
 
-  React.useEffect(() => {
-    refreshSavedState();
-  }, [refreshSavedState]);
-
   useFocusEffect(
     React.useCallback(() => {
       refreshSavedState();
@@ -91,16 +87,6 @@ function MainMenu() {
     },
     [],
   );
-
-  React.useEffect(() => {
-    if (!hasSaved) {
-      setButtonWidths((prev) => {
-        if (!("continue" in prev)) return prev;
-        const { ["continue"]: _unused, ...rest } = prev;
-        return rest;
-      });
-    }
-  }, [hasSaved]);
 
   const maxButtonWidth = React.useMemo(() => {
     const activeKeys: ButtonId[] = ["onePlayer", "twoPlayer", "settings"];

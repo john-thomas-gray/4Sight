@@ -51,8 +51,14 @@ const TutorialStepBanner = ({
   const edgeOpacity = useSharedValue(0);
   const opacity = useSharedValue(0);
   const [shouldRender, setShouldRender] = useState(visible);
+  const [previousVisible, setPreviousVisible] = useState(visible);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousAttentionSignalRef = useRef(attentionSignal);
+
+  if (previousVisible !== visible) {
+    setPreviousVisible(visible);
+    if (visible) setShouldRender(true);
+  }
 
   useEffect(() => {
     if (visible) {
@@ -60,31 +66,30 @@ const TutorialStepBanner = ({
         clearTimeout(exitTimerRef.current);
         exitTimerRef.current = null;
       }
-      setShouldRender(true);
-      translateY.value = BANNER_ENTER_START_Y;
-      attentionScale.value = 1;
-      attentionRotateZ.value = 0;
-      edgeScale.value = 1;
-      edgeOpacity.value = 0;
-      opacity.value = 0;
-      translateY.value = withSpring(0, BANNER_ENTRANCE_SPRING);
-      opacity.value = withTiming(1, { duration: 120 });
+      translateY.set(BANNER_ENTER_START_Y);
+      attentionScale.set(1);
+      attentionRotateZ.set(0);
+      edgeScale.set(1);
+      edgeOpacity.set(0);
+      opacity.set(0);
+      translateY.set(withSpring(0, BANNER_ENTRANCE_SPRING));
+      opacity.set(withTiming(1, { duration: 120 }));
       return;
     }
 
     if (!shouldRender) return;
     cancelAnimation(translateY);
     cancelAnimation(opacity);
-    translateY.value = withTiming(BANNER_EXIT_Y, { duration: BANNER_EXIT_MS });
-    opacity.value = withTiming(0, { duration: BANNER_EXIT_MS });
+    translateY.set(withTiming(BANNER_EXIT_Y, { duration: BANNER_EXIT_MS }));
+    opacity.set(withTiming(0, { duration: BANNER_EXIT_MS }));
     exitTimerRef.current = setTimeout(() => {
       exitTimerRef.current = null;
       setShouldRender(false);
-      translateY.value = BANNER_ENTER_START_Y;
-      attentionScale.value = 1;
-      attentionRotateZ.value = 0;
-      edgeScale.value = 1;
-      edgeOpacity.value = 0;
+      translateY.set(BANNER_ENTER_START_Y);
+      attentionScale.set(1);
+      attentionRotateZ.set(0);
+      edgeScale.set(1);
+      edgeOpacity.set(0);
     }, BANNER_EXIT_MS);
 
     return () => {
@@ -113,29 +118,29 @@ const TutorialStepBanner = ({
     cancelAnimation(attentionRotateZ);
     cancelAnimation(edgeScale);
     cancelAnimation(edgeOpacity);
-    attentionScale.value = withSequence(
+    attentionScale.set(withSequence(
       withTiming(1.2, { duration: 90 }),
       withTiming(1.08, { duration: 90 }),
       withTiming(1, { duration: 170 }),
-    );
-    attentionRotateZ.value = withSequence(
+    ));
+    attentionRotateZ.set(withSequence(
       withTiming(-7, { duration: 40 }),
       withTiming(7, { duration: 52 }),
       withTiming(-5, { duration: 52 }),
       withTiming(4, { duration: 52 }),
       withTiming(0, { duration: 72 }),
-    );
-    edgeScale.value = 0.96;
-    edgeScale.value = withSequence(
+    ));
+    edgeScale.set(0.96);
+    edgeScale.set(withSequence(
       withTiming(1.07, { duration: 90 }),
       withTiming(0.99, { duration: 90 }),
       withTiming(1, { duration: 170 }),
-    );
-    edgeOpacity.value = withSequence(
+    ));
+    edgeOpacity.set(withSequence(
       withTiming(1, { duration: 45 }),
       withTiming(1, { duration: 220 }),
       withTiming(0, { duration: 120 }),
-    );
+    ));
   }, [
     attentionSignal,
     visible,

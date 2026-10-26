@@ -139,18 +139,16 @@ const PieceView: React.FC<PieceViewProps> = ({
 
   useEffect(() => {
     if (!animate) return;
-    animate.winnerColor.value =
-      team === Team.One
+    animate.winnerColor.set(team === Team.One
         ? theme.colorTheme.TEAM_ONE_WINNER_COLOR
-        : theme.colorTheme.TEAM_TWO_WINNER_COLOR;
+        : theme.colorTheme.TEAM_TWO_WINNER_COLOR);
     if (status === PieceStatus.winner) {
-      animate.color.value = animate.winnerColor.value;
+      animate.color.set(animate.winnerColor.value);
       return;
     }
-    animate.color.value =
-      team === Team.One
+    animate.color.set(team === Team.One
         ? theme.colorTheme.TEAM_ONE_COLOR
-        : theme.colorTheme.TEAM_TWO_COLOR;
+        : theme.colorTheme.TEAM_TWO_COLOR);
   }, [animate, team, theme, status]);
 
   const hiddenOffWell =
@@ -164,15 +162,15 @@ const PieceView: React.FC<PieceViewProps> = ({
   const shadowGradientId = useMemo(() => `piece-shadow-${id}`, [id]);
 
   const startHeldJiggle = useCallback(() => {
-    heldJiggleRotation.value = 0;
-    heldJiggleX.value = 0;
-    heldJiggleY.value = 0;
+    heldJiggleRotation.set(0);
+    heldJiggleX.set(0);
+    heldJiggleY.set(0);
     cancelAnimation(pieceLift);
-    pieceLift.value = withTiming(1, {
+    pieceLift.set(withTiming(1, {
       duration: 140,
       easing: Easing.out(Easing.quad),
-    });
-    heldJiggleRotation.value = withRepeat(
+    }));
+    heldJiggleRotation.set(withRepeat(
       withSequence(
         withTiming(-7, {
           duration: 55,
@@ -189,8 +187,8 @@ const PieceView: React.FC<PieceViewProps> = ({
       ),
       -1,
       false,
-    );
-    heldJiggleX.value = withRepeat(
+    ));
+    heldJiggleX.set(withRepeat(
       withSequence(
         withTiming(-2, { duration: 55, easing: Easing.inOut(Easing.quad) }),
         withTiming(2, { duration: 95, easing: Easing.inOut(Easing.quad) }),
@@ -198,8 +196,8 @@ const PieceView: React.FC<PieceViewProps> = ({
       ),
       -1,
       false,
-    );
-    heldJiggleY.value = withRepeat(
+    ));
+    heldJiggleY.set(withRepeat(
       withSequence(
         withTiming(1.2, { duration: 55, easing: Easing.inOut(Easing.quad) }),
         withTiming(-1.2, { duration: 95, easing: Easing.inOut(Easing.quad) }),
@@ -207,25 +205,25 @@ const PieceView: React.FC<PieceViewProps> = ({
       ),
       -1,
       false,
-    );
+    ));
   }, [heldJiggleRotation, heldJiggleX, heldJiggleY, pieceLift]);
 
   const stopHeldJiggle = useCallback(() => {
     cancelAnimation(heldJiggleRotation);
     cancelAnimation(heldJiggleX);
     cancelAnimation(heldJiggleY);
-    heldJiggleRotation.value = withTiming(0, {
+    heldJiggleRotation.set(withTiming(0, {
       duration: 80,
       easing: Easing.out(Easing.quad),
-    });
-    heldJiggleX.value = withTiming(0, {
+    }));
+    heldJiggleX.set(withTiming(0, {
       duration: 80,
       easing: Easing.out(Easing.quad),
-    });
-    heldJiggleY.value = withTiming(0, {
+    }));
+    heldJiggleY.set(withTiming(0, {
       duration: 80,
       easing: Easing.out(Easing.quad),
-    });
+    }));
   }, [heldJiggleRotation, heldJiggleX, heldJiggleY]);
 
   const reversePieceLift = useCallback(
@@ -235,7 +233,7 @@ const PieceView: React.FC<PieceViewProps> = ({
         duration,
         easing: Easing.inOut(Easing.quad),
       });
-      pieceLift.value = delayMs > 0 ? withDelay(delayMs, descend) : descend;
+      pieceLift.set(delayMs > 0 ? withDelay(delayMs, descend) : descend);
     },
     [pieceLift],
   );
@@ -249,7 +247,7 @@ const PieceView: React.FC<PieceViewProps> = ({
       });
 
       if (holdMs <= 0) {
-        pieceLift.value = descend;
+        pieceLift.set(descend);
         return;
       }
 
@@ -259,8 +257,7 @@ const PieceView: React.FC<PieceViewProps> = ({
       );
       const holdAtLiftMs = holdMs - liftSettleMs;
 
-      pieceLift.value =
-        holdAtLiftMs > 0
+      pieceLift.set(holdAtLiftMs > 0
           ? withSequence(
               withTiming(1, {
                 duration: liftSettleMs,
@@ -275,7 +272,7 @@ const PieceView: React.FC<PieceViewProps> = ({
                 easing: Easing.out(Easing.quad),
               }),
               descend,
-            );
+            ));
     },
     [pieceLift],
   );

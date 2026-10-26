@@ -97,4 +97,32 @@ describe("TutorialStepBanner", () => {
       }),
     ).toBe(true);
   });
+
+  it("can enter from hidden and cancel an exit when shown again", () => {
+    const banner = (visible: boolean) => (
+      <TutorialStepBanner
+        visible={visible}
+        message="Touch the piece"
+        textColor="#fff"
+        slotBorderColor="#111"
+        wellBgColor="#222"
+      />
+    );
+    const { queryByText, rerender } = render(banner(false));
+    expect(queryByText("Touch the piece")).toBeNull();
+
+    rerender(banner(true));
+    expect(queryByText("Touch the piece")).toBeTruthy();
+    rerender(banner(false));
+    act(() => { jest.advanceTimersByTime(90); });
+    rerender(banner(true));
+    act(() => { jest.advanceTimersByTime(200); });
+    expect(queryByText("Touch the piece")).toBeTruthy();
+
+    rerender(banner(false));
+    act(() => { jest.advanceTimersByTime(180); });
+    expect(queryByText("Touch the piece")).toBeNull();
+    rerender(banner(true));
+    expect(queryByText("Touch the piece")).toBeTruthy();
+  });
 });
