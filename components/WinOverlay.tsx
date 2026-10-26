@@ -24,6 +24,12 @@ const WinOverlay: React.FC<WinOverlayProps> = ({
   const { theme } = useSettings();
   const opacity = useSharedValue(0);
   const [isOverlayVisible, setIsOverlayVisible] = useState(visible);
+  const [previousVisible, setPreviousVisible] = useState(visible);
+
+  if (previousVisible !== visible) {
+    setPreviousVisible(visible);
+    if (visible) setIsOverlayVisible(true);
+  }
 
   const handleClose = useCallback(() => {
     setIsOverlayVisible(false);
@@ -35,30 +41,30 @@ const WinOverlay: React.FC<WinOverlayProps> = ({
   }));
 
   useEffect(() => {
+    if (!isOverlayVisible) return;
     const FADE_DURATION_MS = 400;
     const DISPLAY_DURATION_MS = 2200;
     let displayTimer: ReturnType<typeof setTimeout> | undefined;
 
     if (visible) {
-      setIsOverlayVisible(true);
-      opacity.value = withTiming(1, { duration: FADE_DURATION_MS });
+      opacity.set(withTiming(1, { duration: FADE_DURATION_MS }));
       displayTimer = setTimeout(() => {
-        opacity.value = withTiming(
+        opacity.set(withTiming(
           0,
           { duration: FADE_DURATION_MS },
           (finished) => {
             if (finished) scheduleOnRN(handleClose);
           }
-        );
+        ));
       }, DISPLAY_DURATION_MS);
     } else if (isOverlayVisible) {
-      opacity.value = withTiming(
+      opacity.set(withTiming(
         0,
         { duration: FADE_DURATION_MS },
         (finished) => {
           if (finished) scheduleOnRN(handleClose);
         }
-      );
+      ));
     }
 
     return () => {

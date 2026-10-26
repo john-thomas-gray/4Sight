@@ -57,6 +57,16 @@ target '4Sight' do
   )
 
   post_install do |installer|
+    # Swift 6.4 prints C++ namespaces with :: in public Swift interfaces.
+    # Expo's existing cleanup only handles dots, leaving an internal CppError
+    # conformance that prevents consumers from importing ExpoModulesJSI.
+    jsi_script = File.join(__dir__, '../node_modules/expo-modules-jsi/apple/scripts/build-xcframework.sh')
+    if File.exist?(jsi_script)
+      source = File.read(jsi_script)
+      patched = source.sub('/^extension __ObjC\./', '/^extension __ObjC[.:]/')
+      File.write(jsi_script, patched) if patched != source
+    end
+
     # Swift in Xcode 27 synthesizes an initializer that conflicts with RevenueCat's
     # public color initializer. Moving its existing designated initializer into the
     # struct suppresses synthesis without changing behavior. Remove when fixed upstream.

@@ -85,17 +85,10 @@ const GamePlay = () => {
     [scenarioParam, tutorialStepParam],
   );
 
-  const [showWinOverlay, setShowWinOverlay] = useState(false);
+  const [winOverlayGame, setWinOverlayGame] = useState<typeof gameState | null>(null);
   const [computerEntranceReady, setComputerEntranceReady] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(
     () => !initialSkipLoadingOverlayFromTutorialUrl,
-  );
-  const [tutorialStepOneBannerReady, setTutorialStepOneBannerReady] = useState(
-    () =>
-      !(
-        scenarioParam === "tutorialStep1" &&
-        (tutorialStepParam ?? "1") === "1"
-      ),
   );
   /** After first dismiss, do not flash loading when layout churns. */
   const loadingScreenDismissedOnceRef = useRef(
@@ -171,24 +164,26 @@ const GamePlay = () => {
     scenarioParam === "tutorialStep1" && resolvedTutorialStepParam === "1";
   const isTutorialActive = !!scenarioParam?.startsWith("tutorial");
   const tutorialStepNumber = Number(resolvedTutorialStepParam);
+  const tutorialBannerCanStart =
+    isTutorialStepOneIntro && !showLoadingScreen && allPlayfieldCellsReady;
+  const tutorialBannerGate = useMemo(
+    () => ({ canStart: tutorialBannerCanStart }),
+    [tutorialBannerCanStart],
+  );
+  const [readyTutorialBannerGate, setReadyTutorialBannerGate] =
+    useState<typeof tutorialBannerGate | null>(null);
   const tutorialBannerVisible =
     showTutorialBanner &&
-    (!isTutorialStepOneIntro || tutorialStepOneBannerReady);
+    (!isTutorialStepOneIntro || readyTutorialBannerGate === tutorialBannerGate);
 
   useEffect(() => {
-    if (!isTutorialStepOneIntro) {
-      setTutorialStepOneBannerReady(true);
-      return;
-    }
-
-    setTutorialStepOneBannerReady(false);
-    if (showLoadingScreen || !allPlayfieldCellsReady) return;
+    if (!tutorialBannerGate.canStart) return;
 
     const timer = setTimeout(() => {
-      setTutorialStepOneBannerReady(true);
+      setReadyTutorialBannerGate(tutorialBannerGate);
     }, TUTORIAL_STEP_ONE_BANNER_READY_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [isTutorialStepOneIntro, showLoadingScreen, allPlayfieldCellsReady]);
+  }, [tutorialBannerGate]);
 
   useEffect(() => {
     const gravityUnlocked =
@@ -311,7 +306,6 @@ const GamePlay = () => {
       gameState.status !== "finished" ||
       (!gameState.winner && !gameState.tie)
     ) {
-      setShowWinOverlay(false);
       return;
     }
     if (
@@ -320,13 +314,12 @@ const GamePlay = () => {
       gameState.winner === Team.One &&
       !gameState.tie
     ) {
-      setShowWinOverlay(false);
       return;
     }
     if (gameState.tie) {
       const delayMs = tieWinOverlayDelayMs;
       if (delayMs == null) return;
-      const timer = setTimeout(() => setShowWinOverlay(true), delayMs);
+      const timer = setTimeout(() => setWinOverlayGame(gameState), delayMs);
       return () => clearTimeout(timer);
     }
     const winnerCount = Object.values(pieceStatusMap).filter(
@@ -334,19 +327,25 @@ const GamePlay = () => {
     ).length;
     if (winnerCount === 0) return;
     const timer = setTimeout(
-      () => setShowWinOverlay(true),
+      () => setWinOverlayGame(gameState),
       WIN_OVERLAY_DELAY_MS,
     );
     return () => clearTimeout(timer);
   }, [
-    gameState.status,
-    gameState.winner,
-    gameState.tie,
+    gameState,
     pieceStatusMap,
     tieWinOverlayDelayMs,
     scenarioParam,
     resolvedTutorialStepParam,
   ]);
+
+  const showWinOverlay = winOverlayGame === gameState && !(
+    scenarioParam?.startsWith("tutorial") &&
+    resolvedTutorialStepParam === "4" &&
+    gameState.winner === Team.One &&
+    !gameState.tie
+  );
+  const closeWinOverlay = useCallback(() => setWinOverlayGame(null), []);
 
   return (
     <View
@@ -516,7 +515,7 @@ const GamePlay = () => {
               ? "teamOne"
               : "teamTwo"
         }
-        onClose={() => setShowWinOverlay(false)}
+        onClose={closeWinOverlay}
       />
       <LoadingScreen visible={showLoadingScreen} />
     </View>

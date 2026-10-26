@@ -98,7 +98,7 @@ const PieceLoading = ({
     (cur, prev) => {
       if (prev == null) return;
       if (Math.abs(cur) < Math.abs(prev)) {
-        colorPhase.value = colorPhase.value === 0 ? 1 : 0;
+        colorPhase.set(colorPhase.value === 0 ? 1 : 0);
       }
     },
   );

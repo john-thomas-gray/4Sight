@@ -109,3 +109,5 @@ The `ios/` and `android/` directories are checked in. Keep native settings synch
 Apple scene support is enabled in `expo-build-properties` and implemented in `AppDelegate.swift` and `Info.plist`, following [Expo's scene lifecycle migration](https://github.com/expo/fyi/blob/main/ios-scene-lifecycle.md). This is required for Xcode 27 builds. The main link scheme is `foursight`; native projects also retain `4sight` and register `exp+4sight` for the development client.
 
 The Podfile includes a targeted RevenueCat color-initializer workaround for Xcode 27's Swift compiler. It moves the existing designated initializer into the struct to prevent a conflicting synthesized initializer. Remove it when the upstream RevenueCat implementation includes the fix.
+
+The Podfile also updates Expo's Swift interface cleanup to handle Swift 6.4's `::` namespace spelling. This keeps the internal `CppError` conformance out of public interfaces so Expo modules can be imported with Xcode 27.1. Remove the workaround when Expo handles both namespace formats.
